@@ -1,0 +1,24 @@
+{
+  "name": "redis-best-practices-build",
+  "version": "1.0.0",
+  "description": "Build tooling for Redis Best Practices skill",
+  "type": "module",
+  "scripts": {
+    "build": "npx tsx src/build.ts --all",
+    "validate": "npx tsx src/validate.ts",
+    "dev": "npm run validate && npm run build"
+  },
+  "keywords": [
+    "redis",
+    "performance",
+    "guidelines",
+    "llm",
+    "agents"
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.0"
+  }
+}
