@@ -415,7 +415,12 @@ Redis JSON and Hash serve different purposes. Choose based on your data structur
 | **Path queries** | Yes (`$.preferences.theme`) | No (top-level fields only) |
 | **Geospatial indexing** | Yes (with Redis Query Engine) | No |
 | **Memory efficiency** | Higher overhead | More efficient |
-| **Field-level expiration** | No | Yes (HEXPIRE) |```python
+| **Field-level expiration** | No | Yes (HEXPIRE) |
+| **RQE indexing** | Yes | Yes |
+
+**Correct: Use JSON for nested structures and path queries.**
+
+```python
 # JSON supports nested structures and deep updates
 redis.json().set("user:1001", "$", {
     "name": "Alice",
