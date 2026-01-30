@@ -1,4 +1,4 @@
-# Agent Skills
+# Redis Agent Skills
 
 A collection of skills for AI coding agents working with Redis. Skills are packaged instructions and resources that extend agent capabilities.
 

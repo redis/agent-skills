@@ -76,13 +76,13 @@ tags: tag1, tag2, tag3
 Brief explanation of the rule and why it matters.
 ```
 
-**Incorrect:**
+**Incorrect: (description of what's wrong)**
 
 ```python
 # Bad code example
 ```
 
-**Correct:**
+**Correct: (description of what's right)**
 
 ```python
 # Good code example
