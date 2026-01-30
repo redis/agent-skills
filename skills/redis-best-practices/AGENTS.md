@@ -76,23 +76,14 @@ Choosing the right Redis data type and key naming conventions. Foundation for ef
 Selecting the appropriate Redis data type for your use case is fundamental to performance and memory efficiency.
 
 | Use Case | Recommended Type | Why |
-
 |----------|------------------|-----|
-
 | Simple values, counters | String | Fast, atomic operations |
-
 | Object with fields | Hash | Memory efficient, partial updates, field-level expiration |
-
 | Queue, recent items | List | O(1) push/pop at ends |
-
 | Unique items, membership | Set | O(1) add/remove/check |
-
 | Rankings, ranges | Sorted Set | Score-based ordering |
-
 | Nested/hierarchical data | JSON | Path queries, nested structures, geospatial indexing with RQE |
-
 | Event logs, messaging | Stream | Persistent, consumer groups |
-
 | Similarity search | Vector Set | Native vector storage with built-in HNSW indexing |
 
 **Incorrect: Using strings for everything.**
@@ -181,15 +172,10 @@ maxmemory-policy allkeys-lru
 ```
 
 | Policy | Use Case |
-
 |--------|----------|
-
 | `volatile-lru` | Evict keys with TTL, least recently used first |
-
 | `allkeys-lru` | Evict any key, least recently used first |
-
 | `volatile-ttl` | Evict keys closest to expiration |
-
 | `noeviction` | Return errors when memory is full (use for critical data) |
 
 **Incorrect: Running Redis without memory limits.**
@@ -262,15 +248,10 @@ Connection pooling, pipelining, timeouts, and avoiding blocking commands.
 Some Redis commands are slow because they scan large datasets. Use incremental alternatives to avoid blocking the server.
 
 | Avoid | Use Instead |
-
 |-------|-------------|
-
 | `KEYS *` | `SCAN` with cursor |
-
 | `SMEMBERS` on large sets | `SSCAN` |
-
 | `HGETALL` on large hashes | `HSCAN` |
-
 | `LRANGE 0 -1` on large lists | Paginate with `LRANGE 0 100` |
 
 **Correct: Use SCAN for iteration.**
@@ -429,24 +410,12 @@ Using Redis JSON for nested structures, partial updates, and integration with RQ
 Redis JSON and Hash serve different purposes. Choose based on your data structure and query needs.
 
 | Feature | JSON | Hash |
-
 |---------|------|------|
-
 | **Structure** | Nested objects and arrays | Flat key-value pairs |
-
 | **Path queries** | Yes (`$.preferences.theme`) | No (top-level fields only) |
-
 | **Geospatial indexing** | Yes (with Redis Query Engine) | No |
-
 | **Memory efficiency** | Higher overhead | More efficient |
-
-| **Field-level expiration** | No | Yes (HEXPIRE) |
-
-| **RQE indexing** | Yes | Yes |
-
-**Correct: Use JSON for nested structures and path queries.**
-
-```python
+| **Field-level expiration** | No | Yes (HEXPIRE) |```python
 # JSON supports nested structures and deep updates
 redis.json().set("user:1001", "$", {
     "name": "Alice",
@@ -534,19 +503,12 @@ FT.CREATE, FT.SEARCH, FT.AGGREGATE, index design, field types, and query optimiz
 Each field type has different capabilities and performance characteristics.
 
 | Field Type | Use When | Notes |
-
 |------------|----------|-------|
-
 | TEXT | Full-text search needed | Tokenized, stemmed |
-
 | TAG | Exact match, filtering | Faster than TEXT for filtering |
-
 | NUMERIC | Range queries, sorting | Use for prices, counts, timestamps |
-
 | GEO | Point location queries | Lat/long coordinates (single points) |
-
 | GEOSHAPE | Area/region queries | Polygons, circles, rectangles |
-
 | VECTOR | Similarity search | HNSW or FLAT algorithm |
 
 **Correct: Use TAG for exact matching.**
@@ -766,11 +728,8 @@ Vector indexes, HNSW vs FLAT, hybrid search, and RAG patterns with RedisVL.
 Select the right algorithm based on your accuracy requirements and dataset size.
 
 | Algorithm | Speed | Accuracy | Memory | Best For |
-
 |-----------|-------|----------|--------|----------|
-
 | HNSW | Fast (approximate) | ~95%+ recall tunable | Higher | Large datasets (>10k vectors) |
-
 | FLAT | Slower (exact) | 100% (exact) | Lower | Small datasets, accuracy-critical |
 
 **Correct: Use HNSW for large-scale production workloads.**
@@ -1183,19 +1142,12 @@ r.xack("orders:stream", "workers", message_id)
 ```
 
 | Requirement | Use |
-
 |-------------|-----|
-
 | Real-time notifications, OK to miss messages | Pub/Sub |
-
 | Messages must not be lost | Streams |
-
 | Need to replay/reprocess messages | Streams |
-
 | Multiple workers processing same queue | Streams (consumer groups) |
-
 | Simple broadcast to connected clients | Pub/Sub |
-
 | Event sourcing or audit trail | Streams |
 
 Reference: [https://redis.io/docs/latest/develop/data-types/streams/](https://redis.io/docs/latest/develop/data-types/streams/)
@@ -1455,21 +1407,13 @@ SLOWLOG, INFO, MEMORY commands, monitoring metrics, and Redis Insight.
 Track these metrics to catch issues before they impact users.
 
 | Metric | What It Tells You | Alert When |
-
 |--------|-------------------|------------|
-
 | `used_memory` | Current memory usage | > 80% of maxmemory |
-
 | `connected_clients` | Number of connections | Sudden spikes or drops |
-
 | `blocked_clients` | Clients waiting on blocking ops | > 0 sustained |
-
 | `instantaneous_ops_per_sec` | Current throughput | Significant drops |
-
 | `keyspace_hits/misses` | Cache hit ratio | Hit ratio < 80% |
-
 | `rejected_connections` | Connection limit issues | > 0 |
-
 | `rdb_last_save_time` | Last persistence snapshot | Too old |
 
 **Correct: Export metrics to your monitoring system.**

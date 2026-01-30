@@ -1,91 +1,127 @@
 # Redis Best Practices
 
-Redis performance optimization rules optimized for AI agents and LLMs. Contains 29 rules across 11 categories.
+A structured repository for creating and maintaining Redis Best Practices optimized for agents and LLMs.
 
-## Installation
 
-**Claude Code:**
-```bash
-cp -r skills/redis-best-practices ~/.claude/skills/
-```
+## Structure
 
-**Claude.ai:**
-Add SKILL.md to project knowledge or paste contents into conversation.
+- `rules/` - Individual rule files (one per rule)
+  - `_sections.md` - Section metadata (titles, impacts, descriptions)
+  - `_template.md` - Template for creating new rules
+  - `_contributing.md` - Contribution guidelines (excluded from build)
+  - `prefix-description.md` - Individual rule files
+- `metadata.json` - Document metadata (version, organization, abstract)
+- `AGENTS.md` - Compiled output (generated)
+- `SKILL.md` - Skill definition and entry point
+- `README.md` - This file
 
-## Usage
 
-The skill activates when working with:
-- Redis data structures and key design
-- Redis Query Engine (FT.CREATE, FT.SEARCH, FT.AGGREGATE)
-- Vector search with RedisVL
-- Semantic caching with LangCache
-- Connection management and performance optimization
+## Getting Started
 
-## Rule Categories
-
-| Category | Impact | Prefix | Rules |
-|----------|--------|--------|-------|
-| Data Structures & Keys | HIGH | `data-` | 2 |
-| Memory & Expiration | HIGH | `ram-` | 2 |
-| Connection & Performance | HIGH | `conn-` | 4 |
-| JSON Documents | MEDIUM | `json-` | 2 |
-| Redis Query Engine | HIGH | `rqe-` | 5 |
-| Vector Search & RedisVL | HIGH | `vector-` | 4 |
-| Semantic Caching | MEDIUM | `semantic-cache-` | 2 |
-| Streams & Pub/Sub | MEDIUM | `stream-` | 1 |
-| Clustering & Replication | MEDIUM | `cluster-` | 2 |
-| Security | HIGH | `security-` | 3 |
-| Observability | MEDIUM | `observe-` | 2 |
-
-## Contributing
-
-### Adding a New Rule
-
-1. Choose a section prefix from the table above
-2. Copy the template:
+1. Navigate to the build package:
    ```bash
-   cp rules/_template.md rules/{prefix}-your-rule-name.md
+   cd ../../packages/redis-best-practices-build
    ```
-3. Fill in the content following the template structure
-4. Build and validate from the packages directory:
+
+2. Install dependencies:
    ```bash
-   cd packages/redis-best-practices-build
+   npm install
+   ```
+
+3. Validate rule files:
+   ```bash
    npm run validate
+   ```
+
+4. Build AGENTS.md from rules:
+   ```bash
    npm run build
    ```
 
-### Rule File Structure
+
+## Creating a New Rule
+
+1. Copy `rules/_template.md` to `rules/prefix-description.md`
+2. Choose the appropriate area prefix:
+   - `data-` for Data Structures & Keys
+   - `ram-` for Memory & Expiration
+   - `conn-` for Connection & Performance
+   - `json-` for JSON Documents
+   - `rqe-` for Redis Query Engine
+   - `vector-` for Vector Search & RedisVL
+   - `semantic-cache-` for Semantic Caching
+   - `stream-` for Streams & Pub/Sub
+   - `cluster-` for Clustering & Replication
+   - `security-` for Security
+   - `observe-` for Observability
+3. Fill in the frontmatter and content
+4. Ensure you have clear examples with explanations
+5. Run `npm run build` (in the build package) to regenerate AGENTS.md
+
+
+## Rule File Structure
+
+Each rule file should follow this structure:
 
 ```markdown
 ---
-title: Clear, Action-Oriented Title
-impact: HIGH|MEDIUM|LOW
-impactDescription: Quantified benefit (e.g., "10x faster")
-tags: relevant, keywords
+title: Rule Title Here
+impact: MEDIUM
+impactDescription: Optional description
+tags: tag1, tag2, tag3
 ---
 
-## [Title]
+## Rule Title Here
 
-[1-2 sentence explanation]
+Brief explanation of the rule and why it matters.
+```
 
-**Correct:** Description of good approach.
+**Incorrect:**
 
 ```python
-# Good example with comments
+# Bad code example
 ```
 
-**Incorrect:** Description of problematic approach.
+**Correct:**
 
 ```python
-# Bad example with comments
+# Good code example
 ```
 
-Reference: [Link](URL)
-```
+Optional explanatory text after examples.
 
-## References
+Reference: [Link](https://example.com/)
 
-- [Redis Documentation](https://redis.io/docs/)
-- [Redis Query Engine](https://redis.io/docs/latest/develop/interact/search-and-query/)
-- [RedisVL Documentation](https://redis.io/docs/latest/develop/clients/redisvl/)
-- [LangCache](https://redis.io/docs/latest/develop/ai/langcache/)
+## File Naming Convention
+
+- Files starting with `_` are special (excluded from build)
+- Rule files: `prefix-description.md` (e.g., `data-key-naming.md`)
+- Section is automatically inferred from filename prefix
+- Rules are sorted alphabetically by title within each section
+
+
+## Impact Levels
+
+- `HIGH` - Significant performance improvements or critical security practices
+- `MEDIUM` - Moderate performance improvements or recommended patterns
+- `LOW` - Incremental improvements
+
+
+## Scripts
+
+(Run these from `../../packages/redis-best-practices-build`)
+
+- `npm run build` - Compile rules into AGENTS.md
+- `npm run validate` - Validate all rule files
+- `npm run dev` - Build and validate (if configured)
+
+
+## Contributing
+
+When adding or modifying rules:
+
+1. Use the correct filename prefix for your section
+2. Follow the `_template.md` structure
+3. Include clear bad/good examples with explanations
+4. Add appropriate tags
+5. Run `npm run build` to regenerate AGENTS.md

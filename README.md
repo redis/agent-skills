@@ -1,4 +1,4 @@
-# Redis Agent Skills
+# Agent Skills
 
 A collection of skills for AI coding agents working with Redis. Skills are packaged instructions and resources that extend agent capabilities.
 
@@ -34,7 +34,7 @@ Redis performance optimization and best practices. Contains 29 rules across 11 c
 ## Installation
 
 ```bash
-npx skills add redis/redis-agent-skills
+npx skills add redis/agent-skills
 ```
 
 ## Usage
