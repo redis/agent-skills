@@ -6,6 +6,21 @@ import { readFile } from 'fs/promises'
 import { basename } from 'path'
 import { Rule, ImpactLevel } from './types.js'
 
+/**
+ * Join lines with checking for table rows to avoid extra newlines
+ */
+function smartJoin(lines: string[]): string {
+  if (lines.length === 0) return ''
+  let result = lines[0]
+  for (let i = 1; i < lines.length; i++) {
+    const line = lines[i]
+    const prevLine = lines[i - 1]
+    const isTable = line.trim().startsWith('|') && prevLine.trim().endsWith('|')
+    result += (isTable ? '\n' : '\n\n') + line
+  }
+  return result
+}
+
 export interface RuleFile {
   section: number
   subsection?: number
@@ -134,7 +149,7 @@ export async function parseRuleFile(
       // Save previous example if it exists
       if (currentExample) {
         if (additionalText.length > 0) {
-          currentExample.additionalText = additionalText.join('\n\n')
+          currentExample.additionalText = smartJoin(additionalText)
           additionalText = []
         }
         examples.push(currentExample)
@@ -173,7 +188,7 @@ export async function parseRuleFile(
       // Save current example before processing references
       if (currentExample) {
         if (additionalText.length > 0) {
-          currentExample.additionalText = additionalText.join('\n\n')
+          currentExample.additionalText = smartJoin(additionalText)
           additionalText = []
         }
         examples.push(currentExample)
@@ -196,7 +211,9 @@ export async function parseRuleFile(
     if (line.trim() && !line.startsWith('#')) {
       if (!currentExample && !inCodeBlock) {
         // Main explanation before any examples
-        explanation += (explanation ? '\n\n' : '') + line
+        const isTable =
+          line.trim().startsWith('|') && explanation.trim().endsWith('|')
+        explanation += (explanation ? (isTable ? '\n' : '\n\n') : '') + line
       } else if (
         currentExample &&
         (afterCodeBlock || !hasCodeBlockForCurrentExample)
@@ -211,7 +228,7 @@ export async function parseRuleFile(
   // Handle last example if still open
   if (currentExample) {
     if (additionalText.length > 0) {
-      currentExample.additionalText = additionalText.join('\n\n')
+      currentExample.additionalText = smartJoin(additionalText)
     }
     examples.push(currentExample)
   }
