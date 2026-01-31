@@ -35,4 +35,3 @@ jobs:
             git diff skills/*/AGENTS.md
             exit 1
           fi
-
