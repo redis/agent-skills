@@ -24,14 +24,14 @@ export interface SkillConfig {
 }
 
 export const SKILLS: Record<string, SkillConfig> = {
-  'redis-best-practices': {
-    name: 'redis-best-practices',
-    title: 'Redis Best Practices',
+  'redis-development': {
+    name: 'redis-development',
+    title: 'Redis Development',
     description: 'Redis applications',
-    skillDir: join(SKILLS_DIR, 'redis-best-practices'),
-    rulesDir: join(SKILLS_DIR, 'redis-best-practices/rules'),
-    metadataFile: join(SKILLS_DIR, 'redis-best-practices/metadata.json'),
-    outputFile: join(SKILLS_DIR, 'redis-best-practices/AGENTS.md'),
+    skillDir: join(SKILLS_DIR, 'redis-development'),
+    rulesDir: join(SKILLS_DIR, 'redis-development/rules'),
+    metadataFile: join(SKILLS_DIR, 'redis-development/metadata.json'),
+    outputFile: join(SKILLS_DIR, 'redis-development/AGENTS.md'),
     sectionMap: {
       data: 1,
       ram: 2,
@@ -49,7 +49,7 @@ export const SKILLS: Record<string, SkillConfig> = {
 }
 
 // Default skill
-export const DEFAULT_SKILL = 'redis-best-practices'
+export const DEFAULT_SKILL = 'redis-development'
 
 // Legacy exports for backwards compatibility
 export const SKILL_DIR = SKILLS[DEFAULT_SKILL].skillDir

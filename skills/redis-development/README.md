@@ -1,6 +1,6 @@
-# Redis Best Practices
+# Redis Development
 
-A structured repository for creating and maintaining Redis Best Practices optimized for agents and LLMs.
+A structured repository for creating and maintaining Redis development guidelines optimized for agents and LLMs.
 
 
 ## Structure
@@ -18,12 +18,7 @@ A structured repository for creating and maintaining Redis Best Practices optimi
 
 ## Getting Started
 
-1. Navigate to the build package:
-   ```bash
-   cd ../../packages/redis-best-practices-build
-   ```
-
-2. Install dependencies:
+1. Install dependencies from the repo root:
    ```bash
    npm install
    ```
@@ -109,7 +104,7 @@ Reference: [Link](https://example.com/)
 
 ## Scripts
 
-(Run these from `../../packages/redis-best-practices-build`)
+(Run these from the repo root)
 
 - `npm run build` - Compile rules into AGENTS.md
 - `npm run validate` - Validate all rule files

@@ -5,8 +5,8 @@
     "packages/*"
   ],
   "scripts": {
-    "build": "npm run build --workspace=redis-best-practices-build",
-    "validate": "npm run validate --workspace=redis-best-practices-build",
+    "build": "npm run build --workspace=redis-development-build",
+    "validate": "npm run validate --workspace=redis-development-build",
     "prepare": "husky"
   },
   "devDependencies": {
