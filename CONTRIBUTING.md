@@ -10,7 +10,7 @@ This installs dependencies and sets up Git hooks (via Husky) that validate and b
 
 ## Adding Rules
 
-Rules live in `skills/<skill-name>/rules/`. See `skills/redis-best-practices/` for an example.
+Rules live in `skills/<skill-name>/rules/`. See `skills/redis-development/` for an example.
 
 To add a new rule:
 

@@ -1,7 +1,7 @@
 {
-  "name": "redis-best-practices-build",
+  "name": "redis-development-build",
   "version": "1.0.0",
-  "description": "Build tooling for Redis Best Practices skill",
+  "description": "Build tooling for Redis Development skill",
   "type": "module",
   "scripts": {
     "build": "npx tsx src/build.ts --all",

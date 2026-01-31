@@ -27,7 +27,7 @@ skills/
 
 ### Naming Conventions
 
-- **Skill directory**: `kebab-case` (e.g., `redis-best-practices`, `redis-monitoring`)
+- **Skill directory**: `kebab-case` (e.g., `redis-development`, `redis-monitoring`)
 - **SKILL.md, AGENTS.md**: Always uppercase
 - **Rule files**: `{prefix}-{description}.md` where prefix maps to section
 - **Scripts**: `kebab-case.sh`
@@ -125,15 +125,14 @@ Reference: [Link](URL)
    - Create `rules/_sections.md` defining categories
    - Create `rules/_template.md` for contributors
    - Add rules as `rules/{prefix}-{name}.md`
-   - Add skill config to `packages/redis-best-practices-build/src/config.ts`
+   - Add skill config to `packages/redis-development-build/src/config.ts`
    - Run `npm run build` to generate AGENTS.md
 
 ### Build System
 
-The build tooling in `packages/redis-best-practices-build/` compiles individual rule files into AGENTS.md:
+The build tooling in `packages/redis-development-build/` compiles individual rule files into AGENTS.md:
 
 ```bash
-cd packages/redis-best-practices-build
 npm install
 npm run validate  # Check rule structure
 npm run build     # Generate AGENTS.md

@@ -6,30 +6,9 @@ Skills follow the [Agent Skills](https://agentskills.io/) format.
 
 ## Available Skills
 
-### redis-best-practices
-
-Redis performance optimization and best practices. Contains 29 rules across 11 categories, prioritized by impact.
-
-**Use when:**
-- Writing code that interacts with Redis
-- Choosing data structures or designing key schemas
-- Using Redis Query Engine (FT.CREATE, FT.SEARCH, FT.AGGREGATE)
-- Building vector search or RAG applications with RedisVL
-- Implementing semantic caching with LangCache
-- Optimizing Redis performance and memory usage
-
-**Categories covered:**
-- Data Structures & Keys (High)
-- Memory & Expiration (High)
-- Connection & Performance (High)
-- JSON Documents (Medium)
-- Redis Query Engine (High)
-- Vector Search & RedisVL (High)
-- Semantic Caching (Medium)
-- Streams & Pub/Sub (Medium)
-- Clustering & Replication (Medium)
-- Security (High)
-- Observability (Medium)
+| Skill | Description |
+|-------|-------------|
+| [redis-development](skills/redis-development/) | Redis development best practices — data structures, query engine, vector search, caching, and performance optimization. |
 
 ## Installation
 
@@ -65,7 +44,6 @@ Each skill contains:
 For rule-based skills, build the compiled AGENTS.md:
 
 ```bash
-cd packages/redis-best-practices-build
 npm install
 npm run validate  # Validate rule files
 npm run build     # Build AGENTS.md

@@ -1,4 +1,4 @@
-# Redis Best Practices
+# Redis Development
 
 **Version 1.0.0**  
 Redis, Inc.  
