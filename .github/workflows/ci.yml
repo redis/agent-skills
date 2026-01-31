@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate-and-build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate rules
+        run: npm run validate
+
+      - name: Build AGENTS.md
+        run: npm run build
+
+      - name: Check AGENTS.md is up to date
+        run: |
+          if ! git diff --quiet skills/*/AGENTS.md; then
+            echo "AGENTS.md is out of date. Run 'npm run build' and commit the changes."
+            git diff skills/*/AGENTS.md
+            exit 1
+          fi

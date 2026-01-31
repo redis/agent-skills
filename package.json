@@ -1,0 +1,15 @@
+{
+  "name": "agent-skills",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspace=redis-best-practices-build",
+    "validate": "npm run validate --workspace=redis-best-practices-build",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7"
+  }
+}

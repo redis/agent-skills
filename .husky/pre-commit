@@ -1,0 +1,8 @@
+npm run validate
+npm run build
+
+# Fail if AGENTS.md changed
+if ! git diff --quiet skills/*/AGENTS.md; then
+  echo "AGENTS.md is out of date. Run 'npm run build' and stage the changes."
+  exit 1
+fi
