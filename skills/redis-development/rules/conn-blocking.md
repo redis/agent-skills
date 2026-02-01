@@ -18,6 +18,7 @@ Some Redis commands are slow because they scan large datasets. Use incremental a
 
 **Correct:** Use SCAN for iteration.
 
+**Python** (redis-py):
 ```python
 # Good: Non-blocking iteration
 cursor = 0
@@ -29,11 +30,37 @@ while True:
         break
 ```
 
+**Java** (Jedis):
+```java
+import redis.clients.jedis.ScanIteration;
+import redis.clients.jedis.UnifiedJedis;
+import java.util.List;
+
+try (UnifiedJedis jedis = new UnifiedJedis("redis://localhost:6379")) {
+    // ScanIteration manages the cursor automatically
+    ScanIteration scan = jedis.scanIteration(10, "user:*", "hash");
+
+    while (!scan.isIterationCompleted()) {
+        List<String> result = scan.nextBatch().getResult();
+        for (String key : result) {
+            process(key);
+        }
+    }
+}
+```
+
 **Incorrect:** Using KEYS in production.
 
+**Python** (redis-py):
 ```python
 # Bad: Scans all keys, slow on large datasets
 keys = redis.keys("user:*")
+```
+
+**Java** (Jedis):
+```java
+// Bad: Scans all keys, blocks the server
+Set<String> result = jedis.keys("*");
 ```
 
 **Note:** Truly blocking commands (like `BLPOP`, `BRPOP`, `BLMOVE`) that wait indefinitely for data are appropriate for some use cases like job queues, but should be used with timeouts.

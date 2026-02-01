@@ -11,6 +11,7 @@ In Redis Cluster, keys are distributed across slots based on their hash. Use has
 
 **Correct:** Use hash tags for keys used in multi-key operations.
 
+**Python** (redis-py):
 ```python
 # These keys go to the same slot because {user:1001} is the hash tag
 redis.set("{user:1001}:profile", "...")
@@ -27,8 +28,24 @@ pipe.execute()
 redis.lmove("{user:1001}:pending", "{user:1001}:processed", "LEFT", "RIGHT")
 ```
 
+**Java** (Jedis):
+```java
+import redis.clients.jedis.UnifiedJedis;
+import java.util.Set;
+
+try (UnifiedJedis jedis = new UnifiedJedis("redis://localhost:6379")) {
+    // Hash tags ensure keys go to the same slot
+    jedis.sadd("{bikes:racing}:france", "bike:1", "bike:2", "bike:3");
+    jedis.sadd("{bikes:racing}:usa", "bike:1", "bike:4");
+
+    // Multi-key operation works because of matching hash tags
+    Set<String> result = jedis.sdiff("{bikes:racing}:france", "{bikes:racing}:usa");
+}
+```
+
 **Incorrect:** Keys without hash tags that need multi-key operations.
 
+**Python** (redis-py):
 ```python
 # Bad: These may be on different slots
 redis.set("user:1001:profile", "...")  # No hash tag
@@ -39,6 +56,16 @@ pipe = redis.pipeline()
 pipe.get("user:1001:profile")
 pipe.get("user:1001:settings")
 pipe.execute()  # CROSSSLOT error
+```
+
+**Java** (Jedis):
+```java
+// Bad: No hash tags - keys may be on different slots
+jedis.sadd("bikes:racing:france", "bike:1", "bike:2", "bike:3");
+jedis.sadd("bikes:racing:usa", "bike:1", "bike:4");
+
+// This will fail in cluster mode with CROSSSLOT error
+Set<String> result = jedis.sdiff("bikes:racing:france", "bikes:racing:usa");
 ```
 
 **Hash tag rules:**

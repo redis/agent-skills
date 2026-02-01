@@ -11,6 +11,7 @@ Always set expiration times on cache keys to prevent unbounded memory growth.
 
 **Correct:** Set TTL at write time.
 
+**Python** (redis-py):
 ```python
 # Good: TTL set atomically with the value
 redis.setex("cache:user:1001", 3600, user_json)
@@ -20,11 +21,26 @@ redis.hset("session:abc", mapping=session_data)
 redis.expire("session:abc", 1800)
 ```
 
+**Java** (Jedis):
+```java
+import redis.clients.jedis.params.SetParams;
+
+// Good: TTL set atomically with SetParams
+jedis.set("cachedItem:1", "fe8c357903ac9", new SetParams().ex(120));
+```
+
 **Incorrect:** Forgetting TTL on cache keys.
 
+**Python** (redis-py):
 ```python
 # Risk: This key may live forever
 redis.set("cache:user:1001", user_json)
+```
+
+**Java** (Jedis):
+```java
+// Risk: This key may live forever
+jedis.set("cachedItem:1", "fe8c357903ac9");
 ```
 
 **TTL strategies:**

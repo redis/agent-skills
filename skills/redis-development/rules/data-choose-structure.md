@@ -22,6 +22,7 @@ Selecting the appropriate Redis data type for your use case is fundamental to pe
 
 **Incorrect:** Using strings for everything.
 
+**Python** (redis-py):
 ```python
 # Storing object as JSON string loses atomic field updates
 redis.set("user:1001", json.dumps({"name": "Alice", "email": "alice@example.com"}))
@@ -32,14 +33,42 @@ user["email"] = "new@example.com"
 redis.set("user:1001", json.dumps(user))
 ```
 
+**Java** (Jedis):
+```java
+// Bad: Storing as delimited string requires manual parsing
+jedis.set("bicycle", "Deimos;Ergonom;Enduro bikes;4972");
+String bike = jedis.get("bicycle");
+String[] fields = bike.split(";");
+String model = fields[0];  // Fragile and error-prone
+```
+
 **Correct:** Use Hash for objects with fields.
 
+**Python** (redis-py):
 ```python
 # Hash allows atomic field updates
 redis.hset("user:1001", mapping={"name": "Alice", "email": "alice@example.com"})
 
 # Update single field without touching others
 redis.hset("user:1001", "email", "new@example.com")
+```
+
+**Java** (Jedis):
+```java
+import java.util.Map;
+import java.util.HashMap;
+
+// Good: Hash models properties naturally
+Map<String, String> hashFields = new HashMap<>();
+hashFields.put("model", "Deimos");
+hashFields.put("brand", "Ergonom");
+hashFields.put("type", "Enduro bikes");
+hashFields.put("price", "4972");
+
+jedis.hset("bicycle", hashFields);
+
+// Read individual field
+String model = jedis.hget("bicycle", "model");
 ```
 
 Reference: [Choosing the Right Data Type](https://redis.io/docs/latest/develop/data-types/compare-data-types/)

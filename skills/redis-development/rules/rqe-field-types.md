@@ -28,6 +28,22 @@ FT.CREATE idx:products ON HASH PREFIX 1 product:
         status TAG
 ```
 
+**Java** (Jedis):
+```java
+import redis.clients.jedis.search.*;
+
+Schema schema = new Schema()
+    .addTextField("name", 1)
+    .addTagField("categories");  // TAG for exact matching
+
+IndexDefinition def = new IndexDefinition(IndexDefinition.Type.HASH);
+
+jedis.ftCreate("idx", IndexOptions.defaultOptions().setDefinition(def), schema);
+
+// Query with TAG syntax
+SearchResult result = jedis.ftSearch("idx", "@categories:{chef|runner}");
+```
+
 **Incorrect:** Using TEXT when you don't need full-text features.
 
 ```
@@ -36,6 +52,14 @@ FT.CREATE idx:products ON HASH PREFIX 1 product:
     SCHEMA
         category TEXT
         status TEXT
+```
+
+**Java** (Jedis):
+```java
+// Bad: TEXT for categories adds unnecessary overhead
+Schema schema = new Schema()
+    .addTextField("name", 1)
+    .addTextField("categories", 1);  // Overkill for exact matching
 ```
 
 **Correct:** Use GEO for points, GEOSHAPE for areas.

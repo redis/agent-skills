@@ -112,8 +112,8 @@ rules/vector-rag-pattern.md
 
 Each rule file contains:
 - Brief explanation of why it matters
-- Incorrect example with explanation
-- Correct example with explanation
+- Correct example(s) with explanation
+- Either an "Incorrect" example (for anti-patterns that cause real harm) or "When to use / When NOT needed" guidance (for optional features)
 - Additional context and references
 
 ## Full Compiled Document

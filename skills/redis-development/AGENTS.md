@@ -23,23 +23,28 @@ Best practices for Redis including data structures, memory management, Redis Que
 1. [Data Structures & Keys](#1-data-structures--keys) — **HIGH**
    - 1.1 [Choose the Right Data Structure](#11-choose-the-right-data-structure)
    - 1.2 [Use Consistent Key Naming Conventions](#12-use-consistent-key-naming-conventions)
+   - 1.3 [Use Hash Field Expiration for Per-Field TTL](#13-use-hash-field-expiration-for-per-field-ttl)
+   - 1.4 [Use INCR for Atomic Counters](#14-use-incr-for-atomic-counters)
+   - 1.5 [Use Transactions for Atomic Multi-Command Operations](#15-use-transactions-for-atomic-multi-command-operations)
 2. [Memory & Expiration](#2-memory--expiration) — **HIGH**
    - 2.1 [Configure Memory Limits and Eviction Policies](#21-configure-memory-limits-and-eviction-policies)
    - 2.2 [Set TTL on Cache Keys](#22-set-ttl-on-cache-keys)
 3. [Connection & Performance](#3-connection--performance) — **HIGH**
    - 3.1 [Avoid Slow Commands in Production](#31-avoid-slow-commands-in-production)
    - 3.2 [Configure Connection Timeouts](#32-configure-connection-timeouts)
-   - 3.3 [Use Connection Pooling or Multiplexing](#33-use-connection-pooling-or-multiplexing)
-   - 3.4 [Use Pipelining for Bulk Operations](#34-use-pipelining-for-bulk-operations)
+   - 3.3 [Use Client-Side Caching for Frequently Read Data](#33-use-client-side-caching-for-frequently-read-data)
+   - 3.4 [Use Connection Pooling or Multiplexing](#34-use-connection-pooling-or-multiplexing)
+   - 3.5 [Use Pipelining for Bulk Operations](#35-use-pipelining-for-bulk-operations)
 4. [JSON Documents](#4-json-documents) — **MEDIUM**
-   - 4.1 [Choose JSON vs Hash Appropriately](#41-choose-json-vs-hash-appropriately)
+   - 4.1 [Choose JSON vs Hash vs String Appropriately](#41-choose-json-vs-hash-vs-string-appropriately)
    - 4.2 [Use JSON Paths for Partial Updates](#42-use-json-paths-for-partial-updates)
 5. [Redis Query Engine](#5-redis-query-engine) — **HIGH**
    - 5.1 [Choose the Correct Field Type](#51-choose-the-correct-field-type)
    - 5.2 [Index Only Fields You Query](#52-index-only-fields-you-query)
    - 5.3 [Manage Indexes for Zero-Downtime Updates](#53-manage-indexes-for-zero-downtime-updates)
    - 5.4 [Use DIALECT 2 for Query Syntax](#54-use-dialect-2-for-query-syntax)
-   - 5.5 [Write Efficient Queries](#55-write-efficient-queries)
+   - 5.5 [Use SKIPINITIALSCAN for New Data Only Indexes](#55-use-skipinitialscan-for-new-data-only-indexes)
+   - 5.6 [Write Efficient Queries](#56-write-efficient-queries)
 6. [Vector Search & RedisVL](#6-vector-search--redisvl) — **HIGH**
    - 6.1 [Choose HNSW vs FLAT Based on Requirements](#61-choose-hnsw-vs-flat-based-on-requirements)
    - 6.2 [Configure Vector Indexes Properly](#62-configure-vector-indexes-properly)
@@ -88,6 +93,8 @@ Selecting the appropriate Redis data type for your use case is fundamental to pe
 
 **Incorrect: Using strings for everything.**
 
+**Python** (redis-py):**
+
 ```python
 # Storing object as JSON string loses atomic field updates
 redis.set("user:1001", json.dumps({"name": "Alice", "email": "alice@example.com"}))
@@ -98,7 +105,19 @@ user["email"] = "new@example.com"
 redis.set("user:1001", json.dumps(user))
 ```
 
+**Java** (Jedis):**
+
+```java
+// Bad: Storing as delimited string requires manual parsing
+jedis.set("bicycle", "Deimos;Ergonom;Enduro bikes;4972");
+String bike = jedis.get("bicycle");
+String[] fields = bike.split(";");
+String model = fields[0];  // Fragile and error-prone
+```
+
 **Correct: Use Hash for objects with fields.**
+
+**Python** (redis-py):**
 
 ```python
 # Hash allows atomic field updates
@@ -106,6 +125,25 @@ redis.hset("user:1001", mapping={"name": "Alice", "email": "alice@example.com"})
 
 # Update single field without touching others
 redis.hset("user:1001", "email", "new@example.com")
+```
+
+**Java** (Jedis):**
+
+```java
+import java.util.Map;
+import java.util.HashMap;
+
+// Good: Hash models properties naturally
+Map<String, String> hashFields = new HashMap<>();
+hashFields.put("model", "Deimos");
+hashFields.put("brand", "Ergonom");
+hashFields.put("type", "Enduro bikes");
+hashFields.put("price", "4972");
+
+jedis.hset("bicycle", hashFields);
+
+// Read individual field
+String model = jedis.hget("bicycle", "model");
 ```
 
 Reference: [https://redis.io/docs/latest/develop/data-types/compare-data-types/](https://redis.io/docs/latest/develop/data-types/compare-data-types/)
@@ -127,6 +165,22 @@ cache:api:users:list
 session:abc123
 ```
 
+**Python** (redis-py):**
+
+```python
+# Good: Short, meaningful key
+redis.set("product:8361", cached_html)
+page = redis.get("product:8361")
+```
+
+**Java** (Jedis):**
+
+```java
+// Good: Short, meaningful key derived from URL
+jedis.set("product:8361", "<some cached HTML>");
+String page = jedis.get("product:8361");
+```
+
 **Incorrect: Inconsistent naming, spaces, or very long keys.**
 
 ```python
@@ -134,6 +188,14 @@ session:abc123
 User_1001_Profile
 my key with spaces
 com.mycompany.myapp.production.users.profile.data.1001
+```
+
+**Java** (Jedis):**
+
+```java
+// Bad: Using full URL as key wastes memory and slows comparisons
+jedis.set("http://www.verylongurlkey.com/store/products/product.html?id=8361",
+          "<some cached HTML>");
 ```
 
 **Key naming tips:**
@@ -149,6 +211,219 @@ com.mycompany.myapp.production.users.profile.data.1001
 - Use consistent separators (colons are conventional)
 
 Reference: [https://redis.io/docs/latest/develop/use/keyspace/](https://redis.io/docs/latest/develop/use/keyspace/)
+
+### 1.3 Use Hash Field Expiration for Per-Field TTL
+
+**Impact: MEDIUM (Fine-grained expiration without managing timers)**
+
+Use hash field expiration (Redis 7.4+) to delete individual fields automatically from a hash after a specific period of time. This is useful for caching scenarios where different fields have different lifetimes, and is easier than managing expiration from your own code.
+
+**Correct: Use HEXPIRE to set per-field TTL on hash fields.**
+
+**Python** (redis-py):**
+
+```python
+import redis
+
+client = redis.Redis(host='localhost', port=6379)
+
+# Set hash fields
+client.hset("sensor:sensor1", mapping={
+    "air_quality": "256",
+    "battery_level": "89"
+})
+
+# Set 60-second TTL on specific fields (Redis 7.4+)
+client.hexpire("sensor:sensor1", 60, "air_quality", "battery_level")
+```
+
+**Java** (Jedis):**
+
+```java
+import redis.clients.jedis.UnifiedJedis;
+import java.util.Map;
+import java.util.HashMap;
+
+try (UnifiedJedis jedis = new UnifiedJedis("redis://localhost:6379")) {
+    Map<String, String> hashFields = new HashMap<>();
+    hashFields.put("air_quality", "256");
+    hashFields.put("battery_level", "89");
+
+    jedis.hset("sensor:sensor1", hashFields);
+    
+    // Set 60-second TTL on specific fields (Redis 7.4+)
+    jedis.hexpire("sensor:sensor1", 60, "air_quality", "battery_level");
+}
+```
+
+**When to use:**
+
+- Sensor data or metrics that become stale after a period
+
+- Session attributes where different fields have different lifetimes
+
+- Cached values within a hash that should auto-expire independently
+
+- Temporary flags or tokens stored alongside persistent data
+
+**When NOT needed:**
+
+- Persistent user profiles or configuration
+
+- Data where the entire hash should expire together (use `EXPIRE` on the key instead)
+
+- Fields managed by application logic with explicit deletion
+
+Reference: [https://redis.io/docs/latest/commands/hexpire/](https://redis.io/docs/latest/commands/hexpire/)
+
+### 1.4 Use INCR for Atomic Counters
+
+**Impact: MEDIUM (Atomic increment avoids race conditions)**
+
+If a string represents an integer value, use the `INCR` command to increment the number directly. The increment is atomic and always returns the new value. Use `INCRBY` to increment by any integer (positive or negative). This is more efficient and race-condition-free than reading, incrementing in code, and writing back.
+
+**Correct: Use INCR/INCRBY for atomic counter updates.**
+
+**Python** (redis-py):**
+
+```python
+import redis
+
+client = redis.Redis(host='localhost', port=6379)
+
+# Initialize counter
+client.set("counter", "0")
+
+# Atomic increment - returns new value
+new_value = client.incr("counter")  # Returns 1
+
+# Increment by specific amount
+new_value = client.incrby("counter", 10)  # Returns 11
+```
+
+**Java** (Jedis):**
+
+```java
+import redis.clients.jedis.UnifiedJedis;
+
+try (UnifiedJedis jedis = new UnifiedJedis("redis://localhost:6379")) {
+    jedis.set("counter", "0");
+    
+    // Atomic increment - returns new value
+    long newValue = jedis.incr("counter");  // Returns 1
+    
+    // Increment by specific amount
+    newValue = jedis.incrBy("counter", 10);  // Returns 11
+}
+```
+
+**Incorrect: Read-modify-write pattern creates race conditions.**
+
+**Python** (redis-py):**
+
+```python
+import redis
+
+client = redis.Redis(host='localhost', port=6379)
+
+client.set("counter", "0")
+
+# BAD: Race condition - another client could modify between GET and SET
+curr_value = int(client.get("counter"))
+client.set("counter", str(curr_value + 1))  # Not atomic!
+```
+
+**Java** (Jedis):**
+
+```java
+import redis.clients.jedis.UnifiedJedis;
+
+try (UnifiedJedis jedis = new UnifiedJedis("redis://localhost:6379")) {
+    jedis.set("counter", "0");
+    
+    // BAD: Race condition between GET and SET
+    long currValue = Long.parseLong(jedis.get("counter"));
+    jedis.set("counter", Long.toString(currValue + 1));  // Not atomic!
+}
+```
+
+Reference: [https://redis.io/docs/latest/commands/incr/](https://redis.io/docs/latest/commands/incr/)
+
+### 1.5 Use Transactions for Atomic Multi-Command Operations
+
+**Impact: MEDIUM (Prevents race conditions and data inconsistency)**
+
+Use the `MULTI`/`EXEC` commands to create a transaction when you need to execute multiple commands atomically. No other client requests will be processed while the transaction is executing, preventing other clients from modifying the keys used in the transaction and avoiding inconsistent data.
+
+**Correct: Use transactions when multiple related keys must be updated together.**
+
+**Python** (redis-py):**
+
+```python
+import redis
+
+client = redis.Redis(host='localhost', port=6379)
+
+# Transaction ensures all commands execute atomically
+pipe = client.pipeline(transaction=True)
+pipe.set("person:1:name", "Alex")
+pipe.set("person:1:rank", "Captain")
+pipe.set("person:1:serial", "AB1234")
+pipe.execute()  # All commands execute as one atomic unit
+```
+
+**Java** (Jedis):**
+
+```java
+import redis.clients.jedis.UnifiedJedis;
+import redis.clients.jedis.Transaction;
+
+try (UnifiedJedis jedis = new UnifiedJedis("redis://localhost:6379")) {
+    Transaction tran = (Transaction) jedis.multi();
+
+    tran.set("person:1:name", "Alex");
+    tran.set("person:1:rank", "Captain");
+    tran.set("person:1:serial", "AB1234");
+
+    tran.exec();  // All commands execute atomically
+}
+```
+
+**Incorrect: Executing related commands individually when atomicity is required.**
+
+**Python** (redis-py):**
+
+```python
+import redis
+
+client = redis.Redis(host='localhost', port=6379)
+
+# BAD when atomicity matters - another client could read partial state
+client.set("person:1:name", "Alex")
+# Another client could read here and see incomplete data
+client.set("person:1:rank", "Captain")
+client.set("person:1:serial", "AB1234")
+```
+
+**When to use transactions:**
+
+- Multiple keys must be updated as a single atomic unit
+
+- Other clients reading partial state would cause bugs
+
+- Implementing patterns like "transfer balance between accounts"
+
+**When transactions are NOT needed:**
+
+- Independent operations that don't need to be atomic
+
+- Single-command operations (already atomic)
+
+- When using pipelining purely for performance (use `pipeline(transaction=False)`)
+
+**Note: Transactions add overhead. Only use them when atomicity is actually required.**
+
+Reference: [https://redis.io/docs/latest/develop/interact/transactions/](https://redis.io/docs/latest/develop/interact/transactions/)
 
 ---
 
@@ -205,6 +480,8 @@ Always set expiration times on cache keys to prevent unbounded memory growth.
 
 **Correct: Set TTL at write time.**
 
+**Python** (redis-py):**
+
 ```python
 # Good: TTL set atomically with the value
 redis.setex("cache:user:1001", 3600, user_json)
@@ -214,11 +491,29 @@ redis.hset("session:abc", mapping=session_data)
 redis.expire("session:abc", 1800)
 ```
 
+**Java** (Jedis):**
+
+```java
+import redis.clients.jedis.params.SetParams;
+
+// Good: TTL set atomically with SetParams
+jedis.set("cachedItem:1", "fe8c357903ac9", new SetParams().ex(120));
+```
+
 **Incorrect: Forgetting TTL on cache keys.**
+
+**Python** (redis-py):**
 
 ```python
 # Risk: This key may live forever
 redis.set("cache:user:1001", user_json)
+```
+
+**Java** (Jedis):**
+
+```java
+// Risk: This key may live forever
+jedis.set("cachedItem:1", "fe8c357903ac9");
 ```
 
 **TTL strategies:**
@@ -256,6 +551,8 @@ Some Redis commands are slow because they scan large datasets. Use incremental a
 
 **Correct: Use SCAN for iteration.**
 
+**Python** (redis-py):**
+
 ```python
 # Good: Non-blocking iteration
 cursor = 0
@@ -267,11 +564,40 @@ while True:
         break
 ```
 
+**Java** (Jedis):**
+
+```java
+import redis.clients.jedis.ScanIteration;
+import redis.clients.jedis.UnifiedJedis;
+import java.util.List;
+
+try (UnifiedJedis jedis = new UnifiedJedis("redis://localhost:6379")) {
+    // ScanIteration manages the cursor automatically
+    ScanIteration scan = jedis.scanIteration(10, "user:*", "hash");
+
+    while (!scan.isIterationCompleted()) {
+        List<String> result = scan.nextBatch().getResult();
+        for (String key : result) {
+            process(key);
+        }
+    }
+}
+```
+
 **Incorrect: Using KEYS in production.**
+
+**Python** (redis-py):**
 
 ```python
 # Bad: Scans all keys, slow on large datasets
 keys = redis.keys("user:*")
+```
+
+**Java** (Jedis):**
+
+```java
+// Bad: Scans all keys, blocks the server
+Set<String> result = jedis.keys("*");
 ```
 
 **Note: Truly blocking commands (like `BLPOP`, `BRPOP`, `BLMOVE`) that wait indefinitely for data are appropriate for some use cases like job queues, but should be used with timeouts.**
@@ -322,13 +648,91 @@ r = redis.Redis(host='localhost')
 
 Reference: [https://redis.io/docs/latest/develop/clients/](https://redis.io/docs/latest/develop/clients/)
 
-### 3.3 Use Connection Pooling or Multiplexing
+### 3.3 Use Client-Side Caching for Frequently Read Data
+
+**Impact: HIGH (Reduces network round-trips for repeated reads)**
+
+Use a connection with client-side caching enabled for any data that will be read frequently but written only occasionally. Client-side caching avoids contacting the server for repeated access to data that has recently been read, reducing network traffic and improving performance.
+
+**Correct: Enable client-side caching with RESP3 protocol for frequently accessed data.**
+
+**Python** (redis-py):**
+
+```python
+import redis
+
+# Enable client-side caching with RESP3
+client = redis.Redis(
+    host='localhost',
+    port=6379,
+    protocol=3,  # RESP3 required for client-side caching
+    cache_config=redis.CacheConfig(max_size=1000)
+)
+
+# Cached reads avoid server round-trips
+value = client.get("frequently:read:key")
+```
+
+**Java** (Jedis):**
+
+```java
+import redis.clients.jedis.DefaultJedisClientConfig;
+import redis.clients.jedis.UnifiedJedis;
+import redis.clients.jedis.HostAndPort;
+import redis.clients.jedis.CacheConfig;
+
+HostAndPort endpoint = new HostAndPort("localhost", 6379);
+
+DefaultJedisClientConfig config = DefaultJedisClientConfig
+    .builder()
+    .password("secretPassword")
+    .protocol(RedisProtocol.RESP3)
+    .build();
+
+CacheConfig cacheConfig = CacheConfig.builder().maxSize(1000).build();
+
+UnifiedJedis client = new UnifiedJedis(endpoint, config, cacheConfig);
+```
+
+**When to use:**
+
+- Configuration data read frequently, updated rarely
+
+- User session data accessed on every request
+
+- Feature flags or settings checked repeatedly
+
+- Any read-heavy workload with low write frequency
+
+**When NOT needed:**
+
+- Data that changes frequently (cache invalidation overhead outweighs benefits)
+
+- Write-heavy workloads
+
+- Simple applications where network latency is not a bottleneck
+
+- When you need guaranteed real-time consistency
+
+**Trade-offs:**
+
+- Adds memory overhead on the client
+
+- Requires RESP3 protocol
+
+- Cache invalidation adds complexity for frequently changing data
+
+Reference: [https://redis.io/docs/latest/develop/clients/client-side-caching/](https://redis.io/docs/latest/develop/clients/client-side-caching/)
+
+### 3.4 Use Connection Pooling or Multiplexing
 
 **Impact: HIGH (Reduces connection overhead by 10x or more)**
 
 Reuse connections via a pool or multiplexing instead of creating new connections per request.
 
-**Correct: Use a connection pool (redis-py, Jedis, go-redis).**
+**Correct: Use a connection pool.**
+
+**Python** (redis-py):**
 
 ```python
 import redis
@@ -336,6 +740,17 @@ import redis
 # Good: Connection pool - reuses existing connections
 pool = redis.ConnectionPool(host='localhost', port=6379, max_connections=50)
 r = redis.Redis(connection_pool=pool)
+```
+
+**Java** (Jedis):**
+
+```java
+import redis.clients.jedis.JedisPooled;
+
+// JedisPooled manages a connection pool internally
+try (JedisPooled jedis = new JedisPooled("redis://localhost:6379")) {
+    jedis.set("testKey", "testValue");
+}
 ```
 
 **Correct: Use multiplexing (Lettuce, NRedisStack).**
@@ -351,11 +766,24 @@ connection.sync().set("key", "value");
 
 **Incorrect: Creating new connections per request.**
 
+**Python** (redis-py):**
+
 ```python
 # Bad: New connection every time
 def get_user(user_id):
     r = redis.Redis(host='localhost', port=6379)  # Don't do this
     return r.get(f"user:{user_id}")
+```
+
+**Java** (Jedis):**
+
+```java
+// Bad: Creating new client per request
+public String getUser(String userId) {
+    try (UnifiedJedis jedis = new UnifiedJedis("redis://localhost:6379")) {
+        return jedis.get("user:" + userId);  // Don't do this
+    }
+}
 ```
 
 **Pooling vs Multiplexing:**
@@ -368,13 +796,15 @@ def get_user(user_id):
 
 Reference: [https://redis.io/docs/latest/develop/clients/pools-and-muxing/](https://redis.io/docs/latest/develop/clients/pools-and-muxing/)
 
-### 3.4 Use Pipelining for Bulk Operations
+### 3.5 Use Pipelining for Bulk Operations
 
 **Impact: HIGH (Reduces round trips, 5-10x faster for batch operations)**
 
 Batch multiple commands into a single round trip to reduce network latency.
 
 **Correct: Use pipeline for multiple commands.**
+
+**Python** (redis-py):**
 
 ```python
 # Good: Single round trip for multiple commands
@@ -384,13 +814,39 @@ for user_id in user_ids:
 results = pipe.execute()
 ```
 
+**Java** (Jedis):**
+
+```java
+import redis.clients.jedis.Pipeline;
+
+// Good: Buffer commands and send as single batch
+Pipeline pipe = (Pipeline) jedis.pipelined();
+
+pipe.set("person:1:name", "Alex");
+pipe.set("person:1:rank", "Captain");
+pipe.set("person:1:serial", "AB1234");
+
+pipe.sync();
+```
+
 **Incorrect: Sequential commands in a loop.**
+
+**Python** (redis-py):**
 
 ```python
 # Bad: N round trips
 results = []
 for user_id in user_ids:
     results.append(redis.get(f"user:{user_id}"))
+```
+
+**Java** (Jedis):**
+
+```java
+// Bad: 3 separate round trips
+jedis.set("person:1:name", "Alex");
+jedis.set("person:1:rank", "Captain");
+jedis.set("person:1:serial", "AB1234");
 ```
 
 Reference: [https://redis.io/docs/latest/develop/use/pipelining/](https://redis.io/docs/latest/develop/use/pipelining/)
@@ -403,49 +859,109 @@ Reference: [https://redis.io/docs/latest/develop/use/pipelining/](https://redis.
 
 Using Redis JSON for nested structures, partial updates, and integration with RQE.
 
-### 4.1 Choose JSON vs Hash Appropriately
+### 4.1 Choose JSON vs Hash vs String Appropriately
 
 **Impact: MEDIUM (Optimal data model for your use case)**
 
-Redis JSON and Hash serve different purposes. Choose based on your data structure and query needs.
+Redis offers three ways to store structured data: JSON, Hash, and serialized strings. Each has distinct trade-offs around atomic partial operations and indexability.
 
-| Feature | JSON | Hash |
-|---------|------|------|
-| **Structure** | Nested objects and arrays | Flat key-value pairs |
-| **Path queries** | Yes (`$.preferences.theme`) | No (top-level fields only) |
-| **Geospatial indexing** | Yes (with Redis Query Engine) | No |
-| **Memory efficiency** | Higher overhead | More efficient |
-| **Field-level expiration** | No | Yes (HEXPIRE) |
-| **RQE indexing** | Yes | Yes |
+| Feature | JSON | Hash | String (serialized JSON) |
+|---------|------|------|--------------------------|
+| **Structure** | Nested objects and arrays | Flat key-value pairs | Any structure |
+| **Atomic partial reads** | Yes (`$.field`) | Yes (`HGET`) | No (must fetch entire value) |
+| **Atomic partial writes** | Yes (`JSON.SET $.field`) | Yes (`HSET`) | No (must rewrite entire value) |
+| **RQE indexing** | Yes | Yes | No |
+| **Geospatial indexing** | Yes | Yes | No |
+| **Memory efficiency** | Higher overhead | More efficient | Most compact |
+| **Field-level expiration** | No | Yes (HEXPIRE) | No |
 
-**Correct: Use JSON for nested structures and path queries.**
+**When to use each:**
+
+- **JSON**: Nested structures with atomic partial updates and indexing needs
+
+- **Hash**: Flat objects with atomic field access, field-level expiration, or memory efficiency
+
+- **String**: Simple caching where you always read/write the entire object and don't need indexing
+
+**Correct: Use JSON for nested structures with atomic partial updates.**
+
+**Python** (redis-py):**
 
 ```python
-# JSON supports nested structures and deep updates
+# JSON supports nested structures and atomic deep updates
 redis.json().set("user:1001", "$", {
     "name": "Alice",
-    "address": {
-        "city": "NYC",
-        "location": {"lat": 40.7128, "lng": -74.0060}
-    }
+    "preferences": {"theme": "dark", "notifications": True}
 })
 
-# Update nested field directly
-redis.json().set("user:1001", "$.address.city", "Boston")
+# Atomic update of nested field - no read-modify-write needed
+redis.json().set("user:1001", "$.preferences.theme", "light")
 ```
 
-**Correct: Use Hash for flat objects or when you need field-level expiration.**
+**Java** (Jedis):**
+
+```java
+import redis.clients.jedis.UnifiedJedis;
+import redis.clients.jedis.json.Path2;
+import org.json.JSONObject;
+
+try (UnifiedJedis jedis = new UnifiedJedis("redis://localhost:6379")) {
+    JSONObject user = new JSONObject();
+    user.put("name", "Alice");
+    user.put("preferences", new JSONObject().put("theme", "dark"));
+
+    jedis.jsonSet("user:1001", new Path2("$"), user);
+
+    // Atomic update of nested field
+    jedis.jsonSet("user:1001", new Path2("$.preferences.theme"), "light");
+}
+```
+
+**Correct: Use Hash for flat objects with atomic field access.**
+
+**Python** (redis-py):**
 
 ```python
-# Hash is simpler and more memory-efficient for flat data
+# Hash is efficient for flat data with atomic field operations
 redis.hset("session:abc", mapping={
     "user_id": "1001",
     "created_at": "2024-01-01",
     "ip": "192.168.1.1"
 })
 
-# Field-level expiration (Redis 7.4+)
-redis.hexpire("session:abc", 3600, "ip")  # Expire IP field in 1 hour
+# Atomic field read and update
+ip = redis.hget("session:abc", "ip")
+redis.hset("session:abc", "ip", "10.0.0.1")
+```
+
+**Correct: Use String for simple caching without partial updates.**
+
+**Python** (redis-py):**
+
+```python
+import json
+
+# String is fine when you always read/write the entire object
+# and don't need indexing or partial updates
+config = {"feature_flags": {"dark_mode": True}, "version": "1.0"}
+redis.set("config:app", json.dumps(config), ex=3600)
+
+# Must fetch and parse entire object
+config = json.loads(redis.get("config:app"))
+```
+
+**Incorrect: Using String when you need atomic partial updates.**
+
+**Python** (redis-py):**
+
+```python
+import json
+
+# BAD: Must fetch, parse, modify, serialize, and rewrite entire object
+data = json.loads(redis.get("user:1001"))
+data["preferences"]["theme"] = "light"  # Not atomic!
+redis.set("user:1001", json.dumps(data))
+# Another client could have modified the object between GET and SET
 ```
 
 Reference: [https://redis.io/docs/latest/develop/data-types/compare-data-types/#documents](https://redis.io/docs/latest/develop/data-types/compare-data-types/#documents)
@@ -526,6 +1042,23 @@ FT.CREATE idx:products ON HASH PREFIX 1 product:
         status TAG
 ```
 
+**Java** (Jedis):**
+
+```java
+import redis.clients.jedis.search.*;
+
+Schema schema = new Schema()
+    .addTextField("name", 1)
+    .addTagField("categories");  // TAG for exact matching
+
+IndexDefinition def = new IndexDefinition(IndexDefinition.Type.HASH);
+
+jedis.ftCreate("idx", IndexOptions.defaultOptions().setDefinition(def), schema);
+
+// Query with TAG syntax
+SearchResult result = jedis.ftSearch("idx", "@categories:{chef|runner}");
+```
+
 **Incorrect: Using TEXT when you don't need full-text features.**
 
 ```python
@@ -534,6 +1067,15 @@ FT.CREATE idx:products ON HASH PREFIX 1 product:
     SCHEMA
         category TEXT
         status TEXT
+```
+
+**Java** (Jedis):**
+
+```java
+// Bad: TEXT for categories adds unnecessary overhead
+Schema schema = new Schema()
+    .addTextField("name", 1)
+    .addTextField("categories", 1);  // Overkill for exact matching
 ```
 
 **Correct: Use GEO for points, GEOSHAPE for areas.**
@@ -558,7 +1100,7 @@ Reference: [https://redis.io/docs/latest/develop/interact/search-and-query/index
 
 Create indexes with only the fields you need to search, filter, or sort on.
 
-**Correct: Index specific fields.**
+**Correct: Index specific fields and use prefixes.**
 
 ```python
 FT.CREATE idx:products ON HASH PREFIX 1 product:
@@ -568,6 +1110,22 @@ FT.CREATE idx:products ON HASH PREFIX 1 product:
         category TAG SORTABLE
         price NUMERIC SORTABLE
         location GEO
+```
+
+**Java** (Jedis):**
+
+```java
+import redis.clients.jedis.search.*;
+
+Schema schema = new Schema()
+    .addTextField("name", 1)
+    .addTagField("categories");
+
+// Good: Specify prefix to index only matching keys
+IndexDefinition def = new IndexDefinition(IndexDefinition.Type.HASH)
+    .setPrefixes("person:");
+
+jedis.ftCreate("idx", IndexOptions.defaultOptions().setDefinition(def), schema);
 ```
 
 **Incorrect: Over-indexing or indexing unused fields.**
@@ -588,6 +1146,14 @@ FT.CREATE idx:products ON HASH PREFIX 1 product:
         ...
 ```
 
+**Java** (Jedis):**
+
+```java
+// Bad: No prefix means all hashes get indexed
+IndexDefinition def = new IndexDefinition(IndexDefinition.Type.HASH);
+// This will index every hash in the database!
+```
+
 **Tips:**
 
 - Start with the minimum required fields
@@ -595,6 +1161,8 @@ FT.CREATE idx:products ON HASH PREFIX 1 product:
 - Add fields as query patterns emerge
 
 - Use `FT.INFO` to monitor index size
+
+- Always specify a prefix to avoid indexing unrelated keys
 
 Reference: [https://redis.io/docs/latest/develop/interact/search-and-query/indexing/](https://redis.io/docs/latest/develop/interact/search-and-query/indexing/)
 
@@ -672,7 +1240,91 @@ FT.AGGREGATE idx:products "@category:{electronics}"
 
 Reference: [https://redis.io/docs/latest/develop/interact/search-and-query/advanced-concepts/dialects/](https://redis.io/docs/latest/develop/interact/search-and-query/advanced-concepts/dialects/)
 
-### 5.5 Write Efficient Queries
+### 5.5 Use SKIPINITIALSCAN for New Data Only Indexes
+
+**Impact: MEDIUM (Faster index creation, avoids indexing existing data)**
+
+Enable the `SKIPINITIALSCAN` option when creating an index if you only want to include items that are added after the index is created. This makes index creation faster and avoids indexing existing data that you don't need to search.
+
+**Correct: Use SKIPINITIALSCAN when you only need to index new data.**
+
+**Python** (redis-py):**
+
+```python
+import redis
+from redis.commands.search.field import TextField, TagField
+from redis.commands.search.indexDefinition import IndexDefinition, IndexType
+
+client = redis.Redis(host='localhost', port=6379)
+
+# Create index that only indexes new documents
+schema = (
+    TextField("name"),
+    TagField("categories")
+)
+
+definition = IndexDefinition(
+    prefix=["person:"],
+    index_type=IndexType.HASH
+)
+
+# SKIPINITIALSCAN - only index documents added after creation
+client.ft("idx").create_index(
+    schema,
+    definition=definition,
+    skip_initial_scan=True
+)
+```
+
+**Java** (Jedis):**
+
+```java
+import redis.clients.jedis.UnifiedJedis;
+import redis.clients.jedis.search.FTCreateParams;
+import redis.clients.jedis.search.IndexDataType;
+import redis.clients.jedis.search.schemafields.SchemaField;
+import redis.clients.jedis.search.schemafields.TagField;
+import redis.clients.jedis.search.schemafields.TextField;
+
+try (UnifiedJedis jedis = new UnifiedJedis("redis://localhost:6379")) {
+    FTCreateParams params = new FTCreateParams()
+        .on(IndexDataType.HASH)
+        .skipInitialScan();  // Only index new documents
+
+    jedis.ftCreate(
+        "idx",
+        params,
+        new SchemaField[]{
+            new TextField("name"),
+            new TagField("categories")
+        }
+    );
+}
+```
+
+**When to use SKIPINITIALSCAN:**
+
+- Creating an index for a new feature where existing data is irrelevant
+
+- Setting up indexes in advance before data arrives
+
+- When existing data would be too large to scan during index creation
+
+- Event-driven architectures where you only care about new events
+
+**When NOT to use: default behavior is correct**
+
+- You need to search existing data immediately after index creation
+
+- Migrating to a new index schema and need all data indexed
+
+- Most typical use cases where historical data matters
+
+**Note: The default behavior (without SKIPINITIALSCAN) indexes all existing matching keys, which is usually what you want.**
+
+Reference: [https://redis.io/docs/latest/commands/ft.create/](https://redis.io/docs/latest/commands/ft.create/)
+
+### 5.6 Write Efficient Queries
 
 **Impact: HIGH (Proper filtering reduces query time by orders of magnitude)**
 
@@ -1173,6 +1825,8 @@ In Redis Cluster, keys are distributed across slots based on their hash. Use has
 
 **Correct: Use hash tags for keys used in multi-key operations.**
 
+**Python** (redis-py):**
+
 ```python
 # These keys go to the same slot because {user:1001} is the hash tag
 redis.set("{user:1001}:profile", "...")
@@ -1189,7 +1843,25 @@ pipe.execute()
 redis.lmove("{user:1001}:pending", "{user:1001}:processed", "LEFT", "RIGHT")
 ```
 
+**Java** (Jedis):**
+
+```java
+import redis.clients.jedis.UnifiedJedis;
+import java.util.Set;
+
+try (UnifiedJedis jedis = new UnifiedJedis("redis://localhost:6379")) {
+    // Hash tags ensure keys go to the same slot
+    jedis.sadd("{bikes:racing}:france", "bike:1", "bike:2", "bike:3");
+    jedis.sadd("{bikes:racing}:usa", "bike:1", "bike:4");
+
+    // Multi-key operation works because of matching hash tags
+    Set<String> result = jedis.sdiff("{bikes:racing}:france", "{bikes:racing}:usa");
+}
+```
+
 **Incorrect: Keys without hash tags that need multi-key operations.**
+
+**Python** (redis-py):**
 
 ```python
 # Bad: These may be on different slots
@@ -1201,6 +1873,17 @@ pipe = redis.pipeline()
 pipe.get("user:1001:profile")
 pipe.get("user:1001:settings")
 pipe.execute()  # CROSSSLOT error
+```
+
+**Java** (Jedis):**
+
+```java
+// Bad: No hash tags - keys may be on different slots
+jedis.sadd("bikes:racing:france", "bike:1", "bike:2", "bike:3");
+jedis.sadd("bikes:racing:usa", "bike:1", "bike:4");
+
+// This will fail in cluster mode with CROSSSLOT error
+Set<String> result = jedis.sdiff("bikes:racing:france", "bikes:racing:usa");
 ```
 
 **Hash tag rules:**
@@ -1281,6 +1964,8 @@ Never run Redis without authentication in production environments.
 
 **Correct: Use password and TLS.**
 
+**Python** (redis-py):**
+
 ```python
 r = redis.Redis(
     host='localhost',
@@ -1291,11 +1976,47 @@ r = redis.Redis(
 )
 ```
 
+**Java** (Jedis):**
+
+```java
+import redis.clients.jedis.*;
+import javax.net.ssl.*;
+import java.security.KeyStore;
+
+// Create SSL context with trust store and key store
+KeyStore trustStore = KeyStore.getInstance("jks");
+trustStore.load(new FileInputStream("./truststore.jks"), "password".toCharArray());
+
+TrustManagerFactory tmf = TrustManagerFactory.getInstance("X509");
+tmf.init(trustStore);
+
+SSLContext sslContext = SSLContext.getInstance("TLS");
+sslContext.init(null, tmf.getTrustManagers(), null);
+
+JedisClientConfig config = DefaultJedisClientConfig.builder()
+    .ssl(true)
+    .sslSocketFactory(sslContext.getSocketFactory())
+    .user("redisUser")
+    .password("redisPassword")
+    .build();
+
+JedisPooled jedis = new JedisPooled(new HostAndPort("redis-host", 6379), config);
+```
+
 **Incorrect: Connecting without authentication.**
+
+**Python** (redis-py):**
 
 ```python
 # Bad: No authentication
 r = redis.Redis(host='localhost', port=6379)
+```
+
+**Java** (Jedis):**
+
+```java
+// Bad: No authentication or TLS
+UnifiedJedis jedis = new UnifiedJedis("redis://localhost:6379");
 ```
 
 **Configuration:**

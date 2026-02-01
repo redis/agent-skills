@@ -20,6 +20,20 @@ cache:api:users:list
 session:abc123
 ```
 
+**Python** (redis-py):
+```python
+# Good: Short, meaningful key
+redis.set("product:8361", cached_html)
+page = redis.get("product:8361")
+```
+
+**Java** (Jedis):
+```java
+// Good: Short, meaningful key derived from URL
+jedis.set("product:8361", "<some cached HTML>");
+String page = jedis.get("product:8361");
+```
+
 **Incorrect:** Inconsistent naming, spaces, or very long keys.
 
 ```
@@ -27,6 +41,13 @@ session:abc123
 User_1001_Profile
 my key with spaces
 com.mycompany.myapp.production.users.profile.data.1001
+```
+
+**Java** (Jedis):
+```java
+// Bad: Using full URL as key wastes memory and slows comparisons
+jedis.set("http://www.verylongurlkey.com/store/products/product.html?id=8361",
+          "<some cached HTML>");
 ```
 
 **Key naming tips:**
