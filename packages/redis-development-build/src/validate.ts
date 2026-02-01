@@ -32,31 +32,51 @@ function validateRule(rule: Rule, file: string): ValidationError[] {
   }
 
   if (!rule.examples || rule.examples.length === 0) {
-    errors.push({ file, ruleId: rule.id, message: 'Missing examples (need at least one bad and one good example)' })
+    errors.push({ file, ruleId: rule.id, message: 'Missing examples (need at least one code example)' })
   } else {
     // Filter out informational examples (notes, trade-offs, etc.) that don't have code
     const codeExamples = rule.examples.filter(e => e.code && e.code.trim().length > 0)
 
+    // Check for "bad" pattern examples (anti-patterns that cause real harm)
     const hasBad = codeExamples.some(e =>
       e.label.toLowerCase().includes('incorrect') ||
       e.label.toLowerCase().includes('wrong') ||
       e.label.toLowerCase().includes('bad') ||
       e.label.toLowerCase().includes('avoid')
     )
+
+    // Check for "good" pattern examples
+    // Note: Language labels like "Python" and "Java" are valid as they contain code examples
     const hasGood = codeExamples.some(e =>
       e.label.toLowerCase().includes('correct') ||
       e.label.toLowerCase().includes('good') ||
       e.label.toLowerCase().includes('usage') ||
       e.label.toLowerCase().includes('implementation') ||
       e.label.toLowerCase().includes('example') ||
-      e.label.toLowerCase().includes('recommended')
+      e.label.toLowerCase().includes('recommended') ||
+      e.label.toLowerCase().includes('python') ||
+      e.label.toLowerCase().includes('java') ||
+      e.label.toLowerCase().includes('javascript') ||
+      e.label.toLowerCase().includes('typescript') ||
+      e.label.toLowerCase().includes('go') ||
+      e.label.toLowerCase().includes('ruby') ||
+      e.label.toLowerCase().includes('c#') ||
+      e.label.toLowerCase().includes('rust')
+    )
+
+    // Check for "when to use" guidance (alternative to "incorrect" for feature-introduction rules)
+    const hasWhenToUse = rule.examples.some(e =>
+      e.label.toLowerCase().includes('when to use') ||
+      e.label.toLowerCase().includes('when not')
     )
 
     if (codeExamples.length === 0) {
       errors.push({ file, ruleId: rule.id, message: 'Missing code examples' })
-    } else if (!hasBad && !hasGood) {
-      errors.push({ file, ruleId: rule.id, message: 'Missing bad/incorrect or good/correct examples' })
+    } else if (!hasGood) {
+      // Must have at least one good/correct example or language-labeled code block
+      errors.push({ file, ruleId: rule.id, message: 'Missing good/correct examples' })
     }
+    // Note: "Incorrect" examples are optional - rules can use "When to use" guidance instead
   }
 
   const validImpacts: Rule['impact'][] = ['CRITICAL', 'HIGH', 'MEDIUM-HIGH', 'MEDIUM', 'LOW-MEDIUM', 'LOW']
