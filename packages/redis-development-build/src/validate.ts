@@ -1,70 +1,86 @@
 #!/usr/bin/env node
 /**
  * Validate rule files follow the correct structure
+ *
+ * Usage:
+ *   npm run validate                    # Validate default skill
+ *   npm run validate -- --all           # Validate all skills
+ *   npm run validate -- --skill=name    # Validate specific skill
  */
 
-import { readdir } from 'fs/promises'
+import { readdir, readFile } from 'fs/promises'
 import { join } from 'path'
-import { Rule } from './types.js'
+import { ValidationError } from './types.js'
 import { parseRuleFile } from './parser.js'
-import { RULES_DIR } from './config.js'
+import { SKILLS, SkillConfig, DEFAULT_SKILL } from './config.js'
+import { getValidator } from './validators/index.js'
 
-interface ValidationError {
-  file: string
-  ruleId?: string
-  message: string
-}
+// Parse command line arguments
+const args = process.argv.slice(2)
+const skillArg = args.find((arg) => arg.startsWith('--skill='))
+const skillName = skillArg ? skillArg.split('=')[1] : null
+const validateAll = args.includes('--all')
 
 /**
- * Validate a rule
+ * Validate a single skill
  */
-function validateRule(rule: Rule, file: string): ValidationError[] {
-  const errors: ValidationError[] = []
+async function validateSkill(skillConfig: SkillConfig): Promise<ValidationError[]> {
+  console.log(`\nValidating ${skillConfig.name}...`)
+  console.log(`  Rules directory: ${skillConfig.rulesDir}`)
 
-  // Note: rule.id is auto-generated during build, not required in source files
+  // Get the validator for this skill
+  const validatorName = skillConfig.validator || skillConfig.name
+  const validator = getValidator(validatorName)
+  console.log(`  Using validator: ${validator.name}`)
 
-  if (!rule.title || rule.title.trim().length === 0) {
-    errors.push({ file, ruleId: rule.id, message: 'Missing or empty title' })
+  let files: string[]
+  try {
+    files = await readdir(skillConfig.rulesDir)
+  } catch {
+    console.log('  No rules directory found. Nothing to validate.')
+    return []
   }
 
-  if (!rule.explanation || rule.explanation.trim().length === 0) {
-    errors.push({ file, ruleId: rule.id, message: 'Missing or empty explanation' })
+  const ruleFiles = files.filter((f) => f.endsWith('.md') && !f.startsWith('_'))
+
+  if (ruleFiles.length === 0) {
+    console.log('  No rule files found. Nothing to validate.')
+    return []
   }
 
-  if (!rule.examples || rule.examples.length === 0) {
-    errors.push({ file, ruleId: rule.id, message: 'Missing examples (need at least one bad and one good example)' })
-  } else {
-    // Filter out informational examples (notes, trade-offs, etc.) that don't have code
-    const codeExamples = rule.examples.filter(e => e.code && e.code.trim().length > 0)
+  const allErrors: ValidationError[] = []
 
-    const hasBad = codeExamples.some(e =>
-      e.label.toLowerCase().includes('incorrect') ||
-      e.label.toLowerCase().includes('wrong') ||
-      e.label.toLowerCase().includes('bad') ||
-      e.label.toLowerCase().includes('avoid')
-    )
-    const hasGood = codeExamples.some(e =>
-      e.label.toLowerCase().includes('correct') ||
-      e.label.toLowerCase().includes('good') ||
-      e.label.toLowerCase().includes('usage') ||
-      e.label.toLowerCase().includes('implementation') ||
-      e.label.toLowerCase().includes('example') ||
-      e.label.toLowerCase().includes('recommended')
-    )
-
-    if (codeExamples.length === 0) {
-      errors.push({ file, ruleId: rule.id, message: 'Missing code examples' })
-    } else if (!hasBad && !hasGood) {
-      errors.push({ file, ruleId: rule.id, message: 'Missing bad/incorrect or good/correct examples' })
+  for (const file of ruleFiles) {
+    const filePath = join(skillConfig.rulesDir, file)
+    try {
+      // Read the raw content for validators that need it
+      const content = await readFile(filePath, 'utf-8')
+      
+      // Parse the rule file
+      const { rule } = await parseRuleFile(filePath, skillConfig.sectionMap)
+      
+      // Run the validator
+      const errors = validator.validateRule(rule, file, content)
+      allErrors.push(...errors)
+    } catch (error) {
+      allErrors.push({
+        file,
+        message: `Failed to parse: ${error instanceof Error ? error.message : String(error)}`,
+      })
     }
   }
 
-  const validImpacts: Rule['impact'][] = ['CRITICAL', 'HIGH', 'MEDIUM-HIGH', 'MEDIUM', 'LOW-MEDIUM', 'LOW']
-  if (!validImpacts.includes(rule.impact)) {
-    errors.push({ file, ruleId: rule.id, message: `Invalid impact level: ${rule.impact}. Must be one of: ${validImpacts.join(', ')}` })
+  // Run skill-level validations if the validator supports it
+  if (validator.validateSkill) {
+    // We'd need to collect all rules first - for now, skip this
+    // This can be added later if needed
   }
 
-  return errors
+  if (allErrors.length === 0) {
+    console.log(`  ✓ All ${ruleFiles.length} rule files are valid`)
+  }
+
+  return allErrors
 }
 
 /**
@@ -73,47 +89,56 @@ function validateRule(rule: Rule, file: string): ValidationError[] {
 async function validate() {
   try {
     console.log('Validating rule files...')
-    console.log(`Rules directory: ${RULES_DIR}`)
-
-    let files: string[]
-    try {
-      files = await readdir(RULES_DIR)
-    } catch {
-      console.log('No rules directory found. Nothing to validate.')
-      return
-    }
-
-    const ruleFiles = files.filter(f => f.endsWith('.md') && !f.startsWith('_'))
-
-    if (ruleFiles.length === 0) {
-      console.log('No rule files found. Nothing to validate.')
-      return
-    }
 
     const allErrors: ValidationError[] = []
+    const skillsToValidate: SkillConfig[] = []
 
-    for (const file of ruleFiles) {
-      const filePath = join(RULES_DIR, file)
-      try {
-        const { rule } = await parseRuleFile(filePath)
-        const errors = validateRule(rule, file)
-        allErrors.push(...errors)
-      } catch (error) {
-        allErrors.push({
-          file,
-          message: `Failed to parse: ${error instanceof Error ? error.message : String(error)}`
-        })
+    if (validateAll) {
+      // Validate all skills
+      skillsToValidate.push(...Object.values(SKILLS))
+    } else if (skillName) {
+      // Validate specific skill
+      const skill = SKILLS[skillName]
+      if (!skill) {
+        console.error(`Unknown skill: ${skillName}`)
+        console.error(`Available skills: ${Object.keys(SKILLS).join(', ')}`)
+        process.exit(1)
       }
+      skillsToValidate.push(skill)
+    } else {
+      // Validate default skill (backwards compatibility)
+      skillsToValidate.push(SKILLS[DEFAULT_SKILL])
     }
 
+    // Validate each skill
+    for (const skill of skillsToValidate) {
+      const errors = await validateSkill(skill)
+      allErrors.push(...errors)
+    }
+
+    // Report results
     if (allErrors.length > 0) {
       console.error('\n✗ Validation failed:\n')
-      allErrors.forEach(error => {
-        console.error(`  ${error.file}${error.ruleId ? ` (${error.ruleId})` : ''}: ${error.message}`)
-      })
+      
+      // Group errors by file
+      const errorsByFile = new Map<string, ValidationError[]>()
+      for (const error of allErrors) {
+        const existing = errorsByFile.get(error.file) || []
+        existing.push(error)
+        errorsByFile.set(error.file, existing)
+      }
+
+      for (const [file, errors] of errorsByFile) {
+        console.error(`  ${file}:`)
+        for (const error of errors) {
+          console.error(`    - ${error.message}`)
+        }
+      }
+
+      console.error(`\n  Total: ${allErrors.length} error(s)`)
       process.exit(1)
     } else {
-      console.log(`✓ All ${ruleFiles.length} rule files are valid`)
+      console.log('\n✓ All validations passed')
     }
   } catch (error) {
     console.error('Validation failed:', error)

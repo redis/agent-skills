@@ -21,6 +21,8 @@ export interface SkillConfig {
   metadataFile: string
   outputFile: string
   sectionMap: Record<string, number>
+  /** Name of the validator to use (defaults to skill name, falls back to 'base') */
+  validator?: string
 }
 
 export const SKILLS: Record<string, SkillConfig> = {
@@ -48,6 +50,7 @@ and consistency by AI-assisted workflows.`,
       security: 10,
       observe: 11,
     },
+    validator: 'redis-development',
   },
   'redis-cloud-api': {
     name: 'redis-cloud-api',
@@ -72,6 +75,7 @@ optimized for automation and consistency by AI-assisted workflows.`,
       account: 10,
       errors: 11,
     },
+    validator: 'redis-cloud-api',
   },
 }
 
