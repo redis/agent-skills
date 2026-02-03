@@ -27,7 +27,10 @@ export const SKILLS: Record<string, SkillConfig> = {
   'redis-development': {
     name: 'redis-development',
     title: 'Redis Development',
-    description: 'Redis applications',
+    description: `This document is mainly for agents and LLMs to follow when maintaining,  
+generating, or refactoring Redis applications. Humans  
+may also find it useful, but guidance here is optimized for automation  
+and consistency by AI-assisted workflows.`,
     skillDir: join(SKILLS_DIR, 'redis-development'),
     rulesDir: join(SKILLS_DIR, 'redis-development/rules'),
     metadataFile: join(SKILLS_DIR, 'redis-development/metadata.json'),
@@ -49,7 +52,9 @@ export const SKILLS: Record<string, SkillConfig> = {
   'redis-cloud-api': {
     name: 'redis-cloud-api',
     title: 'Redis Cloud API',
-    description: 'Redis Cloud API operations',
+    description: `This document is mainly for agents and LLMs to follow when working  
+with the Redis Cloud API. Humans may also find it useful, but guidance here is 
+optimized for automation and consistency by AI-assisted workflows.`,
     skillDir: join(SKILLS_DIR, 'redis-cloud-api'),
     rulesDir: join(SKILLS_DIR, 'redis-cloud-api/rules'),
     metadataFile: join(SKILLS_DIR, 'redis-cloud-api/metadata.json'),
