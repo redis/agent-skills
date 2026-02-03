@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "build": "npx tsx src/build.ts --all",
-    "validate": "npx tsx src/validate.ts",
+    "validate": "npx tsx src/validate.ts --all",
+    "test": "node --import tsx --test src/__tests__/*.test.ts",
     "dev": "npm run validate && npm run build"
   },
   "keywords": [

@@ -45,10 +45,8 @@ function generateMarkdown(
   md += `${metadata.organization}  \n`
   md += `${metadata.date}\n\n`
   md += `> **Note:**  \n`
-  md += `> This document is mainly for agents and LLMs to follow when maintaining,  \n`
-  md += `> generating, or refactoring ${skillConfig.description}. Humans  \n`
-  md += `> may also find it useful, but guidance here is optimized for automation  \n`
-  md += `> and consistency by AI-assisted workflows.\n\n`
+  md +=  skillConfig.description.split(/\r?\n/).map(line => `> ${line}`).join("\n")
+  md += `\n\n`
   md += `---\n\n`
   md += `## Abstract\n\n`
   md += `${metadata.abstract}\n\n`

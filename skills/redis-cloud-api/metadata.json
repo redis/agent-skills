@@ -1,0 +1,12 @@
+{
+  "version": "1.0.0",
+  "organization": "Redis, Inc.",
+  "date": "February 2026",
+  "abstract": "Guidelines for using the Redis Cloud REST API to manage subscriptions, databases, connectivity, RBAC, and cloud accounts. Includes authentication, async operation handling, and error management. Optimized for AI agents and LLMs.",
+  "references": [
+    "https://redis.io/docs/latest/operate/rc/api/",
+    "https://redis.io/docs/latest/operate/rc/api/api-reference/",
+    "https://redis.io/docs/latest/operate/rc/api/get-started/",
+    "https://redis.io/docs/latest/operate/rc/api/get-started/process-lifecycle/"
+  ]
+}
