@@ -46,6 +46,28 @@ export const SKILLS: Record<string, SkillConfig> = {
       observe: 11,
     },
   },
+  'redis-cloud-api': {
+    name: 'redis-cloud-api',
+    title: 'Redis Cloud API',
+    description: 'Redis Cloud API operations',
+    skillDir: join(SKILLS_DIR, 'redis-cloud-api'),
+    rulesDir: join(SKILLS_DIR, 'redis-cloud-api/rules'),
+    metadataFile: join(SKILLS_DIR, 'redis-cloud-api/metadata.json'),
+    outputFile: join(SKILLS_DIR, 'redis-cloud-api/AGENTS.md'),
+    sectionMap: {
+      auth: 1,
+      tasks: 2,
+      'sub-pro': 3,
+      'sub-ess': 4,
+      'db-pro': 5,
+      'db-ess': 6,
+      conn: 7,
+      rbac: 8,
+      cloud: 9,
+      account: 10,
+      errors: 11,
+    },
+  },
 }
 
 // Default skill
