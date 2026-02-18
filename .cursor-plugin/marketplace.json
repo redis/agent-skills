@@ -1,0 +1,19 @@
+{
+  "name": "redis",
+  "owner": {
+    "name": "Redis",
+    "email": "yusuf.bahadur@redis.com"
+  },
+  "metadata": {
+    "description": "Official Redis plugins for Cursor",
+    "version": "1.0.0",
+    "pluginRoot": "plugins"
+  },
+  "plugins": [
+    {
+      "name": "redis-development",
+      "source": "redis-development",
+      "description": "Redis development best practices — data structures, query engine, vector search, caching, and performance optimization"
+    }
+  ]
+}

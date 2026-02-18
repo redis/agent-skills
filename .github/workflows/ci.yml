@@ -35,3 +35,6 @@ jobs:
             git diff skills/*/AGENTS.md
             exit 1
           fi
+
+      - name: Validate plugins
+        run: npm run validate:plugins
