@@ -6,17 +6,12 @@ import process from "node:process";
 
 const repoRoot = process.cwd();
 const errors = [];
-const warnings = [];
 
 const pluginNamePattern = /^[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?$/;
 const marketplaceNamePattern = /^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/;
 
 function addError(message) {
   errors.push(message);
-}
-
-function addWarning(message) {
-  warnings.push(message);
 }
 
 async function pathExists(targetPath) {
@@ -65,7 +60,7 @@ function isSafeRelativePath(value) {
   if (typeof value !== "string" || value.length === 0) {
     return false;
   }
-  if (path.isAbsolute(value)) {
+  if (path.isAbsolute(value) || /^[a-zA-Z]:/.test(value)) {
     return false;
   }
   const normalized = path.posix.normalize(value.replace(/\\/g, "/"));
@@ -212,13 +207,6 @@ async function main() {
 }
 
 function summarizeAndExit() {
-  if (warnings.length > 0) {
-    console.log("Warnings:");
-    for (const warning of warnings) {
-      console.log(`- ${warning}`);
-    }
-    console.log("");
-  }
   if (errors.length > 0) {
     console.error("Validation failed:");
     for (const error of errors) {
