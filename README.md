@@ -12,28 +12,30 @@ Skills follow the [Agent Skills](https://agentskills.io/) format.
 
 ## Installation
 
-### Claude Code
-
-```bash
-/plugin marketplace add redis/agent-skills
-/plugin install redis-development@redis
-```
-
-### Cursor
-
-Install from the Cursor plugin marketplace. Search for "redis-development".
-
 ### Agent Skills CLI
 
 ```bash
 npx skills add redis/agent-skills
 ```
 
-### Manual
+### Claude Code Plugin
 
-```bash
-cp -r skills/redis-development ~/.claude/skills/
+You can also install the skills as a Claude Code plugin:
+
 ```
+/plugin marketplace add redis/agent-skills
+/plugin install redis-development@redis
+```
+
+### Cursor Plugin
+
+This repository also includes Cursor plugin packaging. Run this command in chat:
+
+```text
+/add-plugin redis-development
+```
+
+The top-level `skills/` directory remains the source of truth. Plugin folders symlink only the skill directories they expose.
 
 ## Usage
 

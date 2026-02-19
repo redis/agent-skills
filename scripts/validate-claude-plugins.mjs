@@ -1,190 +1,232 @@
 #!/usr/bin/env node
 
-/**
- * Validates Claude Code plugin marketplace configuration.
- *
- * Checks:
- * - marketplace.json exists and has required fields
- * - Plugin names follow kebab-case naming convention
- * - Plugin source directories exist
- * - Plugin manifests (plugin.json) exist and are valid
- * - Referenced paths (skills, mcpServers, etc.) exist
- */
+import { promises as fs } from "node:fs";
+import path from "node:path";
+import process from "node:process";
 
-import { existsSync, readFileSync, statSync } from "node:fs";
-import { join, resolve } from "node:path";
-
-const ROOT = resolve(import.meta.dirname, "..");
-const MARKETPLACE_PATH = join(ROOT, ".claude-plugin", "marketplace.json");
-
-const NAME_PATTERN = /^[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?$/;
-const MARKETPLACE_NAME_PATTERN = /^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/;
-
+const repoRoot = process.cwd();
 const errors = [];
 const warnings = [];
 
-function error(msg) {
-  errors.push(msg);
-}
-function warn(msg) {
-  warnings.push(msg);
+const pluginNamePattern = /^[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?$/;
+const marketplaceNamePattern = /^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/;
+
+function addError(message) {
+  errors.push(message);
 }
 
-function readJson(filepath) {
+function addWarning(message) {
+  warnings.push(message);
+}
+
+async function pathExists(targetPath) {
   try {
-    return JSON.parse(readFileSync(filepath, "utf8"));
-  } catch (e) {
-    error(`Failed to parse ${filepath}: ${e.message}`);
+    await fs.access(targetPath);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function ensureDirectory(targetPath, context) {
+  try {
+    const stat = await fs.stat(targetPath);
+    if (!stat.isDirectory()) {
+      addError(`${context} exists but is not a directory: ${targetPath}`);
+      return false;
+    }
+    return true;
+  } catch {
+    addError(`${context} directory is missing: ${targetPath}`);
+    return false;
+  }
+}
+
+async function readJsonFile(filePath, context) {
+  let raw;
+  try {
+    raw = await fs.readFile(filePath, "utf8");
+  } catch {
+    addError(`${context} is missing: ${filePath}`);
+    return null;
+  }
+
+  try {
+    return JSON.parse(raw);
+  } catch (error) {
+    addError(
+      `${context} contains invalid JSON (${filePath}): ${error.message}`,
+    );
     return null;
   }
 }
 
-function isSafeRelativePath(p) {
-  if (!p || typeof p !== "string") return false;
-  if (p.startsWith("/") || p.startsWith("~")) return false;
-  if (p.includes("..")) return false;
-  return true;
+function isSafeRelativePath(value) {
+  if (typeof value !== "string" || value.length === 0) {
+    return false;
+  }
+  if (path.isAbsolute(value)) {
+    return false;
+  }
+  const normalized = path.posix.normalize(value.replace(/\\/g, "/"));
+  return !normalized.startsWith("../") && normalized !== "..";
 }
 
-function extractPaths(value) {
-  if (typeof value === "string") return [value];
-  if (Array.isArray(value)) return value.filter((v) => typeof v === "string");
-  if (typeof value === "object" && value !== null) return [];
+function extractPathValues(value) {
+  if (typeof value === "string") {
+    return [value];
+  }
+  if (Array.isArray(value)) {
+    return value.flatMap((entry) => extractPathValues(entry));
+  }
+  if (value && typeof value === "object") {
+    const candidates = [];
+    if (typeof value.path === "string") {
+      candidates.push(value.path);
+    }
+    if (typeof value.file === "string") {
+      candidates.push(value.file);
+    }
+    return candidates;
+  }
   return [];
 }
 
-// --- Validate marketplace.json ---
-
-if (!existsSync(MARKETPLACE_PATH)) {
-  error(`Marketplace manifest not found: ${MARKETPLACE_PATH}`);
-  summarizeAndExit();
+async function validateReferencedPath(
+  pluginDir,
+  fieldName,
+  pathValue,
+  pluginName,
+) {
+  if (!isSafeRelativePath(pathValue)) {
+    addError(
+      `${pluginName}: field "${fieldName}" has invalid relative path "${pathValue}".`,
+    );
+    return;
+  }
+  const resolved = path.resolve(pluginDir, pathValue);
+  if (!(await pathExists(resolved))) {
+    addError(
+      `${pluginName}: field "${fieldName}" references missing path "${pathValue}".`,
+    );
+  }
 }
 
-const marketplace = readJson(MARKETPLACE_PATH);
-if (!marketplace) summarizeAndExit();
-
-if (!marketplace.name) {
-  error("marketplace.json: missing 'name' field");
-} else if (!MARKETPLACE_NAME_PATTERN.test(marketplace.name)) {
-  error(
-    `marketplace.json: name '${marketplace.name}' must be lowercase kebab-case`
+async function main() {
+  const marketplacePath = path.join(
+    repoRoot,
+    ".claude-plugin",
+    "marketplace.json",
   );
-}
-
-if (!marketplace.owner?.name) {
-  error("marketplace.json: missing 'owner.name' field");
-}
-
-if (!Array.isArray(marketplace.plugins) || marketplace.plugins.length === 0) {
-  error("marketplace.json: 'plugins' must be a non-empty array");
-  summarizeAndExit();
-}
-
-// Check for duplicate plugin names
-const pluginNames = new Set();
-for (const plugin of marketplace.plugins) {
-  if (pluginNames.has(plugin.name)) {
-    error(`marketplace.json: duplicate plugin name '${plugin.name}'`);
+  const marketplace = await readJsonFile(
+    marketplacePath,
+    "Claude marketplace manifest",
+  );
+  if (!marketplace) {
+    summarizeAndExit();
+    return;
   }
-  pluginNames.add(plugin.name);
-}
 
-// --- Validate each plugin ---
-
-for (const entry of marketplace.plugins) {
-  const pluginLabel = `plugin '${entry.name || "(unnamed)"}'`;
-
-  if (!entry.name) {
-    error(`${pluginLabel}: missing 'name' field`);
-    continue;
-  }
-  if (!NAME_PATTERN.test(entry.name)) {
-    error(
-      `${pluginLabel}: name must match pattern ${NAME_PATTERN} (lowercase, hyphens, periods)`
+  if (
+    typeof marketplace.name !== "string" ||
+    !marketplaceNamePattern.test(marketplace.name)
+  ) {
+    addError(
+      'Marketplace "name" must be lowercase kebab-case and start/end with an alphanumeric character.',
     );
   }
-
-  if (!entry.source || typeof entry.source !== "string") {
-    error(`${pluginLabel}: missing or invalid 'source' field`);
-    continue;
+  if (
+    !marketplace.owner ||
+    typeof marketplace.owner.name !== "string" ||
+    marketplace.owner.name.length === 0
+  ) {
+    addError('Marketplace "owner.name" is required.');
+  }
+  if (!Array.isArray(marketplace.plugins) || marketplace.plugins.length === 0) {
+    addError('Marketplace "plugins" must be a non-empty array.');
+    summarizeAndExit();
+    return;
   }
 
-  if (!isSafeRelativePath(entry.source)) {
-    error(
-      `${pluginLabel}: source '${entry.source}' must be a safe relative path (no ../, no absolute)`
+  const seenNames = new Set();
+  for (const [index, entry] of marketplace.plugins.entries()) {
+    const label = `plugins[${index}]`;
+    if (!entry || typeof entry !== "object") {
+      addError(`${label} must be an object.`);
+      continue;
+    }
+    if (typeof entry.name !== "string" || !pluginNamePattern.test(entry.name)) {
+      addError(
+        `${label}.name must be lowercase and use only alphanumerics, hyphens, and periods.`,
+      );
+      continue;
+    }
+    if (seenNames.has(entry.name)) {
+      addError(
+        `Duplicate plugin name in marketplace manifest: "${entry.name}"`,
+      );
+    }
+    seenNames.add(entry.name);
+
+    if (typeof entry.source !== "string" || entry.source.length === 0) {
+      addError(`${label}.source must be a non-empty relative path string.`);
+      continue;
+    }
+    if (!isSafeRelativePath(entry.source)) {
+      addError(
+        `${label}.source is not a safe relative path: "${entry.source}"`,
+      );
+      continue;
+    }
+
+    const pluginDir = path.join(repoRoot, entry.source);
+    if (!(await ensureDirectory(pluginDir, `${label}.source`))) {
+      continue;
+    }
+
+    const manifestPath = path.join(pluginDir, ".claude-plugin", "plugin.json");
+    const pluginManifest = await readJsonFile(
+      manifestPath,
+      `${entry.name} claude plugin manifest`,
     );
-    continue;
-  }
+    if (!pluginManifest) {
+      continue;
+    }
 
-  const pluginDir = resolve(ROOT, entry.source);
-  if (!existsSync(pluginDir) || !statSync(pluginDir).isDirectory()) {
-    error(`${pluginLabel}: source directory not found: ${entry.source}`);
-    continue;
-  }
-
-  // Validate plugin.json
-  const pluginJsonPath = join(pluginDir, ".claude-plugin", "plugin.json");
-  if (!existsSync(pluginJsonPath)) {
-    error(`${pluginLabel}: missing .claude-plugin/plugin.json`);
-    continue;
-  }
-
-  const pluginJson = readJson(pluginJsonPath);
-  if (!pluginJson) continue;
-
-  if (!pluginJson.name) {
-    error(`${pluginLabel}: plugin.json missing 'name' field`);
-  }
-
-  // Validate referenced paths
-  const pathFields = [
-    "skills",
-    "commands",
-    "agents",
-    "hooks",
-    "mcpServers",
-    "lspServers",
-  ];
-  for (const field of pathFields) {
-    if (!(field in pluginJson)) continue;
-    const paths = extractPaths(pluginJson[field]);
-    for (const p of paths) {
-      if (!isSafeRelativePath(p)) {
-        error(
-          `${pluginLabel}: plugin.json '${field}' contains unsafe path '${p}'`
-        );
-        continue;
-      }
-      const resolved = resolve(pluginDir, p);
-      if (!existsSync(resolved)) {
-        error(
-          `${pluginLabel}: plugin.json '${field}' references non-existent path '${p}'`
-        );
+    const fields = [
+      "skills",
+      "commands",
+      "agents",
+      "hooks",
+      "mcpServers",
+      "lspServers",
+    ];
+    for (const field of fields) {
+      for (const value of extractPathValues(pluginManifest[field])) {
+        await validateReferencedPath(pluginDir, field, value, entry.name);
       }
     }
   }
-}
 
-if (!marketplace.metadata?.description) {
-  warn("marketplace.json: no description in metadata");
+  summarizeAndExit();
 }
-
-summarizeAndExit();
 
 function summarizeAndExit() {
-  console.log("\n=== Claude Plugin Validation ===\n");
-
   if (warnings.length > 0) {
-    for (const w of warnings) console.log(`⚠  ${w}`);
-    console.log();
+    console.log("Warnings:");
+    for (const warning of warnings) {
+      console.log(`- ${warning}`);
+    }
+    console.log("");
   }
-
   if (errors.length > 0) {
-    for (const e of errors) console.log(`✗  ${e}`);
-    console.log(`\n✗ ${errors.length} error(s) found`);
+    console.error("Validation failed:");
+    for (const error of errors) {
+      console.error(`- ${error}`);
+    }
     process.exit(1);
   }
-
-  console.log("✓ All Claude plugin configurations are valid");
-  process.exit(0);
+  console.log("Validation passed.");
 }
+
+await main();
