@@ -1,8 +1,8 @@
 {
   "name": "redis",
   "owner": {
-    "name": "Yusuf Bahadur",
-    "email": "yusuf.bahadur@redis.com"
+    "name": "Redis",
+    "email": "support@redis.com"
   },
   "metadata": {
     "description": "Official Redis plugins for Claude Code",
