@@ -6,7 +6,10 @@
   ],
   "scripts": {
     "build": "npm run build --workspace=redis-development-build",
-    "validate": "npm run validate --workspace=redis-development-build",
+    "validate": "npm run validate:skills && npm run validate:plugins",
+    "validate:skills": "npm run validate --workspace=redis-development-build",
+    "validate:plugins": "npm run validate:claude-plugins",
+    "validate:claude-plugins": "node scripts/validate-claude-plugins.mjs",
     "prepare": "husky"
   },
   "devDependencies": {
