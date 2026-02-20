@@ -56,65 +56,11 @@ async function readJsonFile(filePath, context) {
   }
 }
 
-function normalizeNewlines(content) {
-  return content.replace(/\r\n/g, "\n");
-}
-
-function parseFrontmatter(content) {
-  const normalized = normalizeNewlines(content);
-  if (!normalized.startsWith("---\n")) {
-    return null;
-  }
-
-  const closingIndex = normalized.indexOf("\n---\n", 4);
-  if (closingIndex === -1) {
-    return null;
-  }
-
-  const frontmatterBlock = normalized.slice(4, closingIndex);
-  const fields = {};
-  for (const line of frontmatterBlock.split("\n")) {
-    const trimmed = line.trim();
-    if (!trimmed || trimmed.startsWith("#")) {
-      continue;
-    }
-    const separator = line.indexOf(":");
-    if (separator === -1) {
-      continue;
-    }
-    const key = line.slice(0, separator).trim();
-    const value = line.slice(separator + 1).trim();
-    fields[key] = value;
-  }
-  return fields;
-}
-
-async function walkFiles(dirPath) {
-  const files = [];
-  const stack = [dirPath];
-  while (stack.length > 0) {
-    const current = stack.pop();
-    const entries = await fs.readdir(current, { withFileTypes: true });
-    for (const entry of entries) {
-      const entryPath = path.join(current, entry.name);
-      if (entry.isDirectory()) {
-        stack.push(entryPath);
-      } else if (entry.isFile()) {
-        files.push(entryPath);
-      }
-    }
-  }
-  return files;
-}
-
 function isSafeRelativePath(value) {
   if (typeof value !== "string" || value.length === 0) {
     return false;
   }
-  if (value.startsWith("http://") || value.startsWith("https://")) {
-    return true;
-  }
-  if (path.isAbsolute(value)) {
+  if (path.isAbsolute(value) || /^[a-zA-Z]:/.test(value)) {
     return false;
   }
   const normalized = path.posix.normalize(value.replace(/\\/g, "/"));
@@ -141,109 +87,6 @@ function extractPathValues(value) {
   return [];
 }
 
-async function validateReferencedPath(
-  pluginDir,
-  fieldName,
-  pathValue,
-  pluginName,
-) {
-  if (pathValue.startsWith("http://") || pathValue.startsWith("https://")) {
-    return;
-  }
-  if (!isSafeRelativePath(pathValue)) {
-    addError(
-      `${pluginName}: field "${fieldName}" has invalid path "${pathValue}". Use a relative path without ".." or absolute prefixes.`,
-    );
-    return;
-  }
-  const resolved = path.resolve(pluginDir, pathValue);
-  if (!(await pathExists(resolved))) {
-    addError(
-      `${pluginName}: field "${fieldName}" references missing path "${pathValue}".`,
-    );
-  }
-}
-
-async function validateFrontmatterFile(
-  filePath,
-  componentName,
-  requiredKeys,
-  pluginName,
-) {
-  const content = await fs.readFile(filePath, "utf8");
-  const parsed = parseFrontmatter(content);
-  const relativeFile = path.relative(repoRoot, filePath);
-  if (!parsed) {
-    addError(
-      `${pluginName}: ${componentName} file missing YAML frontmatter: ${relativeFile}`,
-    );
-    return;
-  }
-  for (const key of requiredKeys) {
-    if (!parsed[key] || parsed[key].length === 0) {
-      addError(
-        `${pluginName}: ${componentName} file missing "${key}" in frontmatter: ${relativeFile}`,
-      );
-    }
-  }
-}
-
-async function validateComponentFrontmatter(pluginDir, pluginName) {
-  const checks = [
-    {
-      dir: "rules",
-      exts: [".md", ".mdc", ".markdown"],
-      component: "rule",
-      required: ["description"],
-    },
-    {
-      dir: "agents",
-      exts: [".md", ".mdc", ".markdown"],
-      component: "agent",
-      required: ["name", "description"],
-    },
-    {
-      dir: "commands",
-      exts: [".md", ".mdc", ".markdown", ".txt"],
-      component: "command",
-      required: ["name", "description"],
-    },
-  ];
-
-  for (const check of checks) {
-    const dirPath = path.join(pluginDir, check.dir);
-    if (!(await pathExists(dirPath))) {
-      continue;
-    }
-    const files = await walkFiles(dirPath);
-    for (const file of files) {
-      if (check.exts.includes(path.extname(file).toLowerCase())) {
-        await validateFrontmatterFile(
-          file,
-          check.component,
-          check.required,
-          pluginName,
-        );
-      }
-    }
-  }
-
-  const skillsDir = path.join(pluginDir, "skills");
-  if (await pathExists(skillsDir)) {
-    const files = await walkFiles(skillsDir);
-    for (const file of files) {
-      if (path.basename(file) === "SKILL.md") {
-        await validateFrontmatterFile(
-          file,
-          "skill",
-          ["name", "description"],
-          pluginName,
-        );
-      }
-    }
-  }
-}
-
 function resolveMarketplaceSource(source, pluginRoot) {
   if (typeof source !== "string" || source.length === 0) {
     return null;
@@ -260,6 +103,29 @@ function resolveMarketplaceSource(source, pluginRoot) {
     return normalizedSource;
   }
   return `${normalizedRoot}/${normalizedSource}`;
+}
+
+function validateRequiredString(value, context) {
+  if (typeof value !== "string" || value.trim().length === 0) {
+    addError(`${context} is required and must be a non-empty string.`);
+    return false;
+  }
+  return true;
+}
+
+async function validateManifestPath(pluginDir, pluginName, fieldName, value) {
+  if (!isSafeRelativePath(value)) {
+    addError(
+      `${pluginName}: field "${fieldName}" has invalid relative path "${value}".`,
+    );
+    return;
+  }
+  const resolved = path.resolve(pluginDir, value);
+  if (!(await pathExists(resolved))) {
+    addError(
+      `${pluginName}: field "${fieldName}" references missing path "${value}".`,
+    );
+  }
 }
 
 async function main() {
@@ -315,6 +181,7 @@ async function main() {
   const seenNames = new Set();
   for (const [index, entry] of marketplace.plugins.entries()) {
     const label = `plugins[${index}]`;
+
     if (!entry || typeof entry !== "object") {
       addError(`${label} must be an object.`);
       continue;
@@ -326,15 +193,15 @@ async function main() {
       continue;
     }
     if (seenNames.has(entry.name)) {
-      addError(
-        `Duplicate plugin name in marketplace manifest: "${entry.name}"`,
-      );
+      addError(`Duplicate plugin name in marketplace manifest: "${entry.name}"`);
     }
     seenNames.add(entry.name);
 
+    validateRequiredString(entry.description, `${label}.description`);
+
     const sourcePath = resolveMarketplaceSource(entry.source, pluginRoot ?? "");
     if (!sourcePath) {
-      addError(`${label}.source must be a string path.`);
+      addError(`${label}.source must be a non-empty string path.`);
       continue;
     }
     if (!isSafeRelativePath(sourcePath)) {
@@ -363,11 +230,33 @@ async function main() {
       addError(
         `${entry.name}: "name" in plugin.json must be lowercase and use only alphanumerics, hyphens, and periods.`,
       );
-    }
-    if (pluginManifest.name && pluginManifest.name !== entry.name) {
+    } else if (pluginManifest.name !== entry.name) {
       addError(
         `${entry.name}: marketplace entry name does not match plugin.json name ("${pluginManifest.name}").`,
       );
+    }
+
+    validateRequiredString(pluginManifest.displayName, `${entry.name}: displayName`);
+    validateRequiredString(pluginManifest.version, `${entry.name}: version`);
+    validateRequiredString(pluginManifest.description, `${entry.name}: description`);
+    validateRequiredString(pluginManifest.license, `${entry.name}: license`);
+
+    if (
+      !pluginManifest.author ||
+      typeof pluginManifest.author !== "object" ||
+      typeof pluginManifest.author.name !== "string" ||
+      pluginManifest.author.name.length === 0
+    ) {
+      addError(`${entry.name}: author.name is required in plugin.json.`);
+    }
+    if (
+      !Array.isArray(pluginManifest.keywords) ||
+      pluginManifest.keywords.length === 0 ||
+      pluginManifest.keywords.some(
+        (keyword) => typeof keyword !== "string" || keyword.trim().length === 0,
+      )
+    ) {
+      addError(`${entry.name}: keywords must be a non-empty string array.`);
     }
 
     for (const field of [
@@ -377,13 +266,12 @@ async function main() {
       "agents",
       "commands",
       "hooks",
+      "mcpServers",
     ]) {
       for (const value of extractPathValues(pluginManifest[field])) {
-        await validateReferencedPath(pluginDir, field, value, entry.name);
+        await validateManifestPath(pluginDir, entry.name, field, value);
       }
     }
-
-    await validateComponentFrontmatter(pluginDir, entry.name);
   }
 
   summarizeAndExit();

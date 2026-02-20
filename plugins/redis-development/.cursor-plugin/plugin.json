@@ -5,7 +5,7 @@
   "description": "Redis development best practices — data structures, query engine, vector search, caching, and performance optimization",
   "author": {
     "name": "Redis",
-    "email": "yusuf.bahadur@redis.com"
+    "email": "support@redis.com"
   },
   "homepage": "https://redis.io/docs/",
   "repository": "https://github.com/redis/agent-skills",
