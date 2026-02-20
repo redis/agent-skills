@@ -27,7 +27,38 @@ You can also install the skills as a Claude Code plugin:
 /plugin install redis-development@redis
 ```
 
+### Cursor Plugin
+
+This repository also includes Cursor plugin packaging. Run this command in chat:
+
+```text
+/add-plugin redis-development
+```
+
 The top-level `skills/` directory remains the source of truth. Plugin folders symlink only the skill directories they expose.
+
+### Optional: Redis MCP setup
+
+The plugin includes the official Redis MCP server (`redis/mcp-redis`) via `plugins/redis-development/mcp.json`.
+
+If you do not set any env vars, Redis MCP uses its defaults (`127.0.0.1:6379`).
+
+For custom connections, set environment variables before starting your MCP client:
+
+```bash
+export REDIS_URL=redis://username:password@host:6379/0
+```
+
+Or use individual settings:
+
+```bash
+export REDIS_HOST=your-host
+export REDIS_PORT=6379
+export REDIS_DB=0
+export REDIS_USERNAME=default
+export REDIS_PWD=your-password
+export REDIS_SSL=false
+```
 
 ## Usage
 
