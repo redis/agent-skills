@@ -1,0 +1,17 @@
+{
+  "mcpServers": {
+    "redis": {
+      "command": "uvx",
+      "args": ["--from", "redis-mcp-server@latest", "redis-mcp-server"],
+      "env": {
+        "REDIS_URL": "${REDIS_URL}",
+        "REDIS_HOST": "${REDIS_HOST}",
+        "REDIS_PORT": "${REDIS_PORT}",
+        "REDIS_DB": "${REDIS_DB}",
+        "REDIS_USERNAME": "${REDIS_USERNAME}",
+        "REDIS_PWD": "${REDIS_PWD}",
+        "REDIS_SSL": "${REDIS_SSL}"
+      }
+    }
+  }
+}

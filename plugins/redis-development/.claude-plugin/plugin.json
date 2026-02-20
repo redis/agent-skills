@@ -9,5 +9,6 @@
   "repository": "https://github.com/redis/agent-skills",
   "license": "MIT",
   "keywords": ["redis", "database", "caching", "vector-search", "performance", "best-practices"],
-  "skills": "./skills/"
+  "skills": "./skills/",
+  "mcpServers": "./mcp.json"
 }
