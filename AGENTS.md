@@ -106,6 +106,11 @@ tags: relevant, keywords
 Reference: [Link](URL)
 ```
 
+**When to include "Incorrect" examples:**
+- Use `**Incorrect:**` when the alternative causes real harm (race conditions, security issues, crashes, significant performance problems)
+- For feature-introduction rules where not using the feature is valid, use `**When to use:**` / `**When NOT needed:**` sections instead
+- Rules may include multiple `**Correct:**` sections for different valid approaches (see comparison rules like `json-vs-hash.md`)
+
 ### Adding a New Skill
 
 1. Create skill directory: `skills/{skill-name}/`

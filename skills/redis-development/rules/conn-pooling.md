@@ -9,14 +9,25 @@ tags: connections, pooling, multiplexing, performance
 
 Reuse connections via a pool or multiplexing instead of creating new connections per request.
 
-**Correct:** Use a connection pool (redis-py, Jedis, go-redis).
+**Correct:** Use a connection pool.
 
+**Python** (redis-py):
 ```python
 import redis
 
 # Good: Connection pool - reuses existing connections
 pool = redis.ConnectionPool(host='localhost', port=6379, max_connections=50)
 r = redis.Redis(connection_pool=pool)
+```
+
+**Java** (Jedis):
+```java
+import redis.clients.jedis.JedisPooled;
+
+// JedisPooled manages a connection pool internally
+try (JedisPooled jedis = new JedisPooled("redis://localhost:6379")) {
+    jedis.set("testKey", "testValue");
+}
 ```
 
 **Correct:** Use multiplexing (Lettuce, NRedisStack).
@@ -32,11 +43,22 @@ connection.sync().set("key", "value");
 
 **Incorrect:** Creating new connections per request.
 
+**Python** (redis-py):
 ```python
 # Bad: New connection every time
 def get_user(user_id):
     r = redis.Redis(host='localhost', port=6379)  # Don't do this
     return r.get(f"user:{user_id}")
+```
+
+**Java** (Jedis):
+```java
+// Bad: Creating new client per request
+public String getUser(String userId) {
+    try (UnifiedJedis jedis = new UnifiedJedis("redis://localhost:6379")) {
+        return jedis.get("user:" + userId);  // Don't do this
+    }
+}
 ```
 
 **Pooling vs Multiplexing:**
