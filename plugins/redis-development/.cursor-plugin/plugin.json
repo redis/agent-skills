@@ -12,6 +12,5 @@
   "license": "MIT",
   "keywords": ["redis", "database", "caching", "vector-search", "performance", "cursor"],
   "logo": "assets/logo.png",
-  "skills": "./skills/",
-  "mcpServers": "./mcp.json"
+  "skills": "./skills/"
 }
