@@ -8,7 +8,9 @@
     "https://redis.io/docs/latest/develop/interact/search-and-query/",
     "https://redis.io/docs/latest/develop/clients/redisvl/",
     "https://redis.io/docs/latest/develop/ai/langcache/",
-    "https://redis.io/commands/"
+    "https://redis.io/commands/",
+    "https://hub.docker.com/_/redis/tags",
+    "https://redis.io/legal/licenses/",
+    "https://testcontainers.com/modules/redis/"
   ]
 }
-
