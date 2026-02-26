@@ -8,7 +8,6 @@ const repoRoot = process.cwd();
 const errors = [];
 
 const pluginNamePattern = /^[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?$/;
-const marketplaceNamePattern = /^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/;
 
 function addError(message) {
   errors.push(message);
@@ -87,24 +86,6 @@ function extractPathValues(value) {
   return [];
 }
 
-function resolveMarketplaceSource(source, pluginRoot) {
-  if (typeof source !== "string" || source.length === 0) {
-    return null;
-  }
-  if (!pluginRoot) {
-    return source;
-  }
-  const normalizedRoot = pluginRoot.replace(/\\/g, "/").replace(/\/+$/, "");
-  const normalizedSource = source.replace(/\\/g, "/");
-  if (
-    normalizedSource === normalizedRoot ||
-    normalizedSource.startsWith(`${normalizedRoot}/`)
-  ) {
-    return normalizedSource;
-  }
-  return `${normalizedRoot}/${normalizedSource}`;
-}
-
 function validateRequiredString(value, context) {
   if (typeof value !== "string" || value.trim().length === 0) {
     addError(`${context} is required and must be a non-empty string.`);
@@ -129,148 +110,65 @@ async function validateManifestPath(pluginDir, pluginName, fieldName, value) {
 }
 
 async function main() {
-  const marketplacePath = path.join(
+  const manifestPath = path.join(
     repoRoot,
     ".cursor-plugin",
-    "marketplace.json",
+    "plugin.json",
   );
-  const marketplace = await readJsonFile(
-    marketplacePath,
-    "Cursor marketplace manifest",
+  const pluginManifest = await readJsonFile(
+    manifestPath,
+    "Cursor plugin manifest",
   );
-  if (!marketplace) {
+  if (!pluginManifest) {
     summarizeAndExit();
     return;
   }
 
   if (
-    typeof marketplace.name !== "string" ||
-    !marketplaceNamePattern.test(marketplace.name)
+    typeof pluginManifest.name !== "string" ||
+    !pluginNamePattern.test(pluginManifest.name)
   ) {
     addError(
-      'Marketplace "name" must be lowercase kebab-case and start/end with an alphanumeric character.',
+      '"name" in plugin.json must be lowercase and use only alphanumerics, hyphens, and periods.',
     );
+  }
+
+  validateRequiredString(pluginManifest.displayName, "displayName");
+  validateRequiredString(pluginManifest.version, "version");
+  validateRequiredString(pluginManifest.description, "description");
+  validateRequiredString(pluginManifest.license, "license");
+
+  if (
+    !pluginManifest.author ||
+    typeof pluginManifest.author !== "object" ||
+    typeof pluginManifest.author.name !== "string" ||
+    pluginManifest.author.name.length === 0
+  ) {
+    addError("author.name is required in plugin.json.");
   }
   if (
-    !marketplace.owner ||
-    typeof marketplace.owner.name !== "string" ||
-    marketplace.owner.name.length === 0
+    !Array.isArray(pluginManifest.keywords) ||
+    pluginManifest.keywords.length === 0 ||
+    pluginManifest.keywords.some(
+      (keyword) => typeof keyword !== "string" || keyword.trim().length === 0,
+    )
   ) {
-    addError('Marketplace "owner.name" is required.');
-  }
-  if (!Array.isArray(marketplace.plugins) || marketplace.plugins.length === 0) {
-    addError('Marketplace "plugins" must be a non-empty array.');
-    summarizeAndExit();
-    return;
+    addError("keywords must be a non-empty string array.");
   }
 
-  const pluginRoot = marketplace.metadata?.pluginRoot;
-  if (pluginRoot !== undefined) {
-    if (typeof pluginRoot !== "string" || !isSafeRelativePath(pluginRoot)) {
-      addError(
-        'Marketplace "metadata.pluginRoot" must be a safe relative path.',
-      );
-    } else {
-      await ensureDirectory(
-        path.join(repoRoot, pluginRoot),
-        'Marketplace "metadata.pluginRoot"',
-      );
-    }
-  }
+  await ensureDirectory(path.join(repoRoot, ".cursor-plugin"), ".cursor-plugin");
 
-  const seenNames = new Set();
-  for (const [index, entry] of marketplace.plugins.entries()) {
-    const label = `plugins[${index}]`;
-
-    if (!entry || typeof entry !== "object") {
-      addError(`${label} must be an object.`);
-      continue;
-    }
-    if (typeof entry.name !== "string" || !pluginNamePattern.test(entry.name)) {
-      addError(
-        `${label}.name must be lowercase and use only alphanumerics, hyphens, and periods.`,
-      );
-      continue;
-    }
-    if (seenNames.has(entry.name)) {
-      addError(`Duplicate plugin name in marketplace manifest: "${entry.name}"`);
-    }
-    seenNames.add(entry.name);
-
-    validateRequiredString(entry.description, `${label}.description`);
-
-    const sourcePath = resolveMarketplaceSource(entry.source, pluginRoot ?? "");
-    if (!sourcePath) {
-      addError(`${label}.source must be a non-empty string path.`);
-      continue;
-    }
-    if (!isSafeRelativePath(sourcePath)) {
-      addError(`${label}.source is not a safe relative path: "${sourcePath}"`);
-      continue;
-    }
-
-    const pluginDir = path.join(repoRoot, sourcePath);
-    if (!(await ensureDirectory(pluginDir, `${label}.source`))) {
-      continue;
-    }
-
-    const manifestPath = path.join(pluginDir, ".cursor-plugin", "plugin.json");
-    const pluginManifest = await readJsonFile(
-      manifestPath,
-      `${entry.name} cursor plugin manifest`,
-    );
-    if (!pluginManifest) {
-      continue;
-    }
-
-    if (
-      typeof pluginManifest.name !== "string" ||
-      !pluginNamePattern.test(pluginManifest.name)
-    ) {
-      addError(
-        `${entry.name}: "name" in plugin.json must be lowercase and use only alphanumerics, hyphens, and periods.`,
-      );
-    } else if (pluginManifest.name !== entry.name) {
-      addError(
-        `${entry.name}: marketplace entry name does not match plugin.json name ("${pluginManifest.name}").`,
-      );
-    }
-
-    validateRequiredString(pluginManifest.displayName, `${entry.name}: displayName`);
-    validateRequiredString(pluginManifest.version, `${entry.name}: version`);
-    validateRequiredString(pluginManifest.description, `${entry.name}: description`);
-    validateRequiredString(pluginManifest.license, `${entry.name}: license`);
-
-    if (
-      !pluginManifest.author ||
-      typeof pluginManifest.author !== "object" ||
-      typeof pluginManifest.author.name !== "string" ||
-      pluginManifest.author.name.length === 0
-    ) {
-      addError(`${entry.name}: author.name is required in plugin.json.`);
-    }
-    if (
-      !Array.isArray(pluginManifest.keywords) ||
-      pluginManifest.keywords.length === 0 ||
-      pluginManifest.keywords.some(
-        (keyword) => typeof keyword !== "string" || keyword.trim().length === 0,
-      )
-    ) {
-      addError(`${entry.name}: keywords must be a non-empty string array.`);
-    }
-
-    for (const field of [
-      "logo",
-      "rules",
-      "skills",
-      "agents",
-      "commands",
-      "hooks",
-      "mcpServers",
-    ]) {
-      for (const value of extractPathValues(pluginManifest[field])) {
-        await validateManifestPath(pluginDir, entry.name, field, value);
-      }
+  for (const field of [
+    "logo",
+    "rules",
+    "skills",
+    "agents",
+    "commands",
+    "hooks",
+    "mcpServers",
+  ]) {
+    for (const value of extractPathValues(pluginManifest[field])) {
+      await validateManifestPath(repoRoot, pluginManifest.name, field, value);
     }
   }
 
