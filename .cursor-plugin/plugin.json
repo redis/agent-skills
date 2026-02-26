@@ -12,6 +12,6 @@
   "license": "MIT",
   "keywords": ["redis", "database", "caching", "vector-search", "performance", "cursor"],
   "logo": "plugins/redis-development/assets/logo.png",
-  "skills": "skills/",
-  "rules": "skills/redis-development/rules/"
+  "skills": "./skills/",
+  "rules": "./skills/redis-development/rules/"
 }
