@@ -32,7 +32,7 @@ You can also install the skills as a Claude Code plugin:
 This repository also includes Cursor plugin packaging. Run this command in chat:
 
 ```text
-/add-plugin redis-development
+/add-plugin redis
 ```
 
 The top-level `skills/` directory remains the source of truth. Plugin folders symlink only the skill directories they expose.
