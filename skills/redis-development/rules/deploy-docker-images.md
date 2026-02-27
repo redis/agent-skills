@@ -7,9 +7,9 @@ tags: docker, containers, images, redisinsight, redis-stack, licensing
 
 ## Use Official Redis Images for Containers
 
-Redis 8 bundles the Redis Query Engine and core data structures (JSON, time series, probabilistic) in the main server distribution, so the official `redis:<version>` image is the right default for most containers. Use Redis Stack images only when you explicitly need the bundled RedisInsight UI or Redis Stack packaging.
+Redis 8 bundles the Redis Query Engine and core data structures (JSON, time series, probabilistic) in the main server distribution, so the official `redis:<version>` image is the right default for most containers. Use Redis Stack images only when you explicitly need the bundled Redis Insight UI or Redis Stack packaging.
 
-**Correct:** Run the core server from `redis:<version>` and add RedisInsight separately when needed.
+**Correct:** Run the core server from `redis:<version>` and add Redis Insight separately when needed.
 
 ```bash
 # Core Redis server (pin to a specific tag from Docker Hub)
@@ -20,8 +20,8 @@ docker run -d --name redisinsight -p 5540:5540 redis/redisinsight:latest
 ```
 
 **When to use:**
-- `redis/redis-stack` for local development when you want RedisInsight bundled in the same container.
-- `redis/redis-stack-server` when you specifically want the Redis Stack packaging without RedisInsight.
+- `redis/redis-stack` for local development when you want Redis Insight bundled in the same container.
+- `redis/redis-stack-server` when you specifically want the Redis Stack packaging without Redis Insight.
 
 **When NOT needed:**
 - Do not default to `redis/redis-stack` for Redis 8+ server-only deployments.

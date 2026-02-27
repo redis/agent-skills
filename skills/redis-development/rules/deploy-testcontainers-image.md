@@ -23,6 +23,6 @@ static RedisContainer redis = new RedisContainer(REDIS_IMAGE);
 - Tests that need Redis 8 features (e.g., RQE search, JSON, time series).
 
 **When NOT needed:**
-- Only use `redis/redis-stack` or `redis/redis-stack-server` if you explicitly need the Redis Stack packaging or the RedisInsight UI during tests.
+- Only use `redis/redis-stack` or `redis/redis-stack-server` if you explicitly need the Redis Stack packaging or the Redis Insight UI during tests.
 
 Reference: [Testcontainers Redis module](https://testcontainers.com/modules/redis/), [Redis Docker official image](https://hub.docker.com/_/redis), [Redis Query Engine docs](https://redis.io/docs/latest/develop/ai/search-and-query/)

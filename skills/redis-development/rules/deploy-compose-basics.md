@@ -7,7 +7,7 @@ tags: docker, compose, deployment, persistence, redisinsight
 
 ## Provide a Minimal Docker Compose for Redis
 
-When users ask for a container setup, give a minimal `docker-compose.yml` that pins the image, includes a volume for `/data`, and a simple healthcheck. Add RedisInsight only when the user wants a GUI, and provide a no-persistence variant for ephemeral dev or tests.
+When users ask for a container setup, give a minimal `docker-compose.yml` that pins the image, includes a volume for `/data`, and a simple healthcheck. Add Redis Insight only when the user wants a GUI, and provide a no-persistence variant for ephemeral dev or tests.
 
 **Correct:** Minimal, pinned, and persistent Compose setup.
 
@@ -29,7 +29,7 @@ volumes:
   redis-data:
 ```
 
-**Correct:** Redis + RedisInsight with persistence and healthchecks (for local dev with a GUI).
+**Correct:** Redis + Redis Insight with persistence and healthchecks (for local dev with a GUI).
 
 ```yaml
 services:
@@ -87,7 +87,7 @@ services:
 **When to use:**
 - Local development or single-node container setups.
 - Documentation or examples that need a working Redis container quickly.
-- RedisInsight for GUI-based exploration, indexing, or debugging.
+- Redis Insight for GUI-based exploration, indexing, or debugging.
 - No-persistence variant for ephemeral dev or integration tests.
 
 **When NOT needed:**

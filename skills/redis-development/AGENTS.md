@@ -2274,7 +2274,7 @@ Reference: [https://hub.docker.com/_/redis](https://hub.docker.com/_/redis), [ht
 
 **Impact: MEDIUM (Standardizes local setups and avoids data loss)**
 
-When users ask for a container setup, give a minimal `docker-compose.yml` that pins the image, includes a volume for `/data`, and a simple healthcheck. Add RedisInsight only when the user wants a GUI, and provide a no-persistence variant for ephemeral dev or tests.
+When users ask for a container setup, give a minimal `docker-compose.yml` that pins the image, includes a volume for `/data`, and a simple healthcheck. Add Redis Insight only when the user wants a GUI, and provide a no-persistence variant for ephemeral dev or tests.
 
 **Correct: Minimal, pinned, and persistent Compose setup.**
 
@@ -2296,7 +2296,7 @@ volumes:
   redis-data:
 ```
 
-**Correct: Redis + RedisInsight with persistence and healthchecks (for local dev with a GUI).**
+**Correct: Redis + Redis Insight with persistence and healthchecks (for local dev with a GUI).**
 
 ```yaml
 services:
@@ -2357,7 +2357,7 @@ services:
 
 - Documentation or examples that need a working Redis container quickly.
 
-- RedisInsight for GUI-based exploration, indexing, or debugging.
+- Redis Insight for GUI-based exploration, indexing, or debugging.
 
 - No-persistence variant for ephemeral dev or integration tests.
 
@@ -2373,9 +2373,9 @@ Reference: [https://hub.docker.com/_/redis](https://hub.docker.com/_/redis), [ht
 
 **Impact: HIGH (Avoids outdated stacks and unnecessary components)**
 
-Redis 8 bundles the Redis Query Engine and core data structures (JSON, time series, probabilistic) in the main server distribution, so the official `redis:<version>` image is the right default for most containers. Use Redis Stack images only when you explicitly need the bundled RedisInsight UI or Redis Stack packaging.
+Redis 8 bundles the Redis Query Engine and core data structures (JSON, time series, probabilistic) in the main server distribution, so the official `redis:<version>` image is the right default for most containers. Use Redis Stack images only when you explicitly need the bundled Redis Insight UI or Redis Stack packaging.
 
-**Correct: Run the core server from `redis:<version>` and add RedisInsight separately when needed.**
+**Correct: Run the core server from `redis:<version>` and add Redis Insight separately when needed.**
 
 ```bash
 # Core Redis server (pin to a specific tag from Docker Hub)
@@ -2387,9 +2387,9 @@ docker run -d --name redisinsight -p 5540:5540 redis/redisinsight:latest
 
 **When to use:**
 
-- `redis/redis-stack` for local development when you want RedisInsight bundled in the same container.
+- `redis/redis-stack` for local development when you want Redis Insight bundled in the same container.
 
-- `redis/redis-stack-server` when you specifically want the Redis Stack packaging without RedisInsight.
+- `redis/redis-stack-server` when you specifically want the Redis Stack packaging without Redis Insight.
 
 **When NOT needed:**
 
@@ -2424,7 +2424,7 @@ static RedisContainer redis = new RedisContainer(REDIS_IMAGE);
 
 **When NOT needed:**
 
-- Only use `redis/redis-stack` or `redis/redis-stack-server` if you explicitly need the Redis Stack packaging or the RedisInsight UI during tests.
+- Only use `redis/redis-stack` or `redis/redis-stack-server` if you explicitly need the Redis Stack packaging or the Redis Insight UI during tests.
 
 Reference: [https://testcontainers.com/modules/redis/](https://testcontainers.com/modules/redis/), [https://hub.docker.com/_/redis](https://hub.docker.com/_/redis), [https://redis.io/docs/latest/develop/ai/search-and-query/](https://redis.io/docs/latest/develop/ai/search-and-query/)
 
