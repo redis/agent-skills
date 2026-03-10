@@ -43,8 +43,9 @@ Best practices for Redis including data structures, memory management, Redis Que
    - 5.2 [Index Only Fields You Query](#52-index-only-fields-you-query)
    - 5.3 [Manage Indexes for Zero-Downtime Updates](#53-manage-indexes-for-zero-downtime-updates)
    - 5.4 [Use DIALECT 2 for Query Syntax](#54-use-dialect-2-for-query-syntax)
-   - 5.5 [Use SKIPINITIALSCAN for New Data Only Indexes](#55-use-skipinitialscan-for-new-data-only-indexes)
-   - 5.6 [Write Efficient Queries](#56-write-efficient-queries)
+   - 5.5 [Use Redis Query Engine (RQE) Terminology for Search and JSON](#55-use-redis-query-engine-rqe-terminology-for-search-and-json)
+   - 5.6 [Use SKIPINITIALSCAN for New Data Only Indexes](#56-use-skipinitialscan-for-new-data-only-indexes)
+   - 5.7 [Write Efficient Queries](#57-write-efficient-queries)
 6. [Vector Search & RedisVL](#6-vector-search--redisvl) — **HIGH**
    - 6.1 [Choose HNSW vs FLAT Based on Requirements](#61-choose-hnsw-vs-flat-based-on-requirements)
    - 6.2 [Configure Vector Indexes Properly](#62-configure-vector-indexes-properly)
@@ -65,6 +66,11 @@ Best practices for Redis including data structures, memory management, Redis Que
 11. [Observability](#11-observability) — **MEDIUM**
    - 11.1 [Monitor Key Redis Metrics](#111-monitor-key-redis-metrics)
    - 11.2 [Use Observability Commands for Debugging](#112-use-observability-commands-for-debugging)
+12. [Deployment & Containers](#12-deployment--containers) — **MEDIUM**
+   - 12.1 [Pin Redis Docker Tags for Reproducible Deployments](#121-pin-redis-docker-tags-for-reproducible-deployments)
+   - 12.2 [Provide a Minimal Docker Compose for Redis](#122-provide-a-minimal-docker-compose-for-redis)
+   - 12.3 [Use Official Redis Images for Containers](#123-use-official-redis-images-for-containers)
+   - 12.4 [Use Official Redis Images in Testcontainers](#124-use-official-redis-images-in-testcontainers)
 
 ---
 
@@ -1240,7 +1246,33 @@ FT.AGGREGATE idx:products "@category:{electronics}"
 
 Reference: [https://redis.io/docs/latest/develop/interact/search-and-query/advanced-concepts/dialects/](https://redis.io/docs/latest/develop/interact/search-and-query/advanced-concepts/dialects/)
 
-### 5.5 Use SKIPINITIALSCAN for New Data Only Indexes
+### 5.5 Use Redis Query Engine (RQE) Terminology for Search and JSON
+
+**Impact: MEDIUM (Keeps guidance aligned with Redis 8 docs and naming)**
+
+Redis 8 documentation refers to full-text search, vector search, and JSON indexing as part of the Redis Query Engine (RQE). Prefer `RQE` in guidance instead of the legacy module names unless you are explicitly discussing pre-8 deployments.
+
+**Correct: Describe search and JSON indexing as RQE features.**
+
+```bash
+# RQE index on JSON documents
+FT.CREATE idx:products ON JSON PREFIX 1 "product:" SCHEMA $.name AS name TEXT
+FT.SEARCH idx:products "@name:camera"
+```
+
+**When to use:**
+
+- When explaining search, vector search, or JSON indexing in Redis 8+.
+
+- When pointing users to the official docs for search and query.
+
+**When NOT needed:**
+
+- Only use `RediSearch` or `RedisJSON` when the user is on Redis 7.x or a legacy module-based setup.
+
+Reference: [https://redis.io/docs/latest/develop/ai/search-and-query/](https://redis.io/docs/latest/develop/ai/search-and-query/), [https://redis.io/docs/latest/operate/rs/release-notes/redis-os-8-0-release-notes/](https://redis.io/docs/latest/operate/rs/release-notes/redis-os-8-0-release-notes/)
+
+### 5.6 Use SKIPINITIALSCAN for New Data Only Indexes
 
 **Impact: MEDIUM (Faster index creation, avoids indexing existing data)**
 
@@ -1324,7 +1356,7 @@ try (UnifiedJedis jedis = new UnifiedJedis("redis://localhost:6379")) {
 
 Reference: [https://redis.io/docs/latest/commands/ft.create/](https://redis.io/docs/latest/commands/ft.create/)
 
-### 5.6 Write Efficient Queries
+### 5.7 Write Efficient Queries
 
 **Impact: HIGH (Proper filtering reduces query time by orders of magnitude)**
 
@@ -2207,6 +2239,197 @@ Reference: [https://redis.io/docs/latest/operate/oss_and_stack/management/optimi
 
 ---
 
+## 12. Deployment & Containers
+
+**Impact: MEDIUM**
+
+Docker image selection, container defaults, and deployment packaging.
+
+### 12.1 Pin Redis Docker Tags for Reproducible Deployments
+
+**Impact: MEDIUM (Prevents surprise upgrades and configuration drift)**
+
+Avoid floating tags like `latest` or bare major tags in production. Pin to a specific patch version for repeatable builds, or pin to a minor version only if you explicitly want automatic patch updates.
+
+**Correct: Pin to a patch tag (preferred) or a minor tag (if you want patch updates).**
+
+```bash
+# Preferred: exact patch
+redis:8.4.0
+
+# Acceptable for auto patch updates (use with caution)
+redis:8.4
+```
+
+**Incorrect: Use floating tags that can change without notice.**
+
+```bash
+redis:latest
+redis:8
+```
+
+Reference: [https://hub.docker.com/_/redis](https://hub.docker.com/_/redis), [https://hub.docker.com/_/redis/tags](https://hub.docker.com/_/redis/tags)
+
+### 12.2 Provide a Minimal Docker Compose for Redis
+
+**Impact: MEDIUM (Standardizes local setups and avoids data loss)**
+
+When users ask for a container setup, give a minimal `docker-compose.yml` that pins the image, includes a volume for `/data`, and a simple healthcheck. Add Redis Insight only when the user wants a GUI, and provide a no-persistence variant for ephemeral dev or tests.
+
+**Correct: Minimal, pinned, and persistent Compose setup.**
+
+```yaml
+services:
+  redis:
+    image: redis:8.6.0
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  redis-data:
+```
+
+**Correct: Redis + Redis Insight with persistence and healthchecks (for local dev with a GUI).**
+
+```yaml
+services:
+  redis-database:
+    container_name: redis-database
+    hostname: redis-database
+    image: redis:8.6.0
+    command: ["redis-server", "--save", "30", "1"]
+    volumes:
+      - ./data:/data
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping | grep PONG"]
+      interval: 10s
+      retries: 5
+      start_period: 5s
+      timeout: 5s
+
+  redis-insight:
+    container_name: redis-insight
+    hostname: redis-insight
+    image: redis/redisinsight:3.0.3
+    depends_on:
+      - redis-database
+    environment:
+      RI_REDIS_HOST: "redis-database"
+      RI_REDIS_PORT: "6379"
+    ports:
+      - "5540:5540"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O- http://localhost:5540/api/health/ | grep -q '\"status\":\"up\"'"]
+      interval: 10s
+      retries: 5
+      start_period: 5s
+      timeout: 5s
+```
+
+**Correct: Redis without persistence (ephemeral dev or tests).**
+
+```yaml
+services:
+  redis:
+    image: redis:8.6.0
+    ports:
+      - "6379:6379"
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+```
+
+**When to use:**
+
+- Local development or single-node container setups.
+
+- Documentation or examples that need a working Redis container quickly.
+
+- Redis Insight for GUI-based exploration, indexing, or debugging.
+
+- No-persistence variant for ephemeral dev or integration tests.
+
+**When NOT needed:**
+
+- Kubernetes or managed Redis services where Compose is not used.
+
+- Advanced multi-node deployments with custom orchestration.
+
+Reference: [https://hub.docker.com/_/redis](https://hub.docker.com/_/redis), [https://hub.docker.com/_/redis/tags](https://hub.docker.com/_/redis/tags), [https://hub.docker.com/r/redis/redisinsight](https://hub.docker.com/r/redis/redisinsight)
+
+### 12.3 Use Official Redis Images for Containers
+
+**Impact: HIGH (Avoids outdated stacks and unnecessary components)**
+
+Redis 8 bundles the Redis Query Engine and core data structures (JSON, time series, probabilistic) in the main server distribution, so the official `redis:<version>` image is the right default for most containers. Use Redis Stack images only when you explicitly need the bundled Redis Insight UI or Redis Stack packaging.
+
+**Correct: Run the core server from `redis:<version>` and add Redis Insight separately when needed.**
+
+```bash
+# Core Redis server (pin to a specific tag from Docker Hub)
+docker run -d --name redis -p 6379:6379 redis:8.4.0
+
+# Optional GUI
+docker run -d --name redisinsight -p 5540:5540 redis/redisinsight:latest
+```
+
+**When to use:**
+
+- `redis/redis-stack` for local development when you want Redis Insight bundled in the same container.
+
+- `redis/redis-stack-server` when you specifically want the Redis Stack packaging without Redis Insight.
+
+**When NOT needed:**
+
+- Do not default to `redis/redis-stack` for Redis 8+ server-only deployments.
+
+- Do not recommend separate module installation for JSON/search/time series on Redis 8+ containers.
+
+If licensing comes up, note that Redis 8 is tri-licensed (RSALv2, SSPLv1, AGPLv3); point users to the official license overview for the exact terms.
+
+Reference: [https://hub.docker.com/_/redis](https://hub.docker.com/_/redis), [https://hub.docker.com/_/redis/tags](https://hub.docker.com/_/redis/tags), [https://redis.io/docs/latest/operate/rs/release-notes/redis-os-8-0-release-notes/](https://redis.io/docs/latest/operate/rs/release-notes/redis-os-8-0-release-notes/), [https://redis.io/legal/licenses/](https://redis.io/legal/licenses/), [https://hub.docker.com/r/redis/redis-stack](https://hub.docker.com/r/redis/redis-stack), [https://hub.docker.com/r/redis/redisinsight](https://hub.docker.com/r/redis/redisinsight)
+
+### 12.4 Use Official Redis Images in Testcontainers
+
+**Impact: MEDIUM (Keeps integration tests aligned with production behavior)**
+
+When using Testcontainers, pick the official `redis:<version>` image and pin to the same Redis version you run in production. This keeps behavior consistent across environments and avoids accidental drift.
+
+**Correct: Pin the official Redis image in Testcontainers.**
+
+```java
+static final DockerImageName REDIS_IMAGE = DockerImageName.parse("redis:8.4.0");
+
+@Container
+static RedisContainer redis = new RedisContainer(REDIS_IMAGE);
+```
+
+**When to use:**
+
+- Any integration test that exercises Redis behavior.
+
+- Tests that need Redis 8 features (e.g., RQE search, JSON, time series).
+
+**When NOT needed:**
+
+- Only use `redis/redis-stack` or `redis/redis-stack-server` if you explicitly need the Redis Stack packaging or the Redis Insight UI during tests.
+
+Reference: [https://testcontainers.com/modules/redis/](https://testcontainers.com/modules/redis/), [https://hub.docker.com/_/redis](https://hub.docker.com/_/redis), [https://redis.io/docs/latest/develop/ai/search-and-query/](https://redis.io/docs/latest/develop/ai/search-and-query/)
+
+---
+
 ## References
 
 1. [https://redis.io/docs/](https://redis.io/docs/)
@@ -2214,3 +2437,6 @@ Reference: [https://redis.io/docs/latest/operate/oss_and_stack/management/optimi
 3. [https://redis.io/docs/latest/develop/clients/redisvl/](https://redis.io/docs/latest/develop/clients/redisvl/)
 4. [https://redis.io/docs/latest/develop/ai/langcache/](https://redis.io/docs/latest/develop/ai/langcache/)
 5. [https://redis.io/commands/](https://redis.io/commands/)
+6. [https://hub.docker.com/_/redis/tags](https://hub.docker.com/_/redis/tags)
+7. [https://redis.io/legal/licenses/](https://redis.io/legal/licenses/)
+8. [https://testcontainers.com/modules/redis/](https://testcontainers.com/modules/redis/)

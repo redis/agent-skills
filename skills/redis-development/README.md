@@ -45,10 +45,11 @@ A structured repository for creating and maintaining Redis development guideline
    - `rqe-` for Redis Query Engine
    - `vector-` for Vector Search & RedisVL
    - `semantic-cache-` for Semantic Caching
-   - `stream-` for Streams & Pub/Sub
-   - `cluster-` for Clustering & Replication
-   - `security-` for Security
-   - `observe-` for Observability
+  - `stream-` for Streams & Pub/Sub
+  - `cluster-` for Clustering & Replication
+  - `security-` for Security
+  - `observe-` for Observability
+  - `deploy-` for Deployment & Containers
 3. Fill in the frontmatter and content
 4. Ensure you have clear examples with explanations
 5. Run `npm run build` (in the build package) to regenerate AGENTS.md
