@@ -3,6 +3,8 @@ title: Choose the Right Data Structure
 impact: HIGH
 impactDescription: Optimal memory usage and operation performance
 tags: data-structures, strings, hashes, sets, lists, sorted-sets, json, streams, vector-sets
+description: Choose the Right Data Structure
+alwaysApply: true
 ---
 
 ## Choose the Right Data Structure

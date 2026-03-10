@@ -3,6 +3,8 @@ title: Use INCR for Atomic Counters
 impact: MEDIUM
 impactDescription: Atomic increment avoids race conditions
 tags: incr, counters, atomic, performance
+description: Use INCR for Atomic Counters
+alwaysApply: true
 ---
 
 ## Use INCR for Atomic Counters

@@ -3,6 +3,8 @@ title: Choose Streams vs Pub/Sub Appropriately
 impact: MEDIUM
 impactDescription: Wrong choice leads to lost messages or unnecessary complexity
 tags: streams, pubsub, messaging, events, queues
+description: Choose Streams vs Pub/Sub Appropriately
+alwaysApply: true
 ---
 
 ## Choose Streams vs Pub/Sub Appropriately

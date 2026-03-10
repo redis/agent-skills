@@ -3,6 +3,8 @@ title: Choose HNSW vs FLAT Based on Requirements
 impact: HIGH
 impactDescription: HNSW trades accuracy for speed, FLAT provides exact results
 tags: vector, hnsw, flat, algorithm, performance
+description: Choose HNSW vs FLAT Based on Requirements
+alwaysApply: true
 ---
 
 ## Choose HNSW vs FLAT Based on Requirements

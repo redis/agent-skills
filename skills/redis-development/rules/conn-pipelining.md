@@ -3,6 +3,8 @@ title: Use Pipelining for Bulk Operations
 impact: HIGH
 impactDescription: Reduces round trips, 5-10x faster for batch operations
 tags: pipelining, batch, performance, round-trips
+description: Use Pipelining for Bulk Operations
+alwaysApply: true
 ---
 
 ## Use Pipelining for Bulk Operations

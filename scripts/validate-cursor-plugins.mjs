@@ -109,34 +109,26 @@ async function validateManifestPath(pluginDir, pluginName, fieldName, value) {
   }
 }
 
-async function main() {
-  const manifestPath = path.join(
-    repoRoot,
-    ".cursor-plugin",
-    "plugin.json",
-  );
-  const pluginManifest = await readJsonFile(
-    manifestPath,
-    "Cursor plugin manifest",
-  );
+async function validatePluginManifest(manifestPath, pluginDir, context) {
+  const pluginManifest = await readJsonFile(manifestPath, context);
   if (!pluginManifest) {
-    summarizeAndExit();
     return;
   }
+
+  const label = pluginManifest.name || context;
 
   if (
     typeof pluginManifest.name !== "string" ||
     !pluginNamePattern.test(pluginManifest.name)
   ) {
     addError(
-      '"name" in plugin.json must be lowercase and use only alphanumerics, hyphens, and periods.',
+      `${label}: "name" must be lowercase and use only alphanumerics, hyphens, and periods.`,
     );
   }
 
-  validateRequiredString(pluginManifest.displayName, "displayName");
-  validateRequiredString(pluginManifest.version, "version");
-  validateRequiredString(pluginManifest.description, "description");
-  validateRequiredString(pluginManifest.license, "license");
+  validateRequiredString(pluginManifest.version, `${label}: version`);
+  validateRequiredString(pluginManifest.description, `${label}: description`);
+  validateRequiredString(pluginManifest.license, `${label}: license`);
 
   if (
     !pluginManifest.author ||
@@ -144,7 +136,7 @@ async function main() {
     typeof pluginManifest.author.name !== "string" ||
     pluginManifest.author.name.length === 0
   ) {
-    addError("author.name is required in plugin.json.");
+    addError(`${label}: author.name is required.`);
   }
   if (
     !Array.isArray(pluginManifest.keywords) ||
@@ -153,10 +145,8 @@ async function main() {
       (keyword) => typeof keyword !== "string" || keyword.trim().length === 0,
     )
   ) {
-    addError("keywords must be a non-empty string array.");
+    addError(`${label}: keywords must be a non-empty string array.`);
   }
-
-  await ensureDirectory(path.join(repoRoot, ".cursor-plugin"), ".cursor-plugin");
 
   for (const field of [
     "logo",
@@ -168,8 +158,92 @@ async function main() {
     "mcpServers",
   ]) {
     for (const value of extractPathValues(pluginManifest[field])) {
-      await validateManifestPath(repoRoot, pluginManifest.name, field, value);
+      await validateManifestPath(pluginDir, label, field, value);
     }
+  }
+}
+
+async function validateMarketplace(marketplacePath) {
+  const marketplace = await readJsonFile(marketplacePath, "Cursor marketplace manifest");
+  if (!marketplace) {
+    return;
+  }
+
+  validateRequiredString(marketplace.name, "marketplace: name");
+
+  if (
+    !marketplace.owner ||
+    typeof marketplace.owner !== "object" ||
+    typeof marketplace.owner.name !== "string" ||
+    marketplace.owner.name.length === 0
+  ) {
+    addError("marketplace: owner.name is required.");
+  }
+
+  if (!Array.isArray(marketplace.plugins) || marketplace.plugins.length === 0) {
+    addError("marketplace: plugins must be a non-empty array.");
+    return;
+  }
+
+  const pluginRoot = marketplace.metadata?.pluginRoot || "";
+
+  if (pluginRoot && !isSafeRelativePath(pluginRoot)) {
+    addError(`marketplace: metadata.pluginRoot has invalid path "${pluginRoot}".`);
+    return;
+  }
+
+  for (const entry of marketplace.plugins) {
+    if (
+      typeof entry.name !== "string" ||
+      !pluginNamePattern.test(entry.name)
+    ) {
+      addError(
+        `marketplace plugin entry: "name" must be lowercase kebab-case.`,
+      );
+      continue;
+    }
+
+    const source = typeof entry.source === "string"
+      ? entry.source
+      : entry.source?.path;
+
+    if (!source) {
+      addError(`${entry.name}: marketplace entry requires a "source" path.`);
+      continue;
+    }
+
+    if (!isSafeRelativePath(source)) {
+      addError(`${entry.name}: source has invalid path "${source}".`);
+      continue;
+    }
+
+    const pluginDir = path.resolve(repoRoot, pluginRoot, source);
+    if (!(await pathExists(pluginDir))) {
+      addError(`${entry.name}: resolved plugin directory does not exist: ${pluginDir}`);
+      continue;
+    }
+
+    const perPluginManifest = path.join(pluginDir, ".cursor-plugin", "plugin.json");
+    if (!(await pathExists(perPluginManifest))) {
+      addError(`${entry.name}: per-plugin manifest is missing: ${perPluginManifest}`);
+      continue;
+    }
+    await validatePluginManifest(perPluginManifest, pluginDir, `${entry.name} plugin.json`);
+  }
+}
+
+async function main() {
+  await ensureDirectory(path.join(repoRoot, ".cursor-plugin"), ".cursor-plugin");
+
+  const marketplacePath = path.join(repoRoot, ".cursor-plugin", "marketplace.json");
+  const rootManifestPath = path.join(repoRoot, ".cursor-plugin", "plugin.json");
+
+  if (await pathExists(marketplacePath)) {
+    await validateMarketplace(marketplacePath);
+  } else if (await pathExists(rootManifestPath)) {
+    await validatePluginManifest(rootManifestPath, repoRoot, "Cursor plugin manifest");
+  } else {
+    addError("No .cursor-plugin/marketplace.json or .cursor-plugin/plugin.json found.");
   }
 
   summarizeAndExit();

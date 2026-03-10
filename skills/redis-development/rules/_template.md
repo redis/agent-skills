@@ -3,6 +3,8 @@ title: Clear, Action-Oriented Title (e.g., "Use Connection Pooling")
 impact: MEDIUM
 impactDescription: Brief quantified benefit (e.g., "Reduces connection overhead by 10x")
 tags: relevant, keywords, here
+description: Clear, Action-Oriented Title (e.g., "Use Connection Pooling")
+alwaysApply: true
 ---
 
 ## [Rule Title]

@@ -3,6 +3,8 @@ title: Use JSON Paths for Partial Updates
 impact: MEDIUM
 impactDescription: Avoids fetching and rewriting entire documents
 tags: json, partial-updates, paths, atomic
+description: Use JSON Paths for Partial Updates
+alwaysApply: true
 ---
 
 ## Use JSON Paths for Partial Updates

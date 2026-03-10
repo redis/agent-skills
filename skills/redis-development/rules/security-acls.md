@@ -3,6 +3,8 @@ title: Use ACLs for Fine-Grained Access Control
 impact: HIGH
 impactDescription: Limits blast radius if credentials are compromised
 tags: security, acl, users, permissions, least-privilege
+description: Use ACLs for Fine-Grained Access Control
+alwaysApply: true
 ---
 
 ## Use ACLs for Fine-Grained Access Control

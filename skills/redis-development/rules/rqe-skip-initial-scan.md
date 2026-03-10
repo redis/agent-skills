@@ -3,6 +3,8 @@ title: Use SKIPINITIALSCAN for New Data Only Indexes
 impact: MEDIUM
 impactDescription: Faster index creation, avoids indexing existing data
 tags: index, skipinitialscan, rqe, search
+description: Use SKIPINITIALSCAN for New Data Only Indexes
+alwaysApply: true
 ---
 
 ## Use SKIPINITIALSCAN for New Data Only Indexes

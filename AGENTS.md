@@ -85,6 +85,8 @@ title: Clear, Action-Oriented Title
 impact: HIGH|MEDIUM|LOW
 impactDescription: Quantified benefit (e.g., "10x faster")
 tags: relevant, keywords
+description: Clear, Action-Oriented Title
+alwaysApply: true
 ---
 
 ## {Title}

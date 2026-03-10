@@ -3,6 +3,8 @@ title: Use Transactions for Atomic Multi-Command Operations
 impact: MEDIUM
 impactDescription: Prevents race conditions and data inconsistency
 tags: transactions, multi, exec, atomicity
+description: Use Transactions for Atomic Multi-Command Operations
+alwaysApply: true
 ---
 
 ## Use Transactions for Atomic Multi-Command Operations

@@ -3,6 +3,8 @@ title: Configure Memory Limits and Eviction Policies
 impact: HIGH
 impactDescription: Prevents out-of-memory crashes and unpredictable behavior
 tags: memory, maxmemory, eviction, lru, ttl
+description: Configure Memory Limits and Eviction Policies
+alwaysApply: true
 ---
 
 ## Configure Memory Limits and Eviction Policies

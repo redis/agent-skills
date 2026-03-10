@@ -3,6 +3,8 @@ title: Use Hybrid Search for Better Results
 impact: MEDIUM
 impactDescription: Combining vector + filters improves relevance and reduces search space
 tags: vector, hybrid, filters, redisvl, search
+description: Use Hybrid Search for Better Results
+alwaysApply: true
 ---
 
 ## Use Hybrid Search for Better Results

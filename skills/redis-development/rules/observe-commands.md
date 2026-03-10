@@ -3,6 +3,8 @@ title: Use Observability Commands for Debugging
 impact: MEDIUM
 impactDescription: Enables quick diagnosis of performance issues
 tags: observability, slowlog, info, memory, debugging
+description: Use Observability Commands for Debugging
+alwaysApply: true
 ---
 
 ## Use Observability Commands for Debugging

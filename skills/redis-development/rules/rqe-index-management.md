@@ -3,6 +3,8 @@ title: Manage Indexes for Zero-Downtime Updates
 impact: MEDIUM
 impactDescription: Use aliases for seamless index updates
 tags: rqe, index, alias, management, reindex
+description: Manage Indexes for Zero-Downtime Updates
+alwaysApply: true
 ---
 
 ## Manage Indexes for Zero-Downtime Updates

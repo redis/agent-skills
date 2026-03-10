@@ -3,6 +3,8 @@ title: Use Client-Side Caching for Frequently Read Data
 impact: HIGH
 impactDescription: Reduces network round-trips for repeated reads
 tags: caching, performance, client-side, tracking
+description: Use Client-Side Caching for Frequently Read Data
+alwaysApply: true
 ---
 
 ## Use Client-Side Caching for Frequently Read Data

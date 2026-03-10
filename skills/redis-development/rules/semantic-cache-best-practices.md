@@ -3,6 +3,8 @@ title: Configure Semantic Cache Properly
 impact: MEDIUM
 impactDescription: Correct threshold tuning balances hit rate vs accuracy
 tags: langcache, cache, threshold, ttl, semantic
+description: Configure Semantic Cache Properly
+alwaysApply: true
 ---
 
 ## Configure Semantic Cache Properly

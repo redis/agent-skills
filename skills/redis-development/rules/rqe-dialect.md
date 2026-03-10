@@ -3,6 +3,8 @@ title: Use DIALECT 2 for Query Syntax
 impact: MEDIUM
 impactDescription: Ensures consistent query behavior and access to modern features
 tags: rqe, dialect, query, syntax
+description: Use DIALECT 2 for Query Syntax
+alwaysApply: true
 ---
 
 ## Use DIALECT 2 for Query Syntax
