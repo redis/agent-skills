@@ -187,6 +187,11 @@ async function validateMarketplace(marketplacePath) {
 
   const pluginRoot = marketplace.metadata?.pluginRoot || "";
 
+  if (pluginRoot && !isSafeRelativePath(pluginRoot)) {
+    addError(`marketplace: metadata.pluginRoot has invalid path "${pluginRoot}".`);
+    return;
+  }
+
   for (const entry of marketplace.plugins) {
     if (
       typeof entry.name !== "string" ||
@@ -207,6 +212,11 @@ async function validateMarketplace(marketplacePath) {
       continue;
     }
 
+    if (!isSafeRelativePath(source)) {
+      addError(`${entry.name}: source has invalid path "${source}".`);
+      continue;
+    }
+
     const pluginDir = path.resolve(repoRoot, pluginRoot, source);
     if (!(await pathExists(pluginDir))) {
       addError(`${entry.name}: resolved plugin directory does not exist: ${pluginDir}`);
@@ -214,9 +224,11 @@ async function validateMarketplace(marketplacePath) {
     }
 
     const perPluginManifest = path.join(pluginDir, ".cursor-plugin", "plugin.json");
-    if (await pathExists(perPluginManifest)) {
-      await validatePluginManifest(perPluginManifest, pluginDir, `${entry.name} plugin.json`);
+    if (!(await pathExists(perPluginManifest))) {
+      addError(`${entry.name}: per-plugin manifest is missing: ${perPluginManifest}`);
+      continue;
     }
+    await validatePluginManifest(perPluginManifest, pluginDir, `${entry.name} plugin.json`);
   }
 }
 
