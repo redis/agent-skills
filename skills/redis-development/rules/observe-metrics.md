@@ -3,6 +3,8 @@ title: Monitor Key Redis Metrics
 impact: MEDIUM
 impactDescription: Early detection of performance and capacity issues
 tags: observability, metrics, monitoring, memory, connections
+description: Monitor Key Redis Metrics
+alwaysApply: true
 ---
 
 ## Monitor Key Redis Metrics

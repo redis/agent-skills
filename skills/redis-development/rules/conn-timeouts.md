@@ -3,6 +3,8 @@ title: Configure Connection Timeouts
 impact: MEDIUM
 impactDescription: Improves connection resilience and failure recovery
 tags: timeouts, connections, reliability
+description: Configure Connection Timeouts
+alwaysApply: true
 ---
 
 ## Configure Connection Timeouts

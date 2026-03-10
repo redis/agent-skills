@@ -3,6 +3,8 @@ title: Write Efficient Queries
 impact: HIGH
 impactDescription: Proper filtering reduces query time by orders of magnitude
 tags: rqe, ft.search, query, performance, filters
+description: Write Efficient Queries
+alwaysApply: true
 ---
 
 ## Write Efficient Queries

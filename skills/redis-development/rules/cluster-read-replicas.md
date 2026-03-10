@@ -3,6 +3,8 @@ title: Use Read Replicas for Read-Heavy Workloads
 impact: MEDIUM
 impactDescription: Scales read throughput without adding primary nodes
 tags: cluster, replicas, read-scaling, high-availability
+description: Use Read Replicas for Read-Heavy Workloads
+alwaysApply: true
 ---
 
 ## Use Read Replicas for Read-Heavy Workloads

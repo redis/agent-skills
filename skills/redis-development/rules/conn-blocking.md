@@ -3,6 +3,8 @@ title: Avoid Slow Commands in Production
 impact: HIGH
 impactDescription: Prevents Redis from becoming unresponsive
 tags: slow-commands, keys, scan, performance
+description: Avoid Slow Commands in Production
+alwaysApply: true
 ---
 
 ## Avoid Slow Commands in Production

@@ -3,6 +3,8 @@ title: Always Use Authentication in Production
 impact: HIGH
 impactDescription: Prevents unauthorized access to your data
 tags: security, authentication, password, tls, ssl
+description: Always Use Authentication in Production
+alwaysApply: true
 ---
 
 ## Always Use Authentication in Production

@@ -3,6 +3,8 @@ title: Use Hash Tags for Multi-Key Operations
 impact: HIGH
 impactDescription: Enables multi-key operations in Redis Cluster
 tags: cluster, hash-tags, keys, sharding, multi-key
+description: Use Hash Tags for Multi-Key Operations
+alwaysApply: true
 ---
 
 ## Use Hash Tags for Multi-Key Operations

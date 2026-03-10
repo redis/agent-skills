@@ -3,6 +3,8 @@ title: Use Consistent Key Naming Conventions
 impact: MEDIUM
 impactDescription: Improved maintainability and debugging
 tags: keys, naming, conventions, prefixes
+description: Use Consistent Key Naming Conventions
+alwaysApply: true
 ---
 
 ## Use Consistent Key Naming Conventions

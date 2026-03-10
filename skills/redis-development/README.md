@@ -64,6 +64,8 @@ title: Rule Title Here
 impact: MEDIUM
 impactDescription: Optional description
 tags: tag1, tag2, tag3
+description: Rule Title Here
+alwaysApply: true
 ---
 
 ## Rule Title Here

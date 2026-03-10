@@ -3,6 +3,8 @@ title: Choose the Correct Field Type
 impact: HIGH
 impactDescription: Use TAG instead of TEXT for filtering to improve query speed 10x
 tags: rqe, field-types, text, tag, numeric, geo, geoshape, vector
+description: Choose the Correct Field Type
+alwaysApply: true
 ---
 
 ## Choose the Correct Field Type

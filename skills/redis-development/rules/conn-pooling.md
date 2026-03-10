@@ -3,6 +3,8 @@ title: Use Connection Pooling or Multiplexing
 impact: HIGH
 impactDescription: Reduces connection overhead by 10x or more
 tags: connections, pooling, multiplexing, performance
+description: Use Connection Pooling or Multiplexing
+alwaysApply: true
 ---
 
 ## Use Connection Pooling or Multiplexing

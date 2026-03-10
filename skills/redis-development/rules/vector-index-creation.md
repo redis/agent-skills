@@ -3,6 +3,8 @@ title: Configure Vector Indexes Properly
 impact: HIGH
 impactDescription: Correct configuration is essential for vector search accuracy
 tags: vector, index, hnsw, flat, embeddings, rqe
+description: Configure Vector Indexes Properly
+alwaysApply: true
 ---
 
 ## Configure Vector Indexes Properly

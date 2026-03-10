@@ -3,6 +3,8 @@ title: Implement RAG Pattern Correctly
 impact: HIGH
 impactDescription: Proper RAG implementation improves LLM response quality
 tags: vector, rag, llm, embeddings, retrieval
+description: Implement RAG Pattern Correctly
+alwaysApply: true
 ---
 
 ## Implement RAG Pattern Correctly

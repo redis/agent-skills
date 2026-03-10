@@ -3,6 +3,8 @@ title: Secure Network Access
 impact: HIGH
 impactDescription: Reduces attack surface and prevents unauthorized access
 tags: security, network, firewall, bind, tls
+description: Secure Network Access
+alwaysApply: true
 ---
 
 ## Secure Network Access

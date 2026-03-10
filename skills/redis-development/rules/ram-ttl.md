@@ -3,6 +3,8 @@ title: Set TTL on Cache Keys
 impact: HIGH
 impactDescription: Prevents unbounded memory growth
 tags: ttl, expiration, cache, memory
+description: Set TTL on Cache Keys
+alwaysApply: true
 ---
 
 ## Set TTL on Cache Keys

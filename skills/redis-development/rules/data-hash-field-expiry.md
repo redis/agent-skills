@@ -3,6 +3,8 @@ title: Use Hash Field Expiration for Per-Field TTL
 impact: MEDIUM
 impactDescription: Fine-grained expiration without managing timers
 tags: hash, expiration, ttl, hexpire
+description: Use Hash Field Expiration for Per-Field TTL
+alwaysApply: true
 ---
 
 ## Use Hash Field Expiration for Per-Field TTL

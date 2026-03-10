@@ -3,6 +3,8 @@ title: Choose JSON vs Hash vs String Appropriately
 impact: MEDIUM
 impactDescription: Optimal data model for your use case
 tags: json, hash, string, data-structures, documents
+description: Choose JSON vs Hash vs String Appropriately
+alwaysApply: true
 ---
 
 ## Choose JSON vs Hash vs String Appropriately

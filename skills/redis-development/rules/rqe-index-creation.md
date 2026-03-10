@@ -3,6 +3,8 @@ title: Index Only Fields You Query
 impact: HIGH
 impactDescription: Reduces index size and improves write performance
 tags: rqe, ft.create, index, schema
+description: Index Only Fields You Query
+alwaysApply: true
 ---
 
 ## Index Only Fields You Query

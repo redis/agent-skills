@@ -3,6 +3,8 @@ title: Use LangCache for LLM Response Caching
 impact: HIGH
 impactDescription: Reduces LLM API costs by 50-90% for similar queries
 tags: langcache, llm, semantic-cache, embeddings, ai
+description: Use LangCache for LLM Response Caching
+alwaysApply: true
 ---
 
 ## Use LangCache for LLM Response Caching
