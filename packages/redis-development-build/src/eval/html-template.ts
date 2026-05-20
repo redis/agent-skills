@@ -9,6 +9,14 @@
  *   Renders the standalone Redis-branded HTML aggregate benchmark report from
  *   the normalized cross-model summary built in `aggregate.ts`.
  */
+import {
+  formatUsd,
+  percent,
+  signedNumber,
+  signedPercent,
+  signedUsd,
+} from "./utils.js";
+
 type Metric = "pass_rate" | "tokens" | "time_seconds" | "cost_usd";
 type DeltaTone = "good" | "bad" | "flat";
 
@@ -784,28 +792,6 @@ function deltaColor(
   if (tone === "good") return "var(--good)";
   if (tone === "bad") return "var(--bad)";
   return "var(--tie)";
-}
-
-function percent(value: number): string {
-  return `${Math.round(value * 100)}%`;
-}
-
-function signedPercent(value: number): string {
-  const percentage = value * 100;
-  const roundedMagnitude = Math.round(Math.abs(percentage));
-  return `${percentage < 0 ? "-" : "+"}${roundedMagnitude} points`;
-}
-
-function signedNumber(value: number, decimals: number): string {
-  return `${value >= 0 ? "+" : ""}${value.toFixed(decimals)}`;
-}
-
-function formatUsd(value: number): string {
-  return `$${value.toFixed(4)}`;
-}
-
-function signedUsd(value: number): string {
-  return `${value >= 0 ? "+" : "-"}$${Math.abs(value).toFixed(4)}`;
 }
 
 function clamp(value: number, min: number, max: number): number {

@@ -95,6 +95,28 @@ export function numberOrZero(value: unknown): number {
   return typeof value === 'number' && Number.isFinite(value) ? value : 0
 }
 
+export function percent(value: number): string {
+  return `${Math.round(value * 100)}%`
+}
+
+export function signedPercent(value: number): string {
+  const percentage = value * 100
+  const roundedMagnitude = Math.round(Math.abs(percentage))
+  return `${percentage < 0 ? '-' : '+'}${roundedMagnitude} points`
+}
+
+export function signedNumber(value: number, decimals: number): string {
+  return `${value >= 0 ? '+' : ''}${value.toFixed(decimals)}`
+}
+
+export function formatUsd(value: number): string {
+  return `$${value.toFixed(4)}`
+}
+
+export function signedUsd(value: number): string {
+  return `${value >= 0 ? '+' : '-'}$${Math.abs(value).toFixed(4)}`
+}
+
 export function isNodeError(error: unknown): error is NodeJS.ErrnoException {
   return error instanceof Error && 'code' in error
 }

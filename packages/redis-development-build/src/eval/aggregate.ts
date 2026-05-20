@@ -17,11 +17,16 @@ import { join, relative } from "path";
 import { renderAggregateHtml } from "./html-template.js";
 import {
   EVAL_WORKSPACES_DIR,
+  formatUsd,
   isNodeError,
   numberOrZero,
+  percent,
   readJson,
   resolveRepoPath,
   REPO_ROOT,
+  signedNumber,
+  signedPercent,
+  signedUsd,
 } from "./utils.js";
 
 interface BenchmarkRun {
@@ -791,28 +796,6 @@ function mean(values: number[]): number {
   const filtered = values.filter((value) => Number.isFinite(value));
   if (filtered.length === 0) return 0;
   return filtered.reduce((sum, value) => sum + value, 0) / filtered.length;
-}
-
-function percent(value: number): string {
-  return `${Math.round(value * 100)}%`;
-}
-
-function signedPercent(value: number): string {
-  const percentage = value * 100;
-  const roundedMagnitude = Math.round(Math.abs(percentage));
-  return `${percentage < 0 ? "-" : "+"}${roundedMagnitude} points`;
-}
-
-function signedNumber(value: number, decimals: number): string {
-  return `${value >= 0 ? "+" : ""}${value.toFixed(decimals)}`;
-}
-
-function formatUsd(value: number): string {
-  return `$${value.toFixed(4)}`;
-}
-
-function signedUsd(value: number): string {
-  return `${value >= 0 ? "+" : "-"}$${Math.abs(value).toFixed(4)}`;
 }
 
 function roundUsd(value: number): number {
