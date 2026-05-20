@@ -625,7 +625,7 @@ function summarizeOverall(
       (summary) => summary.verdict === "improves",
     ).length,
     models_neutral: modelSummaries.filter(
-      (summary) => summary.verdict === "neutral",
+      (summary) => isNeutralVerdict(summary.verdict),
     ).length,
     models_degraded: modelSummaries.filter(
       (summary) => summary.verdict === "degrades",
@@ -729,6 +729,10 @@ function classifyDelta(passRateDelta: number, tokenDelta: number): string {
   if (Math.abs(passRateDelta) < 0.05 && tokenDelta > 1500)
     return "costly_neutral";
   return "neutral";
+}
+
+function isNeutralVerdict(verdict: string): boolean {
+  return verdict === "neutral" || verdict === "costly_neutral";
 }
 
 function renderMarkdown(input: {
