@@ -1,0 +1,15 @@
+{
+  "baseline_name": "current",
+  "updated_at": "2026-05-20T07:13:25.176Z",
+  "skill_name": "redis-development",
+  "eval_suite": "data-structures-key-naming",
+  "iteration": "iteration-1",
+  "input_root": "eval-workspaces/redis-development/data-structures-key-naming/iteration-1",
+  "included_files": [
+    "aggregate-benchmark.json",
+    "aggregate-benchmark.md",
+    "model-matrix.json",
+    "baseline.json",
+    "README.md"
+  ]
+}
