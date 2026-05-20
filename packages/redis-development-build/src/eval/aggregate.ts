@@ -14,7 +14,7 @@
 import { readdir, readFile, writeFile } from "fs/promises";
 import type { Dirent } from "fs";
 import { join, relative } from "path";
-import { renderAggregateHtml } from "./eval-html-template.js";
+import { renderAggregateHtml } from "./html-template.js";
 import {
   EVAL_WORKSPACES_DIR,
   isNodeError,
@@ -22,7 +22,7 @@ import {
   readJson,
   resolveRepoPath,
   REPO_ROOT,
-} from "./eval-utils.js";
+} from "./utils.js";
 
 interface BenchmarkRun {
   eval_id: number;

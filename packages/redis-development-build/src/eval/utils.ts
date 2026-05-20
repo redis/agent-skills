@@ -3,7 +3,7 @@ import { dirname, isAbsolute, join, relative, resolve } from 'path'
 import { fileURLToPath } from 'url'
 
 export const EVAL_UTILS_DIRNAME = dirname(fileURLToPath(import.meta.url))
-export const REPO_ROOT = resolve(EVAL_UTILS_DIRNAME, '../../..')
+export const REPO_ROOT = resolve(EVAL_UTILS_DIRNAME, '../../../..')
 export const SKILLS_DIR = join(REPO_ROOT, 'skills')
 export const EVAL_WORKSPACES_DIR = join(REPO_ROOT, 'eval-workspaces')
 

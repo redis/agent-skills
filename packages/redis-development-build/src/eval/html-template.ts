@@ -7,7 +7,7 @@
  *
  * Purpose:
  *   Renders the standalone Redis-branded HTML aggregate benchmark report from
- *   the normalized cross-model summary built in `eval-aggregate.ts`.
+ *   the normalized cross-model summary built in `aggregate.ts`.
  */
 type Metric = "pass_rate" | "tokens" | "time_seconds" | "cost_usd";
 type DeltaTone = "good" | "bad" | "flat";

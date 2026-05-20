@@ -24,7 +24,7 @@ import {
   readJson,
   REPO_ROOT,
   SKILLS_DIR,
-} from './eval-utils.js'
+} from './utils.js'
 
 type Configuration = 'with_skill' | 'without_skill'
 
@@ -591,7 +591,7 @@ async function runAnthropicAggregate(input: {
 
 async function runCombinedAggregate(outputRoot: string): Promise<void> {
   logProgress(`[aggregate] ${relative(REPO_ROOT, outputRoot)}`)
-  await runCommand('npx', ['tsx', 'src/eval-aggregate.ts', '--input-root', outputRoot], {
+  await runCommand('npx', ['tsx', 'src/eval/aggregate.ts', '--input-root', outputRoot], {
     cwd: join(REPO_ROOT, 'packages/redis-development-build'),
   })
 }

@@ -21,7 +21,7 @@ import {
   resolveRepoPath,
   REPO_ROOT,
   SKILLS_DIR,
-} from './eval-utils.js'
+} from './utils.js'
 
 interface ModelMatrix {
   default_iteration?: string
@@ -219,7 +219,7 @@ async function refreshAggregate(
   await runCommand(process.execPath, [
     '--import',
     'tsx',
-    join(EVAL_UTILS_DIRNAME, 'eval-aggregate.ts'),
+    join(EVAL_UTILS_DIRNAME, 'aggregate.ts'),
     '--input-root',
     target.inputRoot,
   ])
