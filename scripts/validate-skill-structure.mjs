@@ -35,7 +35,7 @@ for (const skillDir of skillDirs) {
 
     emitWarning({
       file: item.file ? path.join(path.relative(repoRoot, skillDir), item.file) : path.relative(repoRoot, skillDir),
-      title: `${item.category} ${item.level}`,
+      title: `${item.category || "skill-validator"} ${item.level}`,
       message: item.message,
     });
   }
