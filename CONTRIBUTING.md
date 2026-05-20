@@ -21,9 +21,26 @@ To add a new rule:
 
 The pre-commit hook will fail if `AGENTS.md` is out of sync with the rules.
 
+## Skill Structure
+
+Skills should move toward the standard Agent Skills package structure described in the [Anthropic Agent Skills documentation](https://docs.claude.com/en/docs/agents-and-tools/agent-skills).
+
+For published skill content, prefer:
+
+```text
+skills/<skill-name>/
+  SKILL.md
+  references/
+  scripts/
+  assets/
+```
+
+The PR workflow runs `skill-validator` in advisory mode and reports structure issues as warnings while we gradually move the repository toward the standard layout.
+
 ## Commands
 
 ```bash
-npm run validate  # Check rule files for errors
-npm run build     # Regenerate AGENTS.md from rules
+npm run validate                  # Check rule files and plugin manifests
+npm run validate:skill-structure  # Report skill package structure issues
+npm run build                     # Regenerate AGENTS.md from rules
 ```
