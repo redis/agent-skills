@@ -711,7 +711,8 @@ function inferEvalIds(runs: BenchmarkRun[]): number[] {
 function inferRunsPerConfiguration(runs: BenchmarkRun[]): number {
   const counts = new Map<string, number>();
   for (const run of runs) {
-    counts.set(run.configuration, (counts.get(run.configuration) ?? 0) + 1);
+    const key = `${run.configuration}:${run.eval_id}`;
+    counts.set(key, (counts.get(key) ?? 0) + 1);
   }
   return Math.max(0, ...counts.values());
 }
