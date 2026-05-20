@@ -799,7 +799,8 @@ function percent(value: number): string {
 
 function signedPercent(value: number): string {
   const percentage = value * 100;
-  return `${percentage >= 0 ? "+" : ""}${percentage.toFixed(0)} points`;
+  const roundedMagnitude = Math.round(Math.abs(percentage));
+  return `${percentage < 0 ? "-" : "+"}${roundedMagnitude} points`;
 }
 
 function signedNumber(value: number, decimals: number): string {
