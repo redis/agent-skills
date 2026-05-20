@@ -8,11 +8,20 @@
  *   It refreshes the combined aggregate report first, then copies only the
  *   stable summary artifacts instead of raw per-run model outputs.
  */
-import { access, copyFile, mkdir, readdir, readFile, writeFile } from 'fs/promises'
-import type { Dirent } from 'fs'
+import { access, copyFile, mkdir, writeFile } from 'fs/promises'
 import { spawn } from 'child_process'
-import { dirname, isAbsolute, join, relative, resolve } from 'path'
-import { fileURLToPath } from 'url'
+import { join, relative } from 'path'
+import {
+  discoverEvalSuiteDirs,
+  EVAL_UTILS_DIRNAME,
+  EVAL_WORKSPACES_DIR,
+  evalSuitePathParts,
+  pathExists,
+  readJson,
+  resolveRepoPath,
+  REPO_ROOT,
+  SKILLS_DIR,
+} from './eval-utils.js'
 
 interface ModelMatrix {
   default_iteration?: string
@@ -37,11 +46,6 @@ interface BaselineTarget {
   inputRoot: string
   iteration: string
 }
-
-const __dirname = dirname(fileURLToPath(import.meta.url))
-const REPO_ROOT = resolve(__dirname, '../../..')
-const SKILLS_DIR = join(REPO_ROOT, 'skills')
-const EVAL_WORKSPACES_DIR = join(REPO_ROOT, 'eval-workspaces')
 
 async function main(): Promise<void> {
   const options = parseArgs(process.argv.slice(2))
@@ -85,7 +89,7 @@ function parseArgs(args: string[]): CliOptions {
 
     switch (arg) {
       case '--input-root':
-        options.inputRoot = resolvePath(next())
+        options.inputRoot = resolveRepoPath(next())
         break
       case '--skill':
         options.skill = next()
@@ -177,46 +181,6 @@ async function resolveTargets(options: CliOptions): Promise<BaselineTarget[]> {
   return targets
 }
 
-async function discoverEvalSuiteDirs(): Promise<string[]> {
-  const suiteDirs: string[] = []
-  let skillEntries: Dirent[]
-
-  try {
-    skillEntries = await readdir(SKILLS_DIR, { withFileTypes: true })
-  } catch (error) {
-    if (isNodeError(error) && error.code === 'ENOENT') return []
-    throw error
-  }
-
-  for (const skillEntry of skillEntries) {
-    if (!skillEntry.isDirectory()) continue
-
-    const evalsDir = join(SKILLS_DIR, skillEntry.name, 'evals')
-    let suiteEntries: Dirent[]
-    try {
-      suiteEntries = await readdir(evalsDir, { withFileTypes: true })
-    } catch (error) {
-      if (isNodeError(error) && error.code === 'ENOENT') continue
-      throw error
-    }
-
-    for (const suiteEntry of suiteEntries) {
-      if (!suiteEntry.isDirectory()) continue
-      const suiteDir = join(evalsDir, suiteEntry.name)
-      const hasEvalSuite =
-        (await pathExists(join(suiteDir, 'evals.json'))) &&
-        (await pathExists(join(suiteDir, 'model-matrix.json')))
-      if (hasEvalSuite) {
-        suiteDirs.push(suiteDir)
-      }
-    }
-  }
-
-  return suiteDirs.sort((left, right) =>
-    relative(REPO_ROOT, left).localeCompare(relative(REPO_ROOT, right))
-  )
-}
-
 async function targetFromInputRoot(inputRoot: string): Promise<BaselineTarget> {
   const parts = relative(EVAL_WORKSPACES_DIR, inputRoot).split(/[\\/]/)
   const [skill = '', suite = '', iteration = ''] = parts
@@ -255,7 +219,7 @@ async function refreshAggregate(
   await runCommand(process.execPath, [
     '--import',
     'tsx',
-    join(__dirname, 'eval-aggregate.ts'),
+    join(EVAL_UTILS_DIRNAME, 'eval-aggregate.ts'),
     '--input-root',
     target.inputRoot,
   ])
@@ -382,38 +346,11 @@ function baselineDirectory(target: BaselineTarget, options: CliOptions): string 
   return options.name ? join(baselinesDir, options.name) : baselinesDir
 }
 
-function evalSuitePathParts(suiteDir: string): { skill: string; suite: string } {
-  const parts = relative(SKILLS_DIR, suiteDir).split(/[\\/]/)
-  return {
-    skill: parts[0] ?? '',
-    suite: parts[2] ?? '',
-  }
-}
-
 function safeBaselineName(value: string): string {
   if (!/^[a-zA-Z0-9._-]+$/.test(value)) {
     throw new Error(`--name may only contain letters, numbers, dots, dashes, and underscores.`)
   }
   return value
-}
-
-function resolvePath(value: string): string {
-  return isAbsolute(value) ? value : resolve(REPO_ROOT, value)
-}
-
-async function readJson<T>(filePath: string): Promise<T> {
-  const raw = await readFile(filePath, 'utf-8')
-  return JSON.parse(raw) as T
-}
-
-async function pathExists(path: string): Promise<boolean> {
-  try {
-    await access(path)
-    return true
-  } catch (error) {
-    if (isNodeError(error) && error.code === 'ENOENT') return false
-    throw error
-  }
 }
 
 async function runCommand(command: string, args: string[]): Promise<void> {
@@ -432,10 +369,6 @@ async function runCommand(command: string, args: string[]): Promise<void> {
       reject(new Error(`${command} ${args.join(' ')} failed with exit code ${code}`))
     })
   })
-}
-
-function isNodeError(error: unknown): error is NodeJS.ErrnoException {
-  return error instanceof Error && 'code' in error
 }
 
 main().catch((error) => {

@@ -13,9 +13,16 @@
  */
 import { readdir, readFile, writeFile } from "fs/promises";
 import type { Dirent } from "fs";
-import { dirname, isAbsolute, join, relative, resolve } from "path";
-import { fileURLToPath } from "url";
+import { join, relative } from "path";
 import { renderAggregateHtml } from "./eval-html-template.js";
+import {
+  EVAL_WORKSPACES_DIR,
+  isNodeError,
+  numberOrZero,
+  readJson,
+  resolveRepoPath,
+  REPO_ROOT,
+} from "./eval-utils.js";
 
 interface BenchmarkRun {
   eval_id: number;
@@ -74,10 +81,6 @@ interface CliOptions {
 }
 
 type ModelSummary = Awaited<ReturnType<typeof summarizeModel>>;
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const REPO_ROOT = resolve(__dirname, "../../..");
-const EVAL_WORKSPACES_DIR = join(REPO_ROOT, "eval-workspaces");
 
 async function main(): Promise<void> {
   const options = parseArgs(process.argv.slice(2));
@@ -163,7 +166,7 @@ function parseArgs(args: string[]): CliOptions {
 
     switch (arg) {
       case "--input-root":
-        options.inputRoot = resolvePath(next());
+        options.inputRoot = resolveRepoPath(next());
         break;
       case "--skill":
         options.skill = next();
@@ -252,10 +255,6 @@ async function resolveInputRoots(options: CliOptions): Promise<string[]> {
   return roots.sort((left, right) =>
     relative(REPO_ROOT, left).localeCompare(relative(REPO_ROOT, right)),
   );
-}
-
-function resolvePath(value: string): string {
-  return isAbsolute(value) ? value : resolve(REPO_ROOT, value);
 }
 
 async function readBenchmarks(inputRoot: string): Promise<
@@ -398,8 +397,7 @@ async function readEvalNames(context: {
   );
 
   try {
-    const raw = await readFile(evalsPath, "utf-8");
-    const parsed = JSON.parse(raw) as EvalDefinitionFile;
+    const parsed = await readJson<EvalDefinitionFile>(evalsPath);
     for (const evalDefinition of parsed.evals ?? []) {
       const id = Number(evalDefinition.id);
       const name = evalDefinition.name?.trim();
@@ -818,14 +816,6 @@ function signedUsd(value: number): string {
 
 function roundUsd(value: number): number {
   return Number(value.toFixed(6));
-}
-
-function numberOrZero(value: unknown): number {
-  return typeof value === "number" && Number.isFinite(value) ? value : 0;
-}
-
-function isNodeError(error: unknown): error is NodeJS.ErrnoException {
-  return error instanceof Error && "code" in error;
 }
 
 main().catch((error) => {

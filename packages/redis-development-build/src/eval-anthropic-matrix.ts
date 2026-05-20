@@ -10,12 +10,21 @@
  *   Anthropic benchmark aggregation, and then triggers this repo's combined
  *   cross-model aggregate report.
  */
-import { access, mkdir, readdir, readFile, writeFile } from 'fs/promises'
-import type { Dirent } from 'fs'
+import { access, mkdir, writeFile } from 'fs/promises'
 import { accessSync } from 'fs'
 import { spawn } from 'child_process'
 import { dirname, isAbsolute, join, relative, resolve } from 'path'
-import { fileURLToPath } from 'url'
+import {
+  assertEvalSuiteDir,
+  discoverEvalSuiteDirs,
+  EVAL_WORKSPACES_DIR,
+  evalSuitePathParts,
+  isNodeError,
+  numberOrZero,
+  readJson,
+  REPO_ROOT,
+  SKILLS_DIR,
+} from './eval-utils.js'
 
 type Configuration = 'with_skill' | 'without_skill'
 
@@ -92,10 +101,6 @@ interface EvalRunTask {
   judgeModel: string
 }
 
-const __dirname = dirname(fileURLToPath(import.meta.url))
-const REPO_ROOT = resolve(__dirname, '../../..')
-const SKILLS_DIR = join(REPO_ROOT, 'skills')
-const EVAL_WORKSPACES_DIR = join(REPO_ROOT, 'eval-workspaces')
 const DEFAULT_CONCURRENCY = 3
 
 async function main(): Promise<void> {
@@ -411,65 +416,6 @@ async function resolveSuiteDirs(options: CliOptions): Promise<string[]> {
   })
 }
 
-async function discoverEvalSuiteDirs(): Promise<string[]> {
-  const suiteDirs: string[] = []
-  let skillEntries: Dirent[]
-
-  try {
-    skillEntries = await readdir(SKILLS_DIR, { withFileTypes: true })
-  } catch (error) {
-    if (isNodeError(error) && error.code === 'ENOENT') return []
-    throw error
-  }
-
-  for (const skillEntry of skillEntries) {
-    if (!skillEntry.isDirectory()) continue
-    const evalsDir = join(SKILLS_DIR, skillEntry.name, 'evals')
-    let suiteEntries: Dirent[]
-    try {
-      suiteEntries = await readdir(evalsDir, { withFileTypes: true })
-    } catch (error) {
-      if (isNodeError(error) && error.code === 'ENOENT') continue
-      throw error
-    }
-
-    for (const suiteEntry of suiteEntries) {
-      if (!suiteEntry.isDirectory()) continue
-      const suiteDir = join(evalsDir, suiteEntry.name)
-      if (await isEvalSuiteDir(suiteDir)) {
-        suiteDirs.push(suiteDir)
-      }
-    }
-  }
-
-  return suiteDirs.sort((left, right) =>
-    relative(REPO_ROOT, left).localeCompare(relative(REPO_ROOT, right))
-  )
-}
-
-async function isEvalSuiteDir(suiteDir: string): Promise<boolean> {
-  try {
-    await assertEvalSuiteDir(suiteDir)
-    return true
-  } catch (error) {
-    if (isNodeError(error) && error.code === 'ENOENT') return false
-    throw error
-  }
-}
-
-async function assertEvalSuiteDir(suiteDir: string): Promise<void> {
-  await access(join(suiteDir, 'evals.json'))
-  await access(join(suiteDir, 'model-matrix.json'))
-}
-
-function evalSuitePathParts(suiteDir: string): { skill: string; suite: string } {
-  const parts = relative(SKILLS_DIR, suiteDir).split(/[\\/]/)
-  return {
-    skill: parts[0] ?? '',
-    suite: parts[2] ?? '',
-  }
-}
-
 function resolveSkillCreatorPath(options: CliOptions, required: boolean): string {
   const configured = options.skillCreatorPath ?? process.env.ANTHROPIC_SKILL_CREATOR_PATH
   if (configured) return isAbsolute(configured) ? configured : resolve(REPO_ROOT, configured)
@@ -757,11 +703,6 @@ async function writeTiming(
   })
 }
 
-async function readJson<T>(filePath: string): Promise<T> {
-  const raw = await readFile(filePath, 'utf-8')
-  return JSON.parse(raw) as T
-}
-
 async function writeJson(filePath: string, value: unknown): Promise<void> {
   await mkdir(dirname(filePath), { recursive: true })
   await writeFile(filePath, `${JSON.stringify(value, null, 2)}\n`, 'utf-8')
@@ -916,10 +857,6 @@ function seconds(durationMs: number): number {
   return Number((durationMs / 1000).toFixed(3))
 }
 
-function numberOrZero(value: unknown): number {
-  return typeof value === 'number' && Number.isFinite(value) ? value : 0
-}
-
 function numberOrUndefined(value: unknown): number | undefined {
   return typeof value === 'number' && Number.isFinite(value) ? value : undefined
 }
@@ -1009,10 +946,6 @@ function color(text: string, colorName: 'green' | 'cyan' | 'magenta' | 'yellow' 
     blue: 34,
   }
   return `\u001b[${codes[colorName]}m${text}\u001b[0m`
-}
-
-function isNodeError(error: unknown): error is NodeJS.ErrnoException {
-  return error instanceof Error && 'code' in error
 }
 
 main().catch((error) => {
