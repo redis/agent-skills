@@ -27,6 +27,7 @@ import {
   signedNumber,
   signedPercent,
   signedUsd,
+  sumModelUsageCost,
 } from "./utils.js";
 
 interface BenchmarkRun {
@@ -522,14 +523,6 @@ function extractCostUsd(value: any): number {
     numberOrZero(value?.raw_result?.total_cost_usd) ||
     sumModelUsageCost(value?.raw_result?.modelUsage)
   );
-}
-
-function sumModelUsageCost(modelUsage: unknown): number {
-  if (!modelUsage || typeof modelUsage !== "object") return 0;
-  return Object.values(modelUsage).reduce((sum, usage) => {
-    if (!usage || typeof usage !== "object") return sum;
-    return sum + numberOrZero((usage as Record<string, unknown>).costUSD);
-  }, 0);
 }
 
 function summarizeByEval(

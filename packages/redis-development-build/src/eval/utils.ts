@@ -95,6 +95,14 @@ export function numberOrZero(value: unknown): number {
   return typeof value === 'number' && Number.isFinite(value) ? value : 0
 }
 
+export function sumModelUsageCost(modelUsage: unknown): number {
+  if (!modelUsage || typeof modelUsage !== 'object') return 0
+  return Object.values(modelUsage).reduce((sum, usage) => {
+    if (!usage || typeof usage !== 'object') return sum
+    return sum + numberOrZero((usage as Record<string, unknown>).costUSD)
+  }, 0)
+}
+
 export function percent(value: number): string {
   return `${Math.round(value * 100)}%`
 }

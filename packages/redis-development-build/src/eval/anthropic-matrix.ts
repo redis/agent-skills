@@ -24,6 +24,7 @@ import {
   readJson,
   REPO_ROOT,
   SKILLS_DIR,
+  sumModelUsageCost,
 } from './utils.js'
 
 type Configuration = 'with_skill' | 'without_skill'
@@ -865,6 +866,7 @@ function commandUsageSummary(stdout: string): CommandUsageSummary {
   const parsed = tryParseJson(stdout)
   const usage = parsed?.usage
   const modelUsage = parsed?.modelUsage
+  const modelUsageCost = sumModelUsageCost(modelUsage)
   const inputTokens = numberOrZero(usage?.input_tokens)
   const outputTokens = numberOrZero(usage?.output_tokens)
   const cacheCreationInputTokens = numberOrZero(usage?.cache_creation_input_tokens)
@@ -882,7 +884,8 @@ function commandUsageSummary(stdout: string): CommandUsageSummary {
     cache_read_input_tokens: cacheReadInputTokens,
     total_tokens: totalTokens || sumModelUsageTokens(modelUsage),
     total_cost_usd:
-      numberOrUndefined(parsed?.total_cost_usd) ?? sumModelUsageCost(modelUsage),
+      numberOrUndefined(parsed?.total_cost_usd) ??
+      (modelUsageCost > 0 ? modelUsageCost : undefined),
     model_usage: modelUsage,
   }
 }
@@ -900,15 +903,6 @@ function sumModelUsageTokens(modelUsage: unknown): number {
       numberOrZero(usageRecord.cacheCreationInputTokens)
     )
   }, 0)
-}
-
-function sumModelUsageCost(modelUsage: unknown): number | undefined {
-  if (!modelUsage || typeof modelUsage !== 'object') return undefined
-  const total = Object.values(modelUsage).reduce((sum, usage) => {
-    if (!usage || typeof usage !== 'object') return sum
-    return sum + numberOrZero((usage as Record<string, unknown>).costUSD)
-  }, 0)
-  return total > 0 ? total : undefined
 }
 
 function parsePositiveInteger(value: string | undefined): number | undefined {
