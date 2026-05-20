@@ -101,8 +101,8 @@ export function percent(value: number): string {
 
 export function signedPercent(value: number): string {
   const percentage = value * 100
-  const roundedMagnitude = Math.round(Math.abs(percentage))
-  return `${percentage < 0 ? '-' : '+'}${roundedMagnitude} points`
+  const roundedPercentage = Math.round(percentage)
+  return `${roundedPercentage >= 0 ? '+' : ''}${roundedPercentage} points`
 }
 
 export function signedNumber(value: number, decimals: number): string {
