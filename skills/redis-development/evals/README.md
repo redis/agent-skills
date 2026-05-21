@@ -118,6 +118,12 @@ The HTML report includes model-level pass rates, pass deltas, token/time/cost
 deltas, and eval-by-model deltas. Positive pass-rate deltas are good. Positive
 token, time, or cost deltas mean the skill path used more resources.
 
+If a committed default baseline exists at
+`skills/<skill-name>/evals/<suite-name>/baselines/aggregate-benchmark.json`, the
+combined report also includes an **Against Baseline** section. That comparison
+shows how the current run changed versus the baseline for overall pass delta,
+token delta, time delta, total cost, cost delta, and per-model deltas.
+
 ## Setup
 
 Install Anthropic's official `skill-creator` plugin once:

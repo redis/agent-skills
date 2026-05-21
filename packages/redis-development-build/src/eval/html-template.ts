@@ -86,6 +86,45 @@ export interface AggregateOverallSummary {
   models_degraded: number;
 }
 
+export interface BaselineOverallSnapshot {
+  mean_pass_delta: number;
+  mean_token_delta: number;
+  mean_time_delta_seconds: number;
+  total_cost_usd: number;
+  mean_cost_delta_usd: number;
+}
+
+export interface BaselineModelSnapshot {
+  pass_delta: number;
+  token_delta: number;
+  time_delta_seconds: number;
+  total_cost_usd: number;
+  cost_delta_usd: number;
+}
+
+export interface BaselineModelComparison {
+  model: string;
+  status: "compared" | "new";
+  baseline?: BaselineModelSnapshot;
+  current: BaselineModelSnapshot;
+  change?: BaselineModelSnapshot;
+  baseline_verdict?: string;
+  current_verdict: string;
+}
+
+export interface BaselineComparison {
+  path: string;
+  generated_at: string;
+  input_root: string;
+  overall: {
+    baseline: BaselineOverallSnapshot;
+    current: BaselineOverallSnapshot;
+    change: BaselineOverallSnapshot;
+  };
+  models: BaselineModelComparison[];
+  missing_models: string[];
+}
+
 export interface AggregateHtmlInput {
   generatedAt: string;
   inputRootLabel: string;
@@ -97,6 +136,7 @@ export interface AggregateHtmlInput {
   modelSummaries: AggregateModelSummary[];
   evalSummaries: AggregateEvalSummary[];
   overall: AggregateOverallSummary;
+  baselineComparison?: BaselineComparison;
 }
 
 export function renderAggregateHtml(input: AggregateHtmlInput): string {
@@ -117,6 +157,9 @@ export function renderAggregateHtml(input: AggregateHtmlInput): string {
     0.0001,
     ...input.modelSummaries.map((summary) => Math.abs(summary.cost.delta_usd)),
   );
+  const baselineSection = input.baselineComparison
+    ? renderBaselineSection(input.baselineComparison)
+    : "";
 
   const modelRows = input.modelSummaries
     .map((summary) => {
@@ -276,6 +319,13 @@ export function renderAggregateHtml(input: AggregateHtmlInput): string {
 
     .muted {
       color: var(--muted);
+    }
+
+    .baseline-meta {
+      color: var(--muted);
+      display: grid;
+      gap: 4px;
+      margin: -4px 0 12px;
     }
 
     .summary {
@@ -574,6 +624,8 @@ export function renderAggregateHtml(input: AggregateHtmlInput): string {
       ${summaryMetric("Mean Cost Delta", help.costDelta, signedUsd(input.overall.mean_delta_cost_usd), deltaClass(input.overall.mean_delta_cost_usd, "cost_usd"))}
     </section>
 
+    ${baselineSection}
+
     <h2>By Model</h2>
     <div class="panel">
       <table>
@@ -667,6 +719,64 @@ export function renderAggregateHtml(input: AggregateHtmlInput): string {
 `;
 }
 
+function renderBaselineSection(comparison: BaselineComparison): string {
+  const modelRows = comparison.models
+    .map((model) => {
+      if (!model.baseline || !model.change) {
+        return `<tr>
+          <td><strong>${escapeHtml(model.model)}</strong></td>
+          <td colspan="5"><span class="pill">new model</span></td>
+        </tr>`;
+      }
+
+      return `<tr>
+        <td><strong>${escapeHtml(model.model)}</strong></td>
+        <td>${statBadge(signedPercent(model.change.pass_delta), model.change.pass_delta, "pass_rate")}</td>
+        <td>${statBadge(signedNumber(model.change.token_delta, 0), model.change.token_delta, "tokens")}</td>
+        <td>${statBadge(`${signedNumber(model.change.time_delta_seconds, 1)}s`, model.change.time_delta_seconds, "time_seconds")}</td>
+        <td>${statBadge(signedUsd(model.change.cost_delta_usd), model.change.cost_delta_usd, "cost_usd")}</td>
+        <td>${escapeHtml(model.baseline_verdict || "n/a")} &rarr; ${escapeHtml(model.current_verdict)}</td>
+      </tr>`;
+    })
+    .join("\n");
+
+  const missingModels =
+    comparison.missing_models.length > 0
+      ? `<div class="baseline-meta">Missing baseline models in this run: <code>${escapeHtml(comparison.missing_models.join(", "))}</code></div>`
+      : "";
+
+  return `<h2>Against Baseline</h2>
+    <div class="baseline-meta">
+      <div>Baseline: <code>${escapeHtml(comparison.path)}</code></div>
+      <div>Baseline generated: ${escapeHtml(comparison.generated_at || "unknown")}</div>
+    </div>
+    <section class="summary">
+      ${summaryMetric("Pass Delta Change", "Current mean pass delta minus baseline mean pass delta. Positive means this run improved the skill uplift versus the baseline.", signedPercent(comparison.overall.change.mean_pass_delta), deltaClass(comparison.overall.change.mean_pass_delta, "pass_rate"))}
+      ${summaryMetric("Token Delta Change", "Current mean token delta minus baseline mean token delta. Negative means this run reduced token overhead versus the baseline.", signedNumber(comparison.overall.change.mean_token_delta, 0), deltaClass(comparison.overall.change.mean_token_delta, "tokens"))}
+      ${summaryMetric("Time Delta Change", "Current mean time delta minus baseline mean time delta. Negative means this run reduced runtime overhead versus the baseline.", `${signedNumber(comparison.overall.change.mean_time_delta_seconds, 1)}s`, deltaClass(comparison.overall.change.mean_time_delta_seconds, "time_seconds"))}
+      ${summaryMetric("Total Cost Change", "Current total eval cost minus baseline total eval cost. Negative means this run was cheaper than the baseline.", signedUsd(comparison.overall.change.total_cost_usd), deltaClass(comparison.overall.change.total_cost_usd, "cost_usd"))}
+      ${summaryMetric("Cost Delta Change", "Current mean cost delta minus baseline mean cost delta. Negative means the with-skill cost overhead improved versus the baseline.", signedUsd(comparison.overall.change.mean_cost_delta_usd), deltaClass(comparison.overall.change.mean_cost_delta_usd, "cost_usd"))}
+    </section>
+    <div class="panel">
+      <table>
+        <thead>
+          <tr>
+            <th>${headerLabel("Model", "Model included in both the current run and baseline when possible.")}</th>
+            <th>${headerLabel("Pass Delta Change", "Current model pass delta minus baseline model pass delta.")}</th>
+            <th>${headerLabel("Token Delta Change", "Current model token delta minus baseline model token delta. Negative is better.")}</th>
+            <th>${headerLabel("Time Delta Change", "Current model time delta minus baseline model time delta. Negative is better.")}</th>
+            <th>${headerLabel("Cost Delta Change", "Current model cost delta minus baseline model cost delta. Negative is better.")}</th>
+            <th>${headerLabel("Verdict", "Baseline verdict followed by current verdict.")}</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${modelRows}
+        </tbody>
+      </table>
+    </div>
+    ${missingModels}`;
+}
+
 function renderLegend(input: AggregateHtmlInput): string {
   const tones = new Set<DeltaTone>();
   const addTone = (value: number, metric: Metric) =>
@@ -683,6 +793,22 @@ function renderLegend(input: AggregateHtmlInput): string {
     addTone(summary.mean_delta_pass_rate, "pass_rate");
     for (const model of summary.models) {
       addTone(model.delta.pass_rate, "pass_rate");
+    }
+  }
+
+  const baseline = input.baselineComparison;
+  if (baseline) {
+    addTone(baseline.overall.change.mean_pass_delta, "pass_rate");
+    addTone(baseline.overall.change.mean_token_delta, "tokens");
+    addTone(baseline.overall.change.mean_time_delta_seconds, "time_seconds");
+    addTone(baseline.overall.change.total_cost_usd, "cost_usd");
+    addTone(baseline.overall.change.mean_cost_delta_usd, "cost_usd");
+    for (const model of baseline.models) {
+      if (!model.change) continue;
+      addTone(model.change.pass_delta, "pass_rate");
+      addTone(model.change.token_delta, "tokens");
+      addTone(model.change.time_delta_seconds, "time_seconds");
+      addTone(model.change.cost_delta_usd, "cost_usd");
     }
   }
 

@@ -15,6 +15,11 @@ import { readdir, readFile, writeFile } from "fs/promises";
 import type { Dirent } from "fs";
 import { join, relative } from "path";
 import { renderAggregateHtml } from "./html-template.js";
+import type {
+  BaselineComparison,
+  BaselineModelSnapshot,
+  BaselineOverallSnapshot,
+} from "./html-template.js";
 import {
   EVAL_WORKSPACES_DIR,
   formatUsd,
@@ -76,6 +81,35 @@ interface CostSummary {
   without_skill_usd: number;
   delta_usd: number;
   runs_with_cost: number;
+}
+
+interface BaselineAggregateReport {
+  generated_at?: string;
+  input_root?: string;
+  overall?: BaselineOverallReport;
+  models?: BaselineModelReport[];
+}
+
+interface BaselineOverallReport {
+  mean_delta_pass_rate?: number;
+  mean_delta_tokens?: number;
+  mean_delta_time_seconds?: number;
+  total_cost_usd?: number;
+  mean_delta_cost_usd?: number;
+}
+
+interface BaselineModelReport {
+  model?: string;
+  delta?: {
+    pass_rate?: number;
+    tokens?: number;
+    time_seconds?: number;
+  };
+  cost?: {
+    total_usd?: number;
+    delta_usd?: number;
+  };
+  verdict?: string;
 }
 
 interface CliOptions {
@@ -310,6 +344,10 @@ async function buildAggregateReport(
   );
   const evalSummaries = summarizeByEval(entries, evalNames);
   const overall = summarizeOverall(modelSummaries);
+  const baselineComparison = await readBaselineComparison(context, {
+    modelSummaries,
+    overall,
+  });
 
   const json = {
     generated_at: generatedAt,
@@ -318,6 +356,7 @@ async function buildAggregateReport(
     models: modelSummaries,
     evals: evalSummaries,
     overall,
+    baseline_comparison: baselineComparison,
   };
 
   const markdown = renderMarkdown({
@@ -327,6 +366,7 @@ async function buildAggregateReport(
     modelSummaries,
     evalSummaries,
     overall,
+    baselineComparison,
   });
 
   const html = renderAggregateHtml({
@@ -337,6 +377,7 @@ async function buildAggregateReport(
     modelSummaries,
     evalSummaries,
     overall,
+    baselineComparison,
   });
 
   return { json, markdown, html };
@@ -415,6 +456,82 @@ async function readEvalNames(context: {
   }
 
   return names;
+}
+
+async function readBaselineComparison(
+  context: { skill_name: string; suite_name: string },
+  current: {
+    modelSummaries: ModelSummary[];
+    overall: ReturnType<typeof summarizeOverall>;
+  },
+): Promise<BaselineComparison | undefined> {
+  if (!context.skill_name || !context.suite_name) return undefined;
+
+  const baselinePath = join(
+    REPO_ROOT,
+    "skills",
+    context.skill_name,
+    "evals",
+    context.suite_name,
+    "baselines",
+    "aggregate-benchmark.json",
+  );
+
+  let baseline: BaselineAggregateReport;
+  try {
+    baseline = await readJson<BaselineAggregateReport>(baselinePath);
+  } catch (error) {
+    if (isNodeError(error) && error.code === "ENOENT") return undefined;
+    throw error;
+  }
+
+  const baselineOverall = baselineOverallSnapshot(baseline.overall);
+  const currentOverall = currentOverallSnapshot(current.overall);
+  const baselineModels = new Map<string, BaselineModelReport>();
+
+  for (const model of baseline.models ?? []) {
+    if (model.model) baselineModels.set(model.model, model);
+  }
+
+  const modelComparisons = current.modelSummaries.map((summary) => {
+    const baselineModel = baselineModels.get(summary.model);
+    const currentSnapshot = currentModelSnapshot(summary);
+    if (!baselineModel) {
+      return {
+        model: summary.model,
+        status: "new" as const,
+        current: currentSnapshot,
+        current_verdict: summary.verdict,
+      };
+    }
+
+    const baselineSnapshot = baselineModelSnapshot(baselineModel);
+    return {
+      model: summary.model,
+      status: "compared" as const,
+      baseline: baselineSnapshot,
+      current: currentSnapshot,
+      change: subtractModelSnapshot(currentSnapshot, baselineSnapshot),
+      baseline_verdict: baselineModel.verdict ?? "",
+      current_verdict: summary.verdict,
+    };
+  });
+
+  return {
+    path: relative(REPO_ROOT, baselinePath),
+    generated_at: baseline.generated_at ?? "",
+    input_root: baseline.input_root ?? "",
+    overall: {
+      baseline: baselineOverall,
+      current: currentOverall,
+      change: subtractOverallSnapshot(currentOverall, baselineOverall),
+    },
+    models: modelComparisons,
+    missing_models: [...baselineModels.keys()].filter(
+      (model) =>
+        !current.modelSummaries.some((summary) => summary.model === model),
+    ),
+  };
 }
 
 async function summarizeModel(
@@ -626,6 +743,80 @@ function summarizeOverall(
   };
 }
 
+function currentOverallSnapshot(
+  overall: ReturnType<typeof summarizeOverall>,
+): BaselineOverallSnapshot {
+  return {
+    mean_pass_delta: overall.mean_delta_pass_rate,
+    mean_token_delta: overall.mean_delta_tokens,
+    mean_time_delta_seconds: overall.mean_delta_time_seconds,
+    total_cost_usd: overall.total_cost_usd,
+    mean_cost_delta_usd: overall.mean_delta_cost_usd,
+  };
+}
+
+function baselineOverallSnapshot(
+  overall: BaselineAggregateReport["overall"],
+): BaselineOverallSnapshot {
+  return {
+    mean_pass_delta: numberOrZero(overall?.mean_delta_pass_rate),
+    mean_token_delta: numberOrZero(overall?.mean_delta_tokens),
+    mean_time_delta_seconds: numberOrZero(overall?.mean_delta_time_seconds),
+    total_cost_usd: numberOrZero(overall?.total_cost_usd),
+    mean_cost_delta_usd: numberOrZero(overall?.mean_delta_cost_usd),
+  };
+}
+
+function subtractOverallSnapshot(
+  current: BaselineOverallSnapshot,
+  baseline: BaselineOverallSnapshot,
+): BaselineOverallSnapshot {
+  return {
+    mean_pass_delta: current.mean_pass_delta - baseline.mean_pass_delta,
+    mean_token_delta: current.mean_token_delta - baseline.mean_token_delta,
+    mean_time_delta_seconds:
+      current.mean_time_delta_seconds - baseline.mean_time_delta_seconds,
+    total_cost_usd: current.total_cost_usd - baseline.total_cost_usd,
+    mean_cost_delta_usd:
+      current.mean_cost_delta_usd - baseline.mean_cost_delta_usd,
+  };
+}
+
+function currentModelSnapshot(summary: ModelSummary): BaselineModelSnapshot {
+  return {
+    pass_delta: summary.delta.pass_rate,
+    token_delta: summary.delta.tokens,
+    time_delta_seconds: summary.delta.time_seconds,
+    total_cost_usd: summary.cost.total_usd,
+    cost_delta_usd: summary.cost.delta_usd,
+  };
+}
+
+function baselineModelSnapshot(
+  model: BaselineModelReport,
+): BaselineModelSnapshot {
+  return {
+    pass_delta: numberOrZero(model.delta?.pass_rate),
+    token_delta: numberOrZero(model.delta?.tokens),
+    time_delta_seconds: numberOrZero(model.delta?.time_seconds),
+    total_cost_usd: numberOrZero(model.cost?.total_usd),
+    cost_delta_usd: numberOrZero(model.cost?.delta_usd),
+  };
+}
+
+function subtractModelSnapshot(
+  current: BaselineModelSnapshot,
+  baseline: BaselineModelSnapshot,
+): BaselineModelSnapshot {
+  return {
+    pass_delta: current.pass_delta - baseline.pass_delta,
+    token_delta: current.token_delta - baseline.token_delta,
+    time_delta_seconds: current.time_delta_seconds - baseline.time_delta_seconds,
+    total_cost_usd: current.total_cost_usd - baseline.total_cost_usd,
+    cost_delta_usd: current.cost_delta_usd - baseline.cost_delta_usd,
+  };
+}
+
 function summarizeRuns(runs: BenchmarkRun[]): {
   count: number;
   pass_rate: number;
@@ -736,6 +927,7 @@ function renderMarkdown(input: {
   modelSummaries: ModelSummary[];
   evalSummaries: ReturnType<typeof summarizeByEval>;
   overall: ReturnType<typeof summarizeOverall>;
+  baselineComparison?: BaselineComparison;
 }): string {
   const modelRows = input.modelSummaries
     .map(
@@ -755,6 +947,10 @@ function renderMarkdown(input: {
           .join("<br>")} |`,
     )
     .join("\n");
+
+  const baselineSection = input.baselineComparison
+    ? renderBaselineMarkdown(input.baselineComparison)
+    : "";
 
   return `# Skill Benchmark
 
@@ -776,6 +972,8 @@ Input: \`${relative(REPO_ROOT, input.inputRoot)}\`
 - Mean cost delta: ${signedUsd(input.overall.mean_delta_cost_usd)}
 - Verdict counts: ${input.overall.models_improved} improves, ${input.overall.models_neutral} neutral, ${input.overall.models_degraded} degrades
 
+${baselineSection}
+
 ## By Model
 
 | Model | Without Skill | With Skill | Pass Delta | Token Delta | Time Delta | Total Cost | Cost Delta | Verdict |
@@ -788,6 +986,74 @@ ${modelRows}
 |------|-----------------|--------------|
 ${evalRows}
 `;
+}
+
+function renderBaselineMarkdown(comparison: BaselineComparison): string {
+  const overallRows = [
+    [
+      "Mean pass delta",
+      signedPercent(comparison.overall.baseline.mean_pass_delta),
+      signedPercent(comparison.overall.current.mean_pass_delta),
+      signedPercent(comparison.overall.change.mean_pass_delta),
+    ],
+    [
+      "Mean token delta",
+      signedNumber(comparison.overall.baseline.mean_token_delta, 0),
+      signedNumber(comparison.overall.current.mean_token_delta, 0),
+      signedNumber(comparison.overall.change.mean_token_delta, 0),
+    ],
+    [
+      "Mean time delta",
+      `${signedNumber(comparison.overall.baseline.mean_time_delta_seconds, 1)}s`,
+      `${signedNumber(comparison.overall.current.mean_time_delta_seconds, 1)}s`,
+      `${signedNumber(comparison.overall.change.mean_time_delta_seconds, 1)}s`,
+    ],
+    [
+      "Total eval cost",
+      formatUsd(comparison.overall.baseline.total_cost_usd),
+      formatUsd(comparison.overall.current.total_cost_usd),
+      signedUsd(comparison.overall.change.total_cost_usd),
+    ],
+    [
+      "Mean cost delta",
+      signedUsd(comparison.overall.baseline.mean_cost_delta_usd),
+      signedUsd(comparison.overall.current.mean_cost_delta_usd),
+      signedUsd(comparison.overall.change.mean_cost_delta_usd),
+    ],
+  ]
+    .map((row) => `| ${row.join(" | ")} |`)
+    .join("\n");
+
+  const modelRows = comparison.models
+    .map((model) => {
+      if (!model.baseline || !model.change) {
+        return `| ${model.model} | New model | n/a | n/a | n/a | ${model.current_verdict} |`;
+      }
+
+      return `| ${model.model} | ${signedPercent(model.change.pass_delta)} | ${signedNumber(model.change.token_delta, 0)} | ${signedNumber(model.change.time_delta_seconds, 1)}s | ${signedUsd(model.change.cost_delta_usd)} | ${model.baseline_verdict || "n/a"} -> ${model.current_verdict} |`;
+    })
+    .join("\n");
+
+  const missingModels =
+    comparison.missing_models.length > 0
+      ? `\n\nMissing baseline models in this run: ${comparison.missing_models.join(", ")}\n`
+      : "";
+
+  return `## Against Baseline
+
+Baseline: \`${comparison.path}\`
+
+Baseline generated: ${comparison.generated_at || "unknown"}
+
+| Metric | Baseline | Current | Change |
+|--------|----------|---------|--------|
+${overallRows}
+
+### By Model Against Baseline
+
+| Model | Pass Delta Change | Token Delta Change | Time Delta Change | Cost Delta Change | Verdict |
+|-------|-------------------|--------------------|-------------------|-------------------|---------|
+${modelRows}${missingModels}`;
 }
 
 function mean(values: number[]): number {
