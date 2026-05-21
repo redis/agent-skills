@@ -681,11 +681,23 @@ function summarizeByEval(
       };
     });
 
+    const withSkill = summarizeRunSummaries(rows.map((row) => row.with_skill));
+    const withoutSkill = summarizeRunSummaries(
+      rows.map((row) => row.without_skill),
+    );
+
     return {
       eval_id: evalId,
       eval_name:
         evalNames.get(evalId) ?? rows[0]?.eval_name ?? `eval-${evalId}`,
-      mean_delta_pass_rate: mean(rows.map((row) => row.delta.pass_rate)),
+      without_skill: withoutSkill,
+      with_skill: withSkill,
+      delta: {
+        pass_rate: withSkill.pass_rate - withoutSkill.pass_rate,
+        time_seconds: withSkill.time_seconds - withoutSkill.time_seconds,
+        tokens: withSkill.tokens - withoutSkill.tokens,
+      },
+      mean_delta_pass_rate: withSkill.pass_rate - withoutSkill.pass_rate,
       models: rows,
     };
   });
@@ -831,6 +843,20 @@ function summarizeRuns(runs: BenchmarkRun[]): {
   };
 }
 
+function summarizeRunSummaries(summaries: Array<ReturnType<typeof summarizeRuns>>): {
+  count: number;
+  pass_rate: number;
+  time_seconds: number;
+  tokens: number;
+} {
+  return {
+    count: summaries.reduce((sum, summary) => sum + summary.count, 0),
+    pass_rate: mean(summaries.map((summary) => summary.pass_rate)),
+    time_seconds: mean(summaries.map((summary) => summary.time_seconds)),
+    tokens: mean(summaries.map((summary) => summary.tokens)),
+  };
+}
+
 function modelIdentity(
   modelDir: string,
   benchmark: ModelBenchmark,
@@ -939,7 +965,7 @@ function renderMarkdown(input: {
   const evalRows = input.evalSummaries
     .map(
       (summary) =>
-        `| ${summary.eval_name || `eval-${summary.eval_id}`} | ${signedPercent(summary.mean_delta_pass_rate)} | ${summary.models
+        `| ${summary.eval_name || `eval-${summary.eval_id}`} | ${percent(summary.without_skill.pass_rate)} | ${percent(summary.with_skill.pass_rate)} | ${signedPercent(summary.delta.pass_rate)} | ${signedNumber(summary.delta.tokens, 0)} | ${signedNumber(summary.delta.time_seconds, 1)}s | ${summary.models
           .map(
             (model) =>
               `${model.model}: ${signedPercent(model.delta.pass_rate)}`,
@@ -982,8 +1008,8 @@ ${modelRows}
 
 ## By Eval
 
-| Eval | Mean Pass Delta | Model Deltas |
-|------|-----------------|--------------|
+| Eval | Without Skill | With Skill | Pass Delta | Token Delta | Time Delta | Model Pass Deltas |
+|------|---------------|------------|------------|-------------|------------|-------------------|
 ${evalRows}
 `;
 }

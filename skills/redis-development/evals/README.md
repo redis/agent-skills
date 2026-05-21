@@ -115,8 +115,9 @@ aggregate-benchmark.html
 ```
 
 The HTML report includes model-level pass rates, pass deltas, token/time/cost
-deltas, and eval-by-model deltas. Positive pass-rate deltas are good. Positive
-token, time, or cost deltas mean the skill path used more resources.
+deltas, eval-level pass rates, eval-level token/time deltas, and eval-by-model
+pass deltas. Positive pass-rate deltas are good. Positive token, time, or cost
+deltas mean the skill path used more resources.
 
 If a committed default baseline exists at
 `skills/<skill-name>/evals/<suite-name>/baselines/aggregate-benchmark.json`, the

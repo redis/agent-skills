@@ -68,6 +68,9 @@ export interface AggregateEvalModelSummary {
 export interface AggregateEvalSummary {
   eval_id: number;
   eval_name: string;
+  without_skill: RunSummary;
+  with_skill: RunSummary;
+  delta: DeltaSummary;
   mean_delta_pass_rate: number;
   models: AggregateEvalModelSummary[];
 }
@@ -190,7 +193,13 @@ export function renderAggregateHtml(input: AggregateHtmlInput): string {
       const evalLabel = summary.eval_name || `eval-${summary.eval_id}`;
       return `<tr>
         <td><strong>${escapeHtml(evalLabel)}</strong></td>
-        <td>${statBadge(signedPercent(summary.mean_delta_pass_rate), summary.mean_delta_pass_rate, "pass_rate")}</td>
+        <td>${comparisonBars(
+          summary.without_skill.pass_rate,
+          summary.with_skill.pass_rate,
+        )}</td>
+        <td>${statBadge(signedPercent(summary.delta.pass_rate), summary.delta.pass_rate, "pass_rate")}</td>
+        <td>${statBadge(signedNumber(summary.delta.tokens, 0), summary.delta.tokens, "tokens")}</td>
+        <td>${statBadge(`${signedNumber(summary.delta.time_seconds, 1)}s`, summary.delta.time_seconds, "time_seconds")}</td>
         ${cells}
       </tr>`;
     })
@@ -216,6 +225,12 @@ export function renderAggregateHtml(input: AggregateHtmlInput): string {
       "Average objective expectation pass rate. The without-skill bar is the neutral baseline; the with-skill bar is green for improvement, red for regression, and gray for no change.",
     passDelta:
       "With-skill pass rate minus without-skill pass rate, shown in percentage points.",
+    evalPassRate:
+      "Average pass rate for this eval across all included models. The without-skill bar is the baseline; the with-skill bar is green for improvement, red for regression, and gray for no change.",
+    meanEvalTokenDelta:
+      "Average token change for this eval across all included models. Positive means higher token cost; negative means token savings.",
+    meanEvalTimeDelta:
+      "Average runtime change for this eval across all included models. Positive means slower; negative means faster.",
     tokenDelta:
       "With-skill average tokens minus without-skill average tokens. Positive means higher token cost, usually worse unless quality improves enough to justify it. Negative means token savings.",
     timeDelta:
@@ -654,7 +669,10 @@ export function renderAggregateHtml(input: AggregateHtmlInput): string {
         <thead>
           <tr>
             <th>${headerLabel("Eval", help.eval)}</th>
-            <th>${headerLabel("Mean Pass Delta", help.meanEvalPassDelta)}</th>
+            <th>${headerLabel("Pass Rate", help.evalPassRate)}</th>
+            <th>${headerLabel("Pass Delta", help.meanEvalPassDelta)}</th>
+            <th>${headerLabel("Token Delta", help.meanEvalTokenDelta)}</th>
+            <th>${headerLabel("Time Delta", help.meanEvalTimeDelta)}</th>
             ${evalHeaders}
           </tr>
         </thead>
@@ -790,7 +808,9 @@ function renderLegend(input: AggregateHtmlInput): string {
   }
 
   for (const summary of input.evalSummaries) {
-    addTone(summary.mean_delta_pass_rate, "pass_rate");
+    addTone(summary.delta.pass_rate, "pass_rate");
+    addTone(summary.delta.tokens, "tokens");
+    addTone(summary.delta.time_seconds, "time_seconds");
     for (const model of summary.models) {
       addTone(model.delta.pass_rate, "pass_rate");
     }
