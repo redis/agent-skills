@@ -44,6 +44,7 @@ export const SKILLS: Record<string, SkillConfig> = {
       cluster: 9,
       security: 10,
       observe: 11,
+      deploy: 12,
     },
   },
 }

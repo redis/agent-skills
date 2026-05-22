@@ -48,3 +48,6 @@ This file defines the rule categories for Redis best practices. Rules are automa
 **Impact:** MEDIUM
 **Description:** SLOWLOG, INFO, MEMORY commands, monitoring metrics, and Redis Insight.
 
+## 12. Deployment & Containers (deploy)
+**Impact:** MEDIUM
+**Description:** Docker image selection, container defaults, and deployment packaging.

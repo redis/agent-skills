@@ -9,7 +9,7 @@ metadata:
 
 # Redis Best Practices
 
-Comprehensive performance optimization guide for Redis, including Redis Query Engine, vector search, and semantic caching. Contains 29 rules across 11 categories, prioritized by impact to guide automated optimization and code generation.
+Comprehensive performance optimization guide for Redis, including Redis Query Engine, vector search, and semantic caching. Contains 39 rules across 12 categories, prioritized by impact to guide automated optimization and code generation.
 
 ## When to Apply
 
@@ -36,6 +36,7 @@ Reference these guidelines when:
 | 9 | Clustering & Replication | MEDIUM | `cluster-` |
 | 10 | Security | HIGH | `security-` |
 | 11 | Observability | MEDIUM | `observe-` |
+| 12 | Deployment & Containers | MEDIUM | `deploy-` |
 
 ## Quick Reference
 
@@ -68,6 +69,7 @@ Reference these guidelines when:
 - `rqe-index-creation` - Index Only Fields You Query
 - `rqe-index-management` - Manage Indexes for Zero-Downtime Updates
 - `rqe-query-optimization` - Write Efficient Queries
+- `rqe-use-rqe-terminology` - Use Redis Query Engine (RQE) Terminology for Search and JSON
 
 ### 6. Vector Search & RedisVL (HIGH)
 
@@ -100,6 +102,13 @@ Reference these guidelines when:
 
 - `observe-commands` - Use Observability Commands for Debugging
 - `observe-metrics` - Monitor Key Redis Metrics
+
+### 12. Deployment & Containers (MEDIUM)
+
+- `deploy-docker-images` - Use Official Redis Images for Containers
+- `deploy-pin-image-tags` - Pin Redis Docker Tags for Reproducible Deployments
+- `deploy-compose-basics` - Provide a Minimal Docker Compose for Redis
+- `deploy-testcontainers-image` - Use Official Redis Images in Testcontainers
 
 ## How to Use
 
