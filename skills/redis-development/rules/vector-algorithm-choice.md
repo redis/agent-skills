@@ -29,8 +29,9 @@ schema = IndexSchema.from_dict({
             "dims": 1536,
             "algorithm": "HNSW",
             "distance_metric": "COSINE",
-            "M": 16,                  # Higher = more accurate, more memory
-            "EF_CONSTRUCTION": 200    # Higher = better index quality, slower build
+            "datatype": "FLOAT32",
+            "m": 16,                      # Higher = more accurate, more memory
+            "ef_construction": 200        # Higher = better index quality, slower build
         }}
     ]
 })
@@ -57,4 +58,4 @@ schema = IndexSchema.from_dict({
 - `EF_CONSTRUCTION`: Build-time parameter (100-500). Higher = better graph quality
 - `EF_RUNTIME`: Query-time parameter. Higher = better recall, slower queries
 
-Reference: [Redis Vector Search](https://redis.io/docs/latest/develop/interact/search-and-query/advanced-concepts/vectors/)
+Reference: [Redis Vector Search](https://redis.io/docs/latest/develop/ai/search-and-query/vectors/)

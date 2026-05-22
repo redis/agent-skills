@@ -5,6 +5,9 @@
   "type": "module",
   "scripts": {
     "build": "npx tsx src/build.ts --all",
+    "eval": "npx tsx src/eval/anthropic-matrix.ts",
+    "eval:aggregate": "npx tsx src/eval/aggregate.ts",
+    "eval:baseline": "npx tsx src/eval/baseline.ts",
     "validate": "npx tsx src/validate.ts",
     "dev": "npm run validate && npm run build"
   },

@@ -1,0 +1,425 @@
+{
+  "generated_at": "2026-05-20T07:02:10.439Z",
+  "input_root": "eval-workspaces/redis-development/data-structures-key-naming/iteration-1",
+  "context": {
+    "skill_name": "redis-development",
+    "suite_name": "data-structures-key-naming"
+  },
+  "models": [
+    {
+      "model_dir": "anthropic__claude-haiku-4-5-20251001",
+      "model": "claude-haiku-4-5-20251001",
+      "provider": "anthropic",
+      "analyzer_model": "<model-name>",
+      "runs_per_configuration": 3,
+      "evals_run": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "without_skill": {
+        "count": 8,
+        "pass_rate": 0.95,
+        "time_seconds": 9.85725,
+        "tokens": 1135.125
+      },
+      "with_skill": {
+        "count": 8,
+        "pass_rate": 0.975,
+        "time_seconds": 21.766624999999998,
+        "tokens": 1071.875
+      },
+      "delta": {
+        "pass_rate": 0.025000000000000022,
+        "time_seconds": 11.909374999999997,
+        "tokens": -63.25
+      },
+      "cost": {
+        "generation_usd": 0.599174,
+        "grading_usd": 0,
+        "total_usd": 0.599174,
+        "with_skill_usd": 0.4833,
+        "without_skill_usd": 0.115874,
+        "delta_usd": 0.045928,
+        "runs_with_cost": 16
+      },
+      "verdict": "neutral"
+    },
+    {
+      "model_dir": "anthropic__claude-opus-4-7",
+      "model": "claude-opus-4-7",
+      "provider": "anthropic",
+      "analyzer_model": "<model-name>",
+      "runs_per_configuration": 3,
+      "evals_run": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "without_skill": {
+        "count": 8,
+        "pass_rate": 1,
+        "time_seconds": 15.903875,
+        "tokens": 1813.875
+      },
+      "with_skill": {
+        "count": 8,
+        "pass_rate": 1,
+        "time_seconds": 20.42075,
+        "tokens": 1226.875
+      },
+      "delta": {
+        "pass_rate": 0,
+        "time_seconds": 4.516875000000002,
+        "tokens": -587
+      },
+      "cost": {
+        "generation_usd": 1.843898,
+        "grading_usd": 0,
+        "total_usd": 1.843898,
+        "with_skill_usd": 1.221934,
+        "without_skill_usd": 0.621964,
+        "delta_usd": 0.074996,
+        "runs_with_cost": 16
+      },
+      "verdict": "neutral"
+    },
+    {
+      "model_dir": "anthropic__claude-sonnet-4-6",
+      "model": "claude-sonnet-4-6",
+      "provider": "anthropic",
+      "analyzer_model": "<model-name>",
+      "runs_per_configuration": 3,
+      "evals_run": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "without_skill": {
+        "count": 8,
+        "pass_rate": 0.9249999999999999,
+        "time_seconds": 14.924,
+        "tokens": 1315.875
+      },
+      "with_skill": {
+        "count": 8,
+        "pass_rate": 0.95,
+        "time_seconds": 23.161375,
+        "tokens": 1300.5
+      },
+      "delta": {
+        "pass_rate": 0.025000000000000022,
+        "time_seconds": 8.237375,
+        "tokens": -15.375
+      },
+      "cost": {
+        "generation_usd": 1.12671,
+        "grading_usd": 0,
+        "total_usd": 1.12671,
+        "with_skill_usd": 0.779452,
+        "without_skill_usd": 0.347258,
+        "delta_usd": 0.054024,
+        "runs_with_cost": 16
+      },
+      "verdict": "neutral"
+    }
+  ],
+  "evals": [
+    {
+      "eval_id": 1,
+      "eval_name": "object-profile-cache",
+      "mean_delta_pass_rate": 0,
+      "models": [
+        {
+          "model": "claude-haiku-4-5-20251001",
+          "eval_name": "object-profile-cache",
+          "with_skill": {
+            "count": 2,
+            "pass_rate": 0.9,
+            "time_seconds": 25.820999999999998,
+            "tokens": 1387
+          },
+          "without_skill": {
+            "count": 2,
+            "pass_rate": 0.9,
+            "time_seconds": 10.6815,
+            "tokens": 1255
+          },
+          "delta": {
+            "pass_rate": 0,
+            "time_seconds": 15.139499999999998,
+            "tokens": 132
+          }
+        },
+        {
+          "model": "claude-opus-4-7",
+          "eval_name": "object-profile-cache",
+          "with_skill": {
+            "count": 2,
+            "pass_rate": 1,
+            "time_seconds": 19.982,
+            "tokens": 1302.5
+          },
+          "without_skill": {
+            "count": 2,
+            "pass_rate": 1,
+            "time_seconds": 14.761,
+            "tokens": 1735
+          },
+          "delta": {
+            "pass_rate": 0,
+            "time_seconds": 5.221,
+            "tokens": -432.5
+          }
+        },
+        {
+          "model": "claude-sonnet-4-6",
+          "eval_name": "object-profile-cache",
+          "with_skill": {
+            "count": 2,
+            "pass_rate": 0.8,
+            "time_seconds": 31.2145,
+            "tokens": 1335
+          },
+          "without_skill": {
+            "count": 2,
+            "pass_rate": 0.8,
+            "time_seconds": 17.553,
+            "tokens": 1354
+          },
+          "delta": {
+            "pass_rate": 0,
+            "time_seconds": 13.6615,
+            "tokens": -19
+          }
+        }
+      ]
+    },
+    {
+      "eval_id": 2,
+      "eval_name": "unique-membership",
+      "mean_delta_pass_rate": 0,
+      "models": [
+        {
+          "model": "claude-haiku-4-5-20251001",
+          "eval_name": "unique-membership",
+          "with_skill": {
+            "count": 2,
+            "pass_rate": 1,
+            "time_seconds": 10.7685,
+            "tokens": 717
+          },
+          "without_skill": {
+            "count": 2,
+            "pass_rate": 1,
+            "time_seconds": 8.86,
+            "tokens": 880.5
+          },
+          "delta": {
+            "pass_rate": 0,
+            "time_seconds": 1.9085,
+            "tokens": -163.5
+          }
+        },
+        {
+          "model": "claude-opus-4-7",
+          "eval_name": "unique-membership",
+          "with_skill": {
+            "count": 2,
+            "pass_rate": 1,
+            "time_seconds": 18.738999999999997,
+            "tokens": 520
+          },
+          "without_skill": {
+            "count": 2,
+            "pass_rate": 1,
+            "time_seconds": 17.286,
+            "tokens": 1535.5
+          },
+          "delta": {
+            "pass_rate": 0,
+            "time_seconds": 1.4529999999999959,
+            "tokens": -1015.5
+          }
+        },
+        {
+          "model": "claude-sonnet-4-6",
+          "eval_name": "unique-membership",
+          "with_skill": {
+            "count": 2,
+            "pass_rate": 1,
+            "time_seconds": 20.384,
+            "tokens": 943.5
+          },
+          "without_skill": {
+            "count": 2,
+            "pass_rate": 1,
+            "time_seconds": 8.146,
+            "tokens": 987
+          },
+          "delta": {
+            "pass_rate": 0,
+            "time_seconds": 12.238,
+            "tokens": -43.5
+          }
+        }
+      ]
+    },
+    {
+      "eval_id": 3,
+      "eval_name": "leaderboard-ranking",
+      "mean_delta_pass_rate": 0,
+      "models": [
+        {
+          "model": "claude-haiku-4-5-20251001",
+          "eval_name": "leaderboard-ranking",
+          "with_skill": {
+            "count": 2,
+            "pass_rate": 1,
+            "time_seconds": 36.0355,
+            "tokens": 1125
+          },
+          "without_skill": {
+            "count": 2,
+            "pass_rate": 1,
+            "time_seconds": 8.947,
+            "tokens": 1119
+          },
+          "delta": {
+            "pass_rate": 0,
+            "time_seconds": 27.0885,
+            "tokens": 6
+          }
+        },
+        {
+          "model": "claude-opus-4-7",
+          "eval_name": "leaderboard-ranking",
+          "with_skill": {
+            "count": 2,
+            "pass_rate": 1,
+            "time_seconds": 22.372999999999998,
+            "tokens": 1663
+          },
+          "without_skill": {
+            "count": 2,
+            "pass_rate": 1,
+            "time_seconds": 16.3855,
+            "tokens": 2165.5
+          },
+          "delta": {
+            "pass_rate": 0,
+            "time_seconds": 5.987499999999997,
+            "tokens": -502.5
+          }
+        },
+        {
+          "model": "claude-sonnet-4-6",
+          "eval_name": "leaderboard-ranking",
+          "with_skill": {
+            "count": 2,
+            "pass_rate": 1,
+            "time_seconds": 23.3375,
+            "tokens": 1718.5
+          },
+          "without_skill": {
+            "count": 2,
+            "pass_rate": 1,
+            "time_seconds": 15.825,
+            "tokens": 1522
+          },
+          "delta": {
+            "pass_rate": 0,
+            "time_seconds": 7.512499999999999,
+            "tokens": 196.5
+          }
+        }
+      ]
+    },
+    {
+      "eval_id": 4,
+      "eval_name": "key-naming-cleanup",
+      "mean_delta_pass_rate": 0.06666666666666665,
+      "models": [
+        {
+          "model": "claude-haiku-4-5-20251001",
+          "eval_name": "key-naming-cleanup",
+          "with_skill": {
+            "count": 2,
+            "pass_rate": 1,
+            "time_seconds": 14.4415,
+            "tokens": 1058.5
+          },
+          "without_skill": {
+            "count": 2,
+            "pass_rate": 0.9,
+            "time_seconds": 10.9405,
+            "tokens": 1286
+          },
+          "delta": {
+            "pass_rate": 0.09999999999999998,
+            "time_seconds": 3.5009999999999994,
+            "tokens": -227.5
+          }
+        },
+        {
+          "model": "claude-opus-4-7",
+          "eval_name": "key-naming-cleanup",
+          "with_skill": {
+            "count": 2,
+            "pass_rate": 1,
+            "time_seconds": 20.589,
+            "tokens": 1422
+          },
+          "without_skill": {
+            "count": 2,
+            "pass_rate": 1,
+            "time_seconds": 15.183,
+            "tokens": 1819.5
+          },
+          "delta": {
+            "pass_rate": 0,
+            "time_seconds": 5.405999999999999,
+            "tokens": -397.5
+          }
+        },
+        {
+          "model": "claude-sonnet-4-6",
+          "eval_name": "key-naming-cleanup",
+          "with_skill": {
+            "count": 2,
+            "pass_rate": 1,
+            "time_seconds": 17.7095,
+            "tokens": 1205
+          },
+          "without_skill": {
+            "count": 2,
+            "pass_rate": 0.9,
+            "time_seconds": 18.171999999999997,
+            "tokens": 1400.5
+          },
+          "delta": {
+            "pass_rate": 0.09999999999999998,
+            "time_seconds": -0.4624999999999986,
+            "tokens": -195.5
+          }
+        }
+      ]
+    }
+  ],
+  "overall": {
+    "models": 3,
+    "total_cost_usd": 3.569782,
+    "generation_cost_usd": 3.569782,
+    "grading_cost_usd": 0,
+    "mean_delta_pass_rate": 0.01666666666666668,
+    "mean_delta_tokens": -221.875,
+    "mean_delta_time_seconds": 8.221208333333333,
+    "mean_delta_cost_usd": 0.058316,
+    "models_improved": 0,
+    "models_neutral": 3,
+    "models_degraded": 0
+  }
+}

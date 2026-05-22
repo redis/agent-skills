@@ -89,7 +89,9 @@ Selecting the appropriate Redis data type for your use case is fundamental to pe
 | Rankings, ranges | Sorted Set | Score-based ordering |
 | Nested/hierarchical data | JSON | Path queries, nested structures, geospatial indexing with RQE |
 | Event logs, messaging | Stream | Persistent, consumer groups |
-| Similarity search | Vector Set | Native vector storage with built-in HNSW indexing |
+| Similarity search | Redis Query Engine / RedisVL or Vector Set | RedisVL is best for document retrieval with filters and full-text search; vector sets are simpler native similarity search |
+
+**Note: Vector sets are a Redis 8+ capability introduced in Redis 8.0 and documented there as beta. Prefer Redis Query Engine / RedisVL when you need document-oriented retrieval, structured filters, or full-text + vector workflows.**
 
 **Incorrect: Using strings for everything.**
 
@@ -1402,8 +1404,9 @@ schema = IndexSchema.from_dict({
             "dims": 1536,
             "algorithm": "HNSW",
             "distance_metric": "COSINE",
-            "M": 16,                  # Higher = more accurate, more memory
-            "EF_CONSTRUCTION": 200    # Higher = better index quality, slower build
+            "datatype": "FLOAT32",
+            "m": 16,                      # Higher = more accurate, more memory
+            "ef_construction": 200        # Higher = better index quality, slower build
         }}
     ]
 })
@@ -1433,7 +1436,7 @@ schema = IndexSchema.from_dict({
 
 - `EF_RUNTIME`: Query-time parameter. Higher = better recall, slower queries
 
-Reference: [https://redis.io/docs/latest/develop/interact/search-and-query/advanced-concepts/vectors/](https://redis.io/docs/latest/develop/interact/search-and-query/advanced-concepts/vectors/)
+Reference: [https://redis.io/docs/latest/develop/ai/search-and-query/vectors/](https://redis.io/docs/latest/develop/ai/search-and-query/vectors/)
 
 ### 6.2 Configure Vector Indexes Properly
 
@@ -1458,6 +1461,7 @@ FT.CREATE idx:docs ON HASH PREFIX 1 doc:
 ```python
 from redis import Redis
 from redis.commands.search.field import TextField, VectorField
+from redis.commands.search.index_definition import IndexDefinition
 
 r = Redis()
 
@@ -1491,6 +1495,7 @@ schema = IndexSchema.from_dict({
         {"name": "embedding", "type": "vector", "attrs": {
             "dims": 1536,
             "algorithm": "HNSW",
+            "datatype": "FLOAT32",
             "distance_metric": "COSINE"
         }}
     ]
@@ -1504,13 +1509,13 @@ index.create(overwrite=True)
 
 ```python
 # Bad: Wrong dimensions for your model
-{"dims": 768}  # But using OpenAI which outputs 1536
+{"dims": 768}  # But your selected embedding model outputs a different size
 
 # Bad: Wrong metric for normalized embeddings
 {"distance_metric": "L2"}  # When embeddings are normalized for COSINE
 ```
 
-Reference: [https://redis.io/docs/latest/develop/interact/search-and-query/advanced-concepts/vectors/](https://redis.io/docs/latest/develop/interact/search-and-query/advanced-concepts/vectors/)
+Reference: [https://redis.io/docs/latest/develop/ai/search-and-query/vectors/](https://redis.io/docs/latest/develop/ai/search-and-query/vectors/)
 
 ### 6.3 Implement RAG Pattern Correctly
 
@@ -1525,17 +1530,19 @@ from redisvl.index import SearchIndex
 from redisvl.query import VectorQuery
 
 # 1. Store documents with embeddings
+records = []
 for doc in documents:
-    embedding = embed_model.encode(doc["content"])
-    index.load([{
+    records.append({
         "content": doc["content"],
-        "embedding": embedding.tolist(),
+        "embedding": embed_model.encode(doc["content"]).tolist(),
         "source": doc["source"]
-    }])
+    })
+
+index.load(records)
 
 # 2. Query with vector similarity
 query_embedding = embed_model.encode(user_question)
-results = index.search(VectorQuery(
+results = index.query(VectorQuery(
     vector=query_embedding,
     vector_field_name="embedding",
     return_fields=["content", "source"],
@@ -1549,7 +1556,7 @@ response = llm.generate(f"Context: {context}\n\nQuestion: {user_question}")
 
 **Best practices:**
 
-- Normalize vectors if using COSINE distance
+- Match your distance metric to your embedding model; many modern text embeddings already work well with COSINE
 
 - Batch inserts using `index.load()` with lists
 
@@ -1565,29 +1572,32 @@ Reference: [https://redis.io/docs/latest/develop/get-started/rag/](https://redis
 
 **Impact: MEDIUM (Combining vector + filters improves relevance and reduces search space)**
 
-Combine vector similarity with attribute filtering for more relevant results.
+Combine vector similarity with attribute filtering for more relevant results. In this rule, "hybrid" means filtered vector search. Redis and RedisVL also use "hybrid search" for text + vector fusion via `FT.HYBRID` / `HybridQuery`.
 
 **Correct: Apply filters to reduce search space.**
 
 ```python
 from redisvl.query import VectorQuery
+from redisvl.query.filter import Num, Tag
+
+filters = (Tag("category") == "technology") & (Num("date") >= 2024) & (Num("date") <= 2025)
 
 query = VectorQuery(
     vector=query_embedding,
     vector_field_name="embedding",
     return_fields=["content", "category", "date"],
     num_results=10,
-    filter_expression="@category:{technology} @date:[2024 2025]"
+    filter_expression=filters
 )
 
-results = index.search(query)
+results = index.query(query)
 ```
 
 **Incorrect: Searching entire vector space when filters apply.**
 
 ```python
 # Bad: No filter - searches all vectors then filters client-side
-results = index.search(VectorQuery(
+results = index.query(VectorQuery(
     vector=query_embedding,
     vector_field_name="embedding",
     num_results=1000
@@ -1602,9 +1612,11 @@ filtered = [r for r in results if r["category"] == "technology"]
 
 - Use NUMERIC fields for date/price ranges
 
-- Filters are applied before vector search, reducing computation
+- Redis auto-selects the filtered vector execution strategy; tune `hybrid_policy` only when needed
 
-Reference: [https://redis.io/docs/latest/develop/interact/search-and-query/query/combined/](https://redis.io/docs/latest/develop/interact/search-and-query/query/combined/)
+- For true text + vector fusion, use `HybridQuery` on Redis >= 8.4.0 with redis-py >= 7.1.0; use `AggregateHybridQuery` on earlier Redis versions
+
+Reference: [https://redis.io/docs/latest/develop/ai/search-and-query/vectors/](https://redis.io/docs/latest/develop/ai/search-and-query/vectors/)
 
 ---
 

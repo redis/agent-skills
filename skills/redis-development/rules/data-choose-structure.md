@@ -20,7 +20,9 @@ Selecting the appropriate Redis data type for your use case is fundamental to pe
 | Rankings, ranges | Sorted Set | Score-based ordering |
 | Nested/hierarchical data | JSON | Path queries, nested structures, geospatial indexing with RQE |
 | Event logs, messaging | Stream | Persistent, consumer groups |
-| Similarity search | Vector Set | Native vector storage with built-in HNSW indexing |
+| Similarity search | Redis Query Engine / RedisVL or Vector Set | RedisVL is best for document retrieval with filters and full-text search; vector sets are simpler native similarity search |
+
+**Note:** Vector sets are a Redis 8+ capability introduced in Redis 8.0 and documented there as beta. Prefer Redis Query Engine / RedisVL when you need document-oriented retrieval, structured filters, or full-text + vector workflows.
 
 **Incorrect:** Using strings for everything.
 

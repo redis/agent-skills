@@ -28,6 +28,7 @@ FT.CREATE idx:docs ON HASH PREFIX 1 doc:
 ```python
 from redis import Redis
 from redis.commands.search.field import TextField, VectorField
+from redis.commands.search.index_definition import IndexDefinition
 
 r = Redis()
 
@@ -61,6 +62,7 @@ schema = IndexSchema.from_dict({
         {"name": "embedding", "type": "vector", "attrs": {
             "dims": 1536,
             "algorithm": "HNSW",
+            "datatype": "FLOAT32",
             "distance_metric": "COSINE"
         }}
     ]
@@ -74,10 +76,10 @@ index.create(overwrite=True)
 
 ```python
 # Bad: Wrong dimensions for your model
-{"dims": 768}  # But using OpenAI which outputs 1536
+{"dims": 768}  # But your selected embedding model outputs a different size
 
 # Bad: Wrong metric for normalized embeddings
 {"distance_metric": "L2"}  # When embeddings are normalized for COSINE
 ```
 
-Reference: [Redis Vector Search](https://redis.io/docs/latest/develop/interact/search-and-query/advanced-concepts/vectors/)
+Reference: [Redis Vector Search](https://redis.io/docs/latest/develop/ai/search-and-query/vectors/)
