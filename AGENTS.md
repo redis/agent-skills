@@ -6,6 +6,12 @@ This file provides guidance to AI coding agents (Claude Code, Cursor, Copilot, e
 
 A collection of skills for AI coding agents working with Redis. Skills are packaged instructions and resources that extend agent capabilities.
 
+## Skill Format
+
+New skills follow the [agentskills.io specification](https://agentskills.io/specification): a `SKILL.md` with required `name` and `description` frontmatter, plus optional `references/`, `scripts/`, and `assets/`. See [skills/redis-core/](skills/redis-core/) for the reference layout.
+
+`skills/redis-development/` is the legacy compiled layout (`rules/` + generated `AGENTS.md`) and is being migrated category-by-category to the spec layout. The instructions below for `rules/`, the build system, and config wiring apply only to that legacy skill until the migration is complete.
+
 ## Creating a New Skill
 
 ### Directory Structure
