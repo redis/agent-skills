@@ -1,7 +1,7 @@
 {
-  "skill_name": "redis-development",
-  "eval_suite": "data-structures-key-naming",
-  "description": "POC evals for the future Redis data structures and key naming skill area.",
+  "skill_name": "redis-core",
+  "eval_suite": "core",
+  "description": "Core evals for the redis-core skill: data structure selection and key naming.",
   "evals": [
     {
       "id": 1,

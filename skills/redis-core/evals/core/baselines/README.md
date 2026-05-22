@@ -1,14 +1,14 @@
-# data-structures-key-naming Baseline
+# core Baseline
 
 Updated: 2026-05-20T07:13:25.176Z
 
-Skill: `redis-development`
+Skill: `redis-core`
 
-Suite: `data-structures-key-naming`
+Suite: `core`
 
 Source iteration: `iteration-1`
 
-Source output: `eval-workspaces/redis-development/data-structures-key-naming/iteration-1`
+Source output: `eval-workspaces/redis-core/core/iteration-1`
 
 This is a curated aggregate benchmark snapshot. Use it as the shared reference
 when comparing future skill changes against the current accepted behavior.
@@ -24,5 +24,5 @@ when comparing future skill changes against the current accepted behavior.
 ## Update Command
 
 ```bash
-npm run eval:baseline -- --skill redis-development --suite data-structures-key-naming --iteration iteration-1
+npm run eval:baseline -- --skill redis-core --suite core --iteration iteration-1
 ```
