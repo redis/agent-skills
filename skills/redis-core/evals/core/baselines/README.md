@@ -1,6 +1,6 @@
 # core Baseline
 
-Updated: 2026-05-20T07:13:25.176Z
+Updated: 2026-05-22T10:36:23.051Z
 
 Skill: `redis-core`
 

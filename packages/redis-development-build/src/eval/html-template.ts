@@ -93,7 +93,6 @@ export interface BaselineOverallSnapshot {
   mean_pass_delta: number;
   mean_token_delta: number;
   mean_time_delta_seconds: number;
-  total_cost_usd: number;
   mean_cost_delta_usd: number;
 }
 
@@ -101,7 +100,6 @@ export interface BaselineModelSnapshot {
   pass_delta: number;
   token_delta: number;
   time_delta_seconds: number;
-  total_cost_usd: number;
   cost_delta_usd: number;
 }
 
@@ -772,7 +770,6 @@ function renderBaselineSection(comparison: BaselineComparison): string {
       ${summaryMetric("Pass Delta Change", "Current mean pass delta minus baseline mean pass delta. Positive means this run improved the skill uplift versus the baseline.", signedPercent(comparison.overall.change.mean_pass_delta), deltaClass(comparison.overall.change.mean_pass_delta, "pass_rate"))}
       ${summaryMetric("Token Delta Change", "Current mean token delta minus baseline mean token delta. Negative means this run reduced token overhead versus the baseline.", signedNumber(comparison.overall.change.mean_token_delta, 0), deltaClass(comparison.overall.change.mean_token_delta, "tokens"))}
       ${summaryMetric("Time Delta Change", "Current mean time delta minus baseline mean time delta. Negative means this run reduced runtime overhead versus the baseline.", `${signedNumber(comparison.overall.change.mean_time_delta_seconds, 1)}s`, deltaClass(comparison.overall.change.mean_time_delta_seconds, "time_seconds"))}
-      ${summaryMetric("Total Cost Change", "Current total eval cost minus baseline total eval cost. Negative means this run was cheaper than the baseline.", signedUsd(comparison.overall.change.total_cost_usd), deltaClass(comparison.overall.change.total_cost_usd, "cost_usd"))}
       ${summaryMetric("Cost Delta Change", "Current mean cost delta minus baseline mean cost delta. Negative means the with-skill cost overhead improved versus the baseline.", signedUsd(comparison.overall.change.mean_cost_delta_usd), deltaClass(comparison.overall.change.mean_cost_delta_usd, "cost_usd"))}
     </section>
     <div class="panel">
@@ -821,7 +818,6 @@ function renderLegend(input: AggregateHtmlInput): string {
     addTone(baseline.overall.change.mean_pass_delta, "pass_rate");
     addTone(baseline.overall.change.mean_token_delta, "tokens");
     addTone(baseline.overall.change.mean_time_delta_seconds, "time_seconds");
-    addTone(baseline.overall.change.total_cost_usd, "cost_usd");
     addTone(baseline.overall.change.mean_cost_delta_usd, "cost_usd");
     for (const model of baseline.models) {
       if (!model.change) continue;

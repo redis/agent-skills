@@ -1,6 +1,6 @@
 {
   "eval_suite": "core",
-  "description": "Cross-model run plan snapshot captured with this baseline. Mirrors the live model-matrix.json at the time the baseline was taken.",
+  "description": "Cross-model run plan for the redis-core eval suite (data structure selection and key naming). Anthropic skill-creator tooling owns generation, grading, per-model benchmark.json, and benchmark.md; this file records the model matrix we run before combining per-model benchmark files.",
   "models": [
     "claude-opus-4-7",
     "claude-sonnet-4-6",

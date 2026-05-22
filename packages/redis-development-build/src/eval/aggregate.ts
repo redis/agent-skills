@@ -94,7 +94,6 @@ interface BaselineOverallReport {
   mean_delta_pass_rate?: number;
   mean_delta_tokens?: number;
   mean_delta_time_seconds?: number;
-  total_cost_usd?: number;
   mean_delta_cost_usd?: number;
 }
 
@@ -106,7 +105,6 @@ interface BaselineModelReport {
     time_seconds?: number;
   };
   cost?: {
-    total_usd?: number;
     delta_usd?: number;
   };
   verdict?: string;
@@ -609,7 +607,8 @@ async function summarizeModelCost(
     }
   }
 
-  const meanWithSkillUsd = withSkillRuns === 0 ? 0 : withSkillUsd / withSkillRuns;
+  const meanWithSkillUsd =
+    withSkillRuns === 0 ? 0 : withSkillUsd / withSkillRuns;
   const meanWithoutSkillUsd =
     withoutSkillRuns === 0 ? 0 : withoutSkillUsd / withoutSkillRuns;
 
@@ -714,9 +713,7 @@ function normalizedEvalName(
   return trimmed;
 }
 
-function summarizeOverall(
-  modelSummaries: ModelSummary[],
-) {
+function summarizeOverall(modelSummaries: ModelSummary[]) {
   return {
     models: modelSummaries.length,
     total_cost_usd: roundUsd(
@@ -729,7 +726,10 @@ function summarizeOverall(
       ),
     ),
     grading_cost_usd: roundUsd(
-      modelSummaries.reduce((sum, summary) => sum + summary.cost.grading_usd, 0),
+      modelSummaries.reduce(
+        (sum, summary) => sum + summary.cost.grading_usd,
+        0,
+      ),
     ),
     mean_delta_pass_rate: mean(
       modelSummaries.map((summary) => summary.delta.pass_rate),
@@ -746,8 +746,8 @@ function summarizeOverall(
     models_improved: modelSummaries.filter(
       (summary) => summary.verdict === "improves",
     ).length,
-    models_neutral: modelSummaries.filter(
-      (summary) => isNeutralVerdict(summary.verdict),
+    models_neutral: modelSummaries.filter((summary) =>
+      isNeutralVerdict(summary.verdict),
     ).length,
     models_degraded: modelSummaries.filter(
       (summary) => summary.verdict === "degrades",
@@ -762,7 +762,6 @@ function currentOverallSnapshot(
     mean_pass_delta: overall.mean_delta_pass_rate,
     mean_token_delta: overall.mean_delta_tokens,
     mean_time_delta_seconds: overall.mean_delta_time_seconds,
-    total_cost_usd: overall.total_cost_usd,
     mean_cost_delta_usd: overall.mean_delta_cost_usd,
   };
 }
@@ -774,7 +773,6 @@ function baselineOverallSnapshot(
     mean_pass_delta: numberOrZero(overall?.mean_delta_pass_rate),
     mean_token_delta: numberOrZero(overall?.mean_delta_tokens),
     mean_time_delta_seconds: numberOrZero(overall?.mean_delta_time_seconds),
-    total_cost_usd: numberOrZero(overall?.total_cost_usd),
     mean_cost_delta_usd: numberOrZero(overall?.mean_delta_cost_usd),
   };
 }
@@ -788,7 +786,6 @@ function subtractOverallSnapshot(
     mean_token_delta: current.mean_token_delta - baseline.mean_token_delta,
     mean_time_delta_seconds:
       current.mean_time_delta_seconds - baseline.mean_time_delta_seconds,
-    total_cost_usd: current.total_cost_usd - baseline.total_cost_usd,
     mean_cost_delta_usd:
       current.mean_cost_delta_usd - baseline.mean_cost_delta_usd,
   };
@@ -799,7 +796,6 @@ function currentModelSnapshot(summary: ModelSummary): BaselineModelSnapshot {
     pass_delta: summary.delta.pass_rate,
     token_delta: summary.delta.tokens,
     time_delta_seconds: summary.delta.time_seconds,
-    total_cost_usd: summary.cost.total_usd,
     cost_delta_usd: summary.cost.delta_usd,
   };
 }
@@ -811,7 +807,6 @@ function baselineModelSnapshot(
     pass_delta: numberOrZero(model.delta?.pass_rate),
     token_delta: numberOrZero(model.delta?.tokens),
     time_delta_seconds: numberOrZero(model.delta?.time_seconds),
-    total_cost_usd: numberOrZero(model.cost?.total_usd),
     cost_delta_usd: numberOrZero(model.cost?.delta_usd),
   };
 }
@@ -823,8 +818,8 @@ function subtractModelSnapshot(
   return {
     pass_delta: current.pass_delta - baseline.pass_delta,
     token_delta: current.token_delta - baseline.token_delta,
-    time_delta_seconds: current.time_delta_seconds - baseline.time_delta_seconds,
-    total_cost_usd: current.total_cost_usd - baseline.total_cost_usd,
+    time_delta_seconds:
+      current.time_delta_seconds - baseline.time_delta_seconds,
     cost_delta_usd: current.cost_delta_usd - baseline.cost_delta_usd,
   };
 }
@@ -843,7 +838,9 @@ function summarizeRuns(runs: BenchmarkRun[]): {
   };
 }
 
-function summarizeRunSummaries(summaries: Array<ReturnType<typeof summarizeRuns>>): {
+function summarizeRunSummaries(
+  summaries: Array<ReturnType<typeof summarizeRuns>>,
+): {
   count: number;
   pass_rate: number;
   time_seconds: number;
@@ -1033,12 +1030,6 @@ function renderBaselineMarkdown(comparison: BaselineComparison): string {
       `${signedNumber(comparison.overall.baseline.mean_time_delta_seconds, 1)}s`,
       `${signedNumber(comparison.overall.current.mean_time_delta_seconds, 1)}s`,
       `${signedNumber(comparison.overall.change.mean_time_delta_seconds, 1)}s`,
-    ],
-    [
-      "Total eval cost",
-      formatUsd(comparison.overall.baseline.total_cost_usd),
-      formatUsd(comparison.overall.current.total_cost_usd),
-      signedUsd(comparison.overall.change.total_cost_usd),
     ],
     [
       "Mean cost delta",
