@@ -8,6 +8,12 @@ import process from "node:process";
 const repoRoot = process.cwd();
 const skillsRoot = path.join(repoRoot, "skills");
 
+// Subdirectories that exist for repo tooling (not the agent runtime) and that
+// skill-validator should accept without "unknown directory" warnings. The
+// agentskills.io spec explicitly allows additional files and directories at
+// the skill root.
+const ALLOW_DIRS = ["evals"];
+
 const options = parseArgs(process.argv.slice(2));
 const skillDirs = resolveSkillDirs(options);
 
@@ -170,11 +176,16 @@ function changedSkillDirs(baseRef) {
 }
 
 function validateSkill(skillDir) {
-  const command = spawnSync(
-    "skill-validator",
-    ["check", "-o", "json", skillDir],
-    { cwd: repoRoot, encoding: "utf8" },
-  );
+  const args = ["check", "-o", "json"];
+  if (ALLOW_DIRS.length > 0) {
+    args.push(`--allow-dirs=${ALLOW_DIRS.join(",")}`);
+  }
+  args.push(skillDir);
+
+  const command = spawnSync("skill-validator", args, {
+    cwd: repoRoot,
+    encoding: "utf8",
+  });
 
   if (command.error) {
     fail(`Failed to run skill-validator: ${command.error.message}`);
