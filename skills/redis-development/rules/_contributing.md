@@ -1,3 +1,11 @@
+---
+description: >
+  Authoring guide for Redis Cursor rules: concrete Correct/Incorrect examples,
+  impact levels, naming, and review checklist. Use when creating or editing
+  markdown rules for the Redis development plugin, or reviewing rule quality.
+alwaysApply: false
+---
+
 # Writing Guidelines for Redis Rules
 
 Guidelines for creating effective Redis best practice rules for AI agents and LLMs.
