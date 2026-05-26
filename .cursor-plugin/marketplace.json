@@ -6,17 +6,73 @@
   },
   "metadata": {
     "description": "Official Redis plugins for Cursor",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "pluginRoot": "skills"
   },
   "plugins": [
     {
-      "name": "redis-development",
-      "source": "redis-development",
-      "description": "Redis development best practices — data structures, query engine, vector search, caching, and performance optimization",
+      "name": "redis-core",
+      "source": "redis-core",
+      "description": "Core Redis modeling — data structures, key naming, memory and TTL, atomic primitives, JSON vs Hash, Streams vs Pub/Sub.",
       "version": "1.0.0",
       "category": "database",
-      "tags": ["redis", "database", "caching", "vector-search", "performance"]
+      "tags": ["redis", "database", "data-modeling"]
+    },
+    {
+      "name": "redis-connections",
+      "source": "redis-connections",
+      "description": "Redis client and connection guidance — pooling, multiplexing, pipelining, client-side caching, timeouts, slow commands.",
+      "version": "1.0.0",
+      "category": "database",
+      "tags": ["redis", "performance", "connections"]
+    },
+    {
+      "name": "redis-query-engine",
+      "source": "redis-query-engine",
+      "description": "Redis Query Engine (RQE) — FT.CREATE schema, FT.SEARCH / FT.AGGREGATE, DIALECT 2, field types, zero-downtime updates.",
+      "version": "1.0.0",
+      "category": "database",
+      "tags": ["redis", "search", "query-engine"]
+    },
+    {
+      "name": "redis-vector-search",
+      "source": "redis-vector-search",
+      "description": "Redis vector search — HNSW vs FLAT, vector index configuration, hybrid search, the RAG retrieval pattern with RedisVL.",
+      "version": "1.0.0",
+      "category": "database",
+      "tags": ["redis", "vector-search", "rag", "ai"]
+    },
+    {
+      "name": "redis-semantic-cache",
+      "source": "redis-semantic-cache",
+      "description": "Redis LangCache — cache-aside flow for LLM responses, similarity threshold tuning, per-task cache separation.",
+      "version": "1.0.0",
+      "category": "database",
+      "tags": ["redis", "semantic-cache", "langcache", "ai"]
+    },
+    {
+      "name": "redis-clustering",
+      "source": "redis-clustering",
+      "description": "Redis Cluster and replication — hash tags for multi-key operations, avoiding CROSSSLOT, reading from replicas.",
+      "version": "1.0.0",
+      "category": "database",
+      "tags": ["redis", "cluster", "replication"]
+    },
+    {
+      "name": "redis-security",
+      "source": "redis-security",
+      "description": "Redis security hardening — authentication and TLS, ACL-based least privilege, network bind, firewall, command renaming.",
+      "version": "1.0.0",
+      "category": "database",
+      "tags": ["redis", "security", "acl", "tls"]
+    },
+    {
+      "name": "redis-observability",
+      "source": "redis-observability",
+      "description": "Redis observability — key metrics to monitor (INFO), debugging commands (SLOWLOG, MEMORY DOCTOR, FT.PROFILE), Redis Insight.",
+      "version": "1.0.0",
+      "category": "database",
+      "tags": ["redis", "observability", "monitoring"]
     }
   ]
 }

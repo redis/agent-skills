@@ -1,0 +1,13 @@
+{
+  "name": "redis-vector-search",
+  "version": "1.0.0",
+  "description": "Redis vector search — HNSW vs FLAT, vector index configuration, hybrid search, the RAG retrieval pattern with RedisVL.",
+  "author": {
+    "name": "Redis",
+    "email": "support@redis.com"
+  },
+  "homepage": "https://redis.io",
+  "repository": "https://github.com/redis/agent-skills",
+  "license": "MIT",
+  "keywords": ["redis", "vector-search", "embeddings", "rag", "redisvl", "hnsw", "ai"]
+}
