@@ -381,18 +381,10 @@ async function buildAggregateReport(
   return { json, markdown, html };
 }
 
-async function readSkillLogoDataUri(context: {
+async function readSkillLogoDataUri(_context: {
   skill_name: string;
 }): Promise<string | undefined> {
-  if (!context.skill_name) return undefined;
-
-  const logoPath = join(
-    REPO_ROOT,
-    "skills",
-    context.skill_name,
-    "assets",
-    "logo.png",
-  );
+  const logoPath = join(REPO_ROOT, "assets", "redis-logo.png");
 
   try {
     const logo = await readFile(logoPath);
