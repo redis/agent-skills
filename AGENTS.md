@@ -4,186 +4,75 @@ This file provides guidance to AI coding agents (Claude Code, Cursor, Copilot, e
 
 ## Repository Overview
 
-A collection of skills for AI coding agents working with Redis. Skills are packaged instructions and resources that extend agent capabilities.
+A collection of agentskills.io-compliant skills for AI coding agents working with Redis. Each skill is a focused, spec-compliant directory under [skills/](skills/):
+
+- [redis-core](skills/redis-core/) — data structures, key naming, memory/TTL, atomic primitives, JSON vs Hash, Streams vs Pub/Sub
+- [redis-connections](skills/redis-connections/) — pooling, multiplexing, pipelining, client-side caching, timeouts
+- [redis-query-engine](skills/redis-query-engine/) — FT.CREATE / FT.SEARCH / FT.AGGREGATE, schema design
+- [redis-vector-search](skills/redis-vector-search/) — HNSW vs FLAT, vector index config, hybrid search, RAG
+- [redis-semantic-cache](skills/redis-semantic-cache/) — LangCache for LLM response caching
+- [redis-clustering](skills/redis-clustering/) — hash tags, multi-key ops, read replicas
+- [redis-security](skills/redis-security/) — AUTH, TLS, ACLs, network exposure, command renaming
+- [redis-observability](skills/redis-observability/) — INFO, SLOWLOG, MEMORY DOCTOR, FT.PROFILE, Redis Insight
 
 ## Skill Format
 
-New skills follow the [agentskills.io specification](https://agentskills.io/specification): a `SKILL.md` with required `name` and `description` frontmatter, plus optional `references/`, `scripts/`, and `assets/`. See [skills/redis-core/](skills/redis-core/) for the reference layout.
-
-`skills/redis-development/` is the legacy compiled layout (`rules/` + generated `AGENTS.md`) and is being migrated category-by-category to the spec layout. The instructions below for `rules/`, the build system, and config wiring apply only to that legacy skill until the migration is complete.
-
-## Creating a New Skill
-
-### Directory Structure
+All skills follow the [agentskills.io specification](https://agentskills.io/specification):
 
 ```
-skills/
-  {skill-name}/               # kebab-case directory name
-    SKILL.md                  # Required: skill definition with frontmatter
-    AGENTS.md                 # Generated: compiled rules (for rule-based skills)
-    README.md                 # Required: user documentation
-    metadata.json             # Required: version and metadata
-    rules/                    # For rule-based skills
-      _sections.md            # Section definitions
-      _template.md            # Rule template
-      {prefix}-{name}.md      # Individual rules
-    scripts/                  # For script-based skills (optional)
-      {script-name}.sh
+skills/<skill-name>/
+├── SKILL.md          # Required: YAML frontmatter (name, description, license, metadata) + agent-facing instructions
+├── references/       # Optional: long-form content loaded on demand (one file per topic)
+├── scripts/          # Optional: executable code agents may invoke
+├── assets/           # Optional: static resources (templates, schemas, images)
+├── evals/            # Internal: eval suites used by this repo's tooling, not by agents at runtime
+└── .cursor-plugin/   # Per-skill Cursor plugin manifest (so the skill can be published as a Cursor plugin)
 ```
 
-### Naming Conventions
+Use [skills/redis-core/](skills/redis-core/) as the reference layout. Editorial convention across this repo: keep `SKILL.md` under ~150 lines with summary tables and key principles inline; move full Python/Java code samples into `references/<topic>.md` (one file per source rule). The agent loads `SKILL.md` once on activation; reference files are loaded only when the task requires them.
 
-- **Skill directory**: `kebab-case` (e.g., `redis-development`, `redis-monitoring`)
-- **SKILL.md, AGENTS.md**: Always uppercase
-- **Rule files**: `{prefix}-{description}.md` where prefix maps to section
-- **Scripts**: `kebab-case.sh`
+## Adding a New Skill
 
-### SKILL.md Format
-
-```markdown
----
-name: {skill-name}
-description: {One sentence describing when to use this skill. Include trigger phrases.}
-license: MIT
-metadata:
-  author: {organization}
-  version: "1.0.0"
----
-
-# {Skill Title}
-
-{Brief description of what the skill does.}
-
-## When to Apply
-
-Reference these guidelines when:
-- {Use case 1}
-- {Use case 2}
-
-## Rule Categories by Priority
-
-| Priority | Category | Impact | Prefix |
-|----------|----------|--------|--------|
-| 1 | {Category} | HIGH | `{prefix}-` |
-
-## Quick Reference
-
-### 1. {Category} (HIGH)
-
-- `{prefix}-{rule-name}` - {Brief description}
-
-## How to Use
-
-{Instructions for reading individual rules}
-
-## Full Compiled Document
-
-For the complete guide with all rules expanded: `AGENTS.md`
-```
-
-### Rule File Format
-
-Each rule in `rules/` follows this structure:
-
-```markdown
----
-title: Clear, Action-Oriented Title
-impact: HIGH|MEDIUM|LOW
-impactDescription: Quantified benefit (e.g., "10x faster")
-tags: relevant, keywords
-description: Clear, Action-Oriented Title
-alwaysApply: true
----
-
-## {Title}
-
-{1-2 sentence explanation of the problem and why it matters}
-
-**Correct:** Description of good approach.
-
-```python
-# Good example with comments
-```
-
-**Incorrect:** Description of problematic approach.
-
-```python
-# Bad example with comments
-```
-
-Reference: [Link](URL)
-```
-
-**When to include "Incorrect" examples:**
-- Use `**Incorrect:**` when the alternative causes real harm (race conditions, security issues, crashes, significant performance problems)
-- For feature-introduction rules where not using the feature is valid, use `**When to use:**` / `**When NOT needed:**` sections instead
-- Rules may include multiple `**Correct:**` sections for different valid approaches (see comparison rules like `json-vs-hash.md`)
-
-### Adding a New Skill
-
-1. Create skill directory: `skills/{skill-name}/`
-2. Create `SKILL.md` with frontmatter and structure above
-3. Create `metadata.json`:
-   ```json
-   {
-     "version": "1.0.0",
-     "organization": "Your Org",
-     "date": "Month Year",
-     "abstract": "Description for AI agents",
-     "references": ["https://..."]
-   }
+1. Create `skills/<skill-name>/SKILL.md` with the required frontmatter:
+   ```yaml
+   ---
+   name: <skill-name>
+   description: <one paragraph that includes the trigger phrases agents should match on>
+   license: MIT
+   metadata:
+     author: <organization>
+     version: "0.1.0"
+   ---
    ```
-4. Create `README.md` with user documentation
-5. For rule-based skills:
-   - Create `rules/_sections.md` defining categories
-   - Create `rules/_template.md` for contributors
-   - Add rules as `rules/{prefix}-{name}.md`
-   - Add skill config to `packages/redis-development-build/src/config.ts`
-   - Run `npm run build` to generate AGENTS.md
+2. Add long-form examples under `references/`.
+3. If the skill needs internal eval coverage, add `evals/<suite-name>/{evals.json, model-matrix.json}`.
+4. Create `.cursor-plugin/plugin.json` (`name`, `version`, `description`, `license`, `keywords` — see any existing skill).
+5. To publish via the marketplaces:
+   - Claude Code: symlink the new skill into `plugins/redis-development/skills/`.
+   - Cursor: add an entry to `.cursor-plugin/marketplace.json` pointing at `<skill-name>`.
+6. Validate: `npm run validate` (covers plugin manifests + agentskills.io spec).
 
-### Build System
-
-The build tooling in `packages/redis-development-build/` compiles individual rule files into AGENTS.md:
+## Running Validators
 
 ```bash
-npm install
-npm run validate  # Check rule structure
-npm run build     # Generate AGENTS.md
+npm run validate                   # plugin manifests + agentskills.io spec validation
+npm run validate:skill-structure   # spec validation only (across all skills)
+npm run validate:plugins           # claude + cursor plugin manifests only
 ```
 
-To add a new skill to the build system, update `src/config.ts`:
+`validate` is wired into the husky pre-commit hook and runs in CI on every PR.
 
-```typescript
-export const SKILLS: Record<string, SkillConfig> = {
-  'your-new-skill': {
-    name: 'your-new-skill',
-    title: 'Your New Skill',
-    description: 'Description',
-    skillDir: join(SKILLS_DIR, 'your-new-skill'),
-    rulesDir: join(SKILLS_DIR, 'your-new-skill/rules'),
-    metadataFile: join(SKILLS_DIR, 'your-new-skill/metadata.json'),
-    outputFile: join(SKILLS_DIR, 'your-new-skill/AGENTS.md'),
-    sectionMap: {
-      prefix1: 1,
-      prefix2: 2,
-    },
-  },
-}
-```
+## Running Evals
 
-### Best Practices for Context Efficiency
-
-- **Keep SKILL.md under 500 lines** — put detailed rules in separate files
-- **Write specific descriptions** — helps agents know when to activate the skill
-- **Use progressive disclosure** — SKILL.md summarizes, AGENTS.md has full details
-- **Quantify impact** — "10x faster" helps agents prioritize rules
-
-### End-User Installation
-
-**Claude Code:**
 ```bash
-cp -r skills/{skill-name} ~/.claude/skills/
+# Run the eval suite for a single skill
+npm run eval -- --skill <skill-name> --suite <suite-name>
+
+# Re-aggregate an existing iteration
+npm run eval:aggregate -- --skill <skill-name> --suite <suite-name>
+
+# Promote an iteration as the committed baseline
+npm run eval:baseline -- --skill <skill-name> --suite <suite-name> --iteration iteration-1
 ```
 
-**Claude.ai:**
-Add SKILL.md to project knowledge or paste contents into conversation.
+Per-skill eval suites live under `skills/<skill-name>/evals/<suite-name>/`. The eval workspace output is written to `eval-workspaces/` (gitignored).
