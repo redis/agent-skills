@@ -7,7 +7,7 @@ on:
     branches: [main]
 
 jobs:
-  validate-and-build:
+  validate:
     runs-on: ubuntu-latest
 
     steps:
@@ -19,22 +19,17 @@ jobs:
           node-version: '22'
           cache: 'npm'
 
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: stable
+          cache: false
+
+      - name: Install skill-validator
+        run: go install github.com/agent-ecosystem/skill-validator/cmd/skill-validator@v1.5.6
+
       - name: Install dependencies
         run: npm ci
 
-      - name: Validate skills
-        run: npm run validate:skills
-
-      - name: Build AGENTS.md
-        run: npm run build
-
-      - name: Check AGENTS.md is up to date
-        run: |
-          if ! git diff --quiet skills/*/AGENTS.md; then
-            echo "AGENTS.md is out of date. Run 'npm run build' and commit the changes."
-            git diff skills/*/AGENTS.md
-            exit 1
-          fi
-
-      - name: Validate plugins
-        run: npm run validate:plugins
+      - name: Validate
+        run: npm run validate
