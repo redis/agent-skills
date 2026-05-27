@@ -55,33 +55,33 @@ Reference these guidelines when:
 
 ### 1. Setup & Cloud Service (HIGH)
 
-- `setup-cloud-service` - Create a Memory service on Redis Cloud
-- `setup-auth-token` - Authenticate the SDK with a store API key
+- [`setup-cloud-service`](references/setup-cloud-service.md) - Create a Memory service on Redis Cloud
+- [`setup-auth-token`](references/setup-auth-token.md) - Authenticate the SDK with a store API key
 
 ### 2. Session Memory / Events (HIGH)
 
-- `session-when-to-use` - Choose session events vs direct long-term memory
-- `session-add-event` - Append a session event correctly
-- `session-retrieval` - Retrieve session memory and individual events
+- [`session-when-to-use`](references/session-when-to-use.md) - Choose session events vs direct long-term memory
+- [`session-add-event`](references/session-add-event.md) - Append a session event correctly
+- [`session-retrieval`](references/session-retrieval.md) - Retrieve session memory and individual events
 
 ### 3. Long-Term Memory (HIGH)
 
-- `ltm-bulk-create` - Create long-term memories in bulk with idempotent IDs
-- `ltm-search` - Search long-term memory semantically with filters
-- `ltm-organize` - Organize records with namespace, ownerId, topics, and memoryType
+- [`ltm-bulk-create`](references/ltm-bulk-create.md) - Create long-term memories in bulk with idempotent IDs
+- [`ltm-search`](references/ltm-search.md) - Search long-term memory semantically with filters
+- [`ltm-organize`](references/ltm-organize.md) - Organize records with namespace, ownerId, topics, and memoryType
 
 ### 4. Memory Promotion (MEDIUM)
 
-- `promotion-overview` - How background promotion works
+- [`promotion-overview`](references/promotion-overview.md) - How background promotion works
 
 ## How to Use
 
-Read individual rule files for detailed explanations and code examples:
+Read individual rule files under `references/` for detailed explanations and code examples:
 
 ```
-rules/setup-cloud-service.md
-rules/session-add-event.md
-rules/promotion-overview.md
+references/setup-cloud-service.md
+references/session-add-event.md
+references/promotion-overview.md
 ```
 
 Each rule file contains:
@@ -90,7 +90,3 @@ Each rule file contains:
 - Correct example(s) with Python and TypeScript SDK code
 - Either an "Incorrect" example or "When to use / When NOT needed" guidance
 - Additional context and references
-
-## Full Compiled Document
-
-For the complete guide with all rules expanded: `AGENTS.md`

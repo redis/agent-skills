@@ -1,11 +1,3 @@
----
-title: Append a Session Event Correctly
-impact: HIGH
-impactDescription: Each event triggers a promotion job — malformed events drop turns and corrupt LTM extraction
-tags: session, events, append, actor-id, role, content, sdk, timestamp
-description: Append a Session Event Correctly
-alwaysApply: true
----
 
 ## Append a Session Event Correctly
 
@@ -105,7 +97,7 @@ agent_memory.add_session_event(
 - `metadata`: any valid JSON document, ≤ 16 KB.
 - Session TTL is governed by the store's short-memory TTL (configured at store creation). Each new event refreshes the TTL on the session key.
 
-The response (`res.event` / `result.event`) includes the server-generated `event_id` / `eventId` (32-char UUID without dashes) — store it if you might need `delete_session_event` / `deleteSessionEvent` later. It also includes a `system_timestamp` / `systemTimestamp` (set by the data plane on ingestion) alongside the client-supplied `created_at` — see `session-retrieval` for how to use the two timestamps.
+The response (`res.event` / `result.event`) includes the server-generated `event_id` / `eventId` (32-char UUID without dashes) — store it if you might need `delete_session_event` / `deleteSessionEvent` later. It also includes a `system_timestamp` / `systemTimestamp` (set by the data plane on ingestion) alongside the client-supplied `created_at` — see [`session-retrieval`](session-retrieval.md) for how to use the two timestamps.
 
 ### Async (Python)
 

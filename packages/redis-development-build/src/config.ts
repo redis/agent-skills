@@ -46,21 +46,6 @@ export const SKILLS: Record<string, SkillConfig> = {
       observe: 11,
     },
   },
-  'iris-development': {
-    name: 'iris-development',
-    title: 'Iris Development',
-    description: 'Iris applications',
-    skillDir: join(SKILLS_DIR, 'iris-development'),
-    rulesDir: join(SKILLS_DIR, 'iris-development/rules'),
-    metadataFile: join(SKILLS_DIR, 'iris-development/metadata.json'),
-    outputFile: join(SKILLS_DIR, 'iris-development/AGENTS.md'),
-    sectionMap: {
-      setup: 1,
-      session: 2,
-      ltm: 3,
-      promotion: 4,
-    },
-  },
 }
 
 // Default skill

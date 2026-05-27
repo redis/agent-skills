@@ -1,11 +1,3 @@
----
-title: Search Long-Term Memory Semantically with Filters
-impact: HIGH
-impactDescription: Pre-filtering by ownerId/namespace cuts vector-search scope by orders of magnitude
-tags: ltm, search, semantic, filters, similarity, sdk
-description: Search Long-Term Memory Semantically with Filters
-alwaysApply: true
----
 
 ## Search Long-Term Memory Semantically with Filters
 

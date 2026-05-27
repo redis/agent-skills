@@ -1,11 +1,3 @@
----
-title: Retrieve Session Memory and Individual Events
-impact: MEDIUM
-impactDescription: Fetching the right SDK method avoids re-paginating an entire session to find one turn
-tags: session, get, list, pagination, retrieval, sdk
-description: Retrieve Session Memory and Individual Events
-alwaysApply: true
----
 
 ## Retrieve Session Memory and Individual Events
 

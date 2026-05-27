@@ -1,11 +1,3 @@
----
-title: Authenticate the SDK with a Store API Key
-impact: HIGH
-impactDescription: Wrong scheme causes 401s on every call; leaked keys expose the entire store
-tags: setup, auth, security, bearer, api-key, sdk
-description: Authenticate the SDK with a Store API Key
-alwaysApply: true
----
 
 ## Authenticate the SDK with a Store API Key
 

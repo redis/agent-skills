@@ -1,11 +1,3 @@
----
-title: Create a Memory Service on Redis Cloud
-impact: HIGH
-impactDescription: Provisions a managed store, API key, and worker in minutes
-tags: setup, cloud, provisioning, store, api-key, sdk
-description: Create a Memory Service on Redis Cloud
-alwaysApply: true
----
 
 ## Create a Memory Service on Redis Cloud
 

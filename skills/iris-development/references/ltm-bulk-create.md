@@ -1,11 +1,3 @@
----
-title: Create Long-Term Memories in Bulk with Idempotent IDs
-impact: HIGH
-impactDescription: Per-record calls cost N round-trips and N embeddings — the bulk method batches both
-tags: ltm, bulk-create, idempotent, embeddings, sdk
-description: Create Long-Term Memories in Bulk with Idempotent IDs
-alwaysApply: true
----
 
 ## Create Long-Term Memories in Bulk with Idempotent IDs
 

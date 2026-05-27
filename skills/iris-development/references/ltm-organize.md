@@ -1,11 +1,3 @@
----
-title: Organize Long-Term Memory with namespace, ownerId, topics, and memoryType
-impact: MEDIUM
-impactDescription: Good metadata makes every later search a filter-then-vector query instead of a full scan
-tags: ltm, namespace, owner-id, topics, memory-type, data-model
-description: Organize Long-Term Memory with namespace, ownerId, topics, and memoryType
-alwaysApply: true
----
 
 ## Organize Long-Term Memory with namespace, ownerId, topics, and memoryType
 

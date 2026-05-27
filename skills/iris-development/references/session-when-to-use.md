@@ -1,11 +1,3 @@
----
-title: Choose Session Events vs Long-Term Memory
-impact: HIGH
-impactDescription: Wrong tier wastes LLM budget on promotion or loses cross-session recall
-tags: session, ltm, working-memory, data-model
-description: Choose Session Events vs Long-Term Memory
-alwaysApply: true
----
 
 ## Choose Session Events vs Long-Term Memory
 

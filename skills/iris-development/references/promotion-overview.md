@@ -1,11 +1,3 @@
----
-title: Understand Background Memory Promotion
-impact: HIGH
-impactDescription: Treating LTM as synchronous after a session write produces flaky tests and missing recall
-tags: promotion, async, worker, deduplication, ttl
-description: Understand Background Memory Promotion
-alwaysApply: true
----
 
 ## Understand Background Memory Promotion
 
