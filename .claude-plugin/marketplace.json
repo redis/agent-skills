@@ -6,14 +6,14 @@
   },
   "metadata": {
     "description": "Official Redis plugins for Claude Code",
-    "version": "1.1.0"
+    "version": "1.2.0"
   },
   "plugins": [
     {
       "name": "redis-development",
       "source": "./plugins/redis-development",
-      "description": "Redis development best practices — data structures, query engine, vector search, caching, and performance optimization",
-      "version": "1.1.0",
+      "description": "Redis development best practices — data structures, query engine, vector search, caching, and performance optimization, plus Iris Redis Agent Memory.",
+      "version": "1.2.0",
       "category": "database",
       "tags": ["redis", "database", "caching", "vector-search", "performance"]
     }

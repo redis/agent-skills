@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "Official Redis plugins for Cursor",
-    "version": "1.1.0",
+    "version": "1.2.0",
     "pluginRoot": "skills"
   },
   "plugins": [
@@ -73,6 +73,14 @@
       "version": "1.0.0",
       "category": "database",
       "tags": ["redis", "observability", "monitoring"]
+    },
+    {
+      "name": "iris-development",
+      "source": "iris-development",
+      "description": "Iris: Redis Agent Memory — provisioning a memory service, authenticating the SDK, appending session events, creating and searching long-term memories, and the async promotion contract.",
+      "version": "1.0.0",
+      "category": "ai",
+      "tags": ["iris", "redis", "agent-memory", "ai", "llm"]
     }
   ]
 }

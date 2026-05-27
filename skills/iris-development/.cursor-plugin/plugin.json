@@ -1,0 +1,13 @@
+{
+  "name": "iris-development",
+  "version": "1.0.0",
+  "description": "Iris: Redis Agent Memory — provisioning a memory service, authenticating the SDK, appending session events, creating and searching long-term memories, and the async promotion contract. Examples in the official redis-agent-memory (Python) and @redis-iris/agent-memory (TypeScript) SDKs.",
+  "author": {
+    "name": "Redis",
+    "email": "support@redis.com"
+  },
+  "homepage": "https://redis.io",
+  "repository": "https://github.com/redis/agent-skills",
+  "license": "MIT",
+  "keywords": ["iris", "redis", "agent-memory", "ai", "llm", "session-memory", "long-term-memory"]
+}
