@@ -37,13 +37,20 @@ skills/<skill-name>/
   assets/
 ```
 
-The PR workflow runs `skill-validator` in advisory mode and reports structure issues as warnings while we gradually move the repository toward the standard layout.
+The PR workflow runs `skill-validator` automatically in **enforced** mode — any validator error fails CI and blocks the merge. Run `npm run validate` locally before opening a PR to catch issues early. Warnings remain advisory.
+
+See [#20 — Restructure redis-core to follow the agentskills.io spec](https://github.com/redis/agent-skills/pull/20) for a worked example of a skill landed in the spec layout (and the PR-description shape reviewers expect).
 
 ## Evaluating Skills
 
 When adding a new skill, or making a meaningful behavior change to an existing
-skill, include evals with the PR whenever possible. Evals help show whether the
-skill improves model output, keeps behavior neutral, or introduces regressions.
+skill, you **must** include evals with the PR. Evals are the only way reviewers
+can tell whether the skill improves model output, keeps behavior neutral, or
+introduces regressions.
+
+For the eval framework — schema, grading flow, report structure, and baseline
+workflow — see [#18 — Add Redis skills eval](https://github.com/redis/agent-skills/pull/18),
+which introduced this system.
 
 Place eval suites next to the skill they exercise:
 
@@ -79,11 +86,13 @@ npm run eval:baseline
 npm run eval:baseline -- --skill <skill-name> --suite <suite-name>
 ```
 
-In the PR description, include the eval command you ran and summarize the
-combined report results. Prefer linking or attaching the generated markdown or
-HTML report, and add screenshots when the HTML charts make the result easier to
-review. If an eval cannot be run, explain why and describe the manual validation
-you performed instead.
+In the PR description, include the eval command you ran, summarize the combined
+report's headline numbers (pass/token/time/cost deltas), and **attach
+screenshots** of the HTML report's "Against Baseline" summary and per-model
+table — the HTML charts and verdict pills don't reproduce in markdown and
+screenshots make the result legible at a glance during review. See [#20](https://github.com/redis/agent-skills/pull/20)
+for the format we expect. If an eval cannot be run, explain why and describe the
+manual validation you performed instead.
 
 ## Commands
 
