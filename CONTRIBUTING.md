@@ -6,22 +6,7 @@
 npm install
 ```
 
-This installs dependencies and sets up Git hooks (via Husky) that validate and build before each commit.
-
-## Adding Rules (deprecated)
-
-Note: We'll drop rules, in favor of [Agent Skills](https://agentskills.io) structure.
-
-Rules live in `skills/<skill-name>/rules/`. See `skills/redis-development/` for an example.
-
-To add a new rule:
-
-1. Create a new file in `rules/` following the naming convention: `<prefix>-<name>.md`
-2. Use the template in `rules/_template.md`
-3. Run `npm run build` to regenerate `AGENTS.md`
-4. Commit both the rule and the updated `AGENTS.md`
-
-The pre-commit hook will fail if `AGENTS.md` is out of sync with the rules.
+This installs dependencies and sets up the Husky pre-commit hook that runs `npm run validate` before every commit.
 
 ## Skill Structure
 
@@ -97,8 +82,8 @@ manual validation you performed instead.
 ## Commands
 
 ```bash
-npm run validate  # Check rule files for errors
-npm run validate:skill-structure  # Report skill package structure issues
-npm run build     # Regenerate AGENTS.md from rules
-npm run eval      # Run configured skill eval suites
+npm run validate                  # Plugin manifests + agentskills.io spec validation (what CI runs)
+npm run validate:skill-structure  # Skill-structure validation only
+npm run validate:plugins          # Claude + Cursor plugin manifests only
+npm run eval                      # Run configured skill eval suites
 ```

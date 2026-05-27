@@ -8,7 +8,15 @@ Skills follow the [Agent Skills](https://agentskills.io/) format.
 
 | Skill | Description |
 |-------|-------------|
-| [redis-development](skills/redis-development/) | Redis development best practices — data structures, query engine, vector search, caching, and performance optimization. |
+| [redis-core](skills/redis-core/) | Data structures, key naming, memory and TTL, atomic primitives, JSON vs Hash, Streams vs Pub/Sub. |
+| [redis-connections](skills/redis-connections/) | Pooling, multiplexing, pipelining, client-side caching, timeouts, slow commands. |
+| [redis-query-engine](skills/redis-query-engine/) | FT.CREATE schema, FT.SEARCH / FT.AGGREGATE, DIALECT 2, field types, zero-downtime updates. |
+| [redis-vector-search](skills/redis-vector-search/) | HNSW vs FLAT, vector index configuration, hybrid search, the RAG retrieval pattern with RedisVL. |
+| [redis-semantic-cache](skills/redis-semantic-cache/) | LangCache — cache-aside flow for LLM responses, similarity threshold tuning, per-task cache separation. |
+| [redis-clustering](skills/redis-clustering/) | Hash tags for multi-key operations, avoiding CROSSSLOT, reading from replicas. |
+| [redis-security](skills/redis-security/) | Authentication and TLS, ACL-based least privilege, network bind, firewall, command renaming. |
+| [redis-observability](skills/redis-observability/) | Key metrics (INFO), debugging commands (SLOWLOG, MEMORY DOCTOR, FT.PROFILE), Redis Insight. |
+| [iris-development](skills/iris-development/) | Iris: Redis Agent Memory — provisioning, SDK auth, session events, long-term memory search, async promotion. |
 
 ## Installation
 
@@ -54,21 +62,14 @@ Review my Redis connection handling
 
 ## Skill Structure
 
-Each skill contains:
-- `SKILL.md` - Instructions for the agent
-- `AGENTS.md` - Compiled rules (generated for rule-based skills)
-- `rules/` - Individual rule files (for rule-based skills)
-- `scripts/` - Helper scripts for automation (optional)
+Each skill follows the [agentskills.io specification](https://agentskills.io/specification):
 
-## Building
+- `SKILL.md` - Instructions for the agent (required)
+- `references/` - Long-form content loaded on demand (optional)
+- `scripts/` - Helper scripts (optional)
+- `assets/` - Static resources (optional)
 
-For rule-based skills, build the compiled AGENTS.md:
-
-```bash
-npm install
-npm run validate  # Validate rule files
-npm run build     # Build AGENTS.md
-```
+See [AGENTS.md](AGENTS.md) for the full layout, conventions, and the "Adding a New Skill" walkthrough.
 
 ## License
 
