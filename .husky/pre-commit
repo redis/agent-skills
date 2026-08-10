@@ -1,2 +1,21 @@
+set -e
+
+# The sync reads the working tree, so anything unstaged under skills/ would be
+# vendored and staged while its source stays out of the commit, leaving the
+# committed tree internally inconsistent. Refuse instead.
+if ! git diff --quiet -- skills; then
+  echo "skills/ has unstaged changes. Stage or stash them so the vendored copies match the commit." >&2
+  exit 1
+fi
+
+# Regenerate the plugin's vendored skill copies and stage them, so a skill edit
+# is always published together with its source. Staging the directory wholesale
+# is safe because every file under it is generated: sync-plugin-skills.mjs
+# rewrites it from skills/ on every run, so there is no hand edit to preserve.
+# See AGENTS.md, "Where Skills Live".
+npm run --silent sync:plugins
+git add plugins/redis-development/skills
+
 # Not the full validate: its link checks would fail commits on a flaky network.
+# validate:plugins covers the vendored copies via validate:plugin-skills.
 npm run validate:plugins && npm run validate:eval-baselines

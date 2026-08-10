@@ -13,6 +13,19 @@ A collection of agentskills.io-compliant skills for AI coding agents working wit
 - [redis-clustering](skills/redis-clustering/) — hash tags, multi-key ops, read replicas
 - [redis-security](skills/redis-security/) — AUTH, TLS, ACLs, network exposure, command renaming
 - [redis-observability](skills/redis-observability/) — INFO, SLOWLOG, MEMORY DOCTOR, FT.PROFILE, Redis Insight
+- [iris-development](skills/iris-development/) — Iris Redis Agent Memory: provisioning, SDK auth, session events, long-term memory
+
+## Where Skills Live
+
+`skills/` is the source of truth. `plugins/redis-development/skills/` holds **generated real copies** of it, committed to the repo, and `npm run sync:plugins` regenerates them.
+
+Copies rather than symlinks, because Claude Code and Cursor both drop a symlink that escapes the plugin root when a plugin is installed from git, so the plugin loads no skills at all. Real files also survive a Windows checkout, where git writes symlinks as plain text files unless `core.symlinks` is on.
+
+The copies also decide *when* an update publishes. The Claude Code plugin directory fetches only the `plugins/redis-development` subdirectory, and its nightly bot advances our pinned commit only when that subdirectory's own contents change. A skill edit that never lands there is never noticed, no matter how many versions we bump.
+
+Only what an agent loads at runtime is vendored. `evals/` and `.cursor-plugin/` stay out (see `EXCLUDED_TOP_LEVEL` in [scripts/sync-plugin-skills.mjs](scripts/sync-plugin-skills.mjs)): eval suites and their baselines outweigh the skills themselves, and Cursor reads `.cursor-plugin/` from `skills/`, where its marketplace `pluginRoot` points. A useful side effect is that an eval-only change leaves the plugin subdirectory untouched and so does not trigger a republish.
+
+You should never have to run the sync by hand. The pre-commit hook runs it and stages the result, and `npm run validate:plugin-skills` (inside `validate:plugins`, so in both the hook and CI) fails when the copies drift, when a file lingers for a skill that no longer exists, or when a symlink reappears on either side.
 
 ## Skill Format
 
@@ -24,8 +37,8 @@ skills/<skill-name>/
 ├── references/       # Optional: long-form content loaded on demand (one file per topic)
 ├── scripts/          # Optional: executable code agents may invoke
 ├── assets/           # Optional: static resources (templates, schemas, images)
-├── evals/            # Internal: eval suites used by this repo's tooling, not by agents at runtime
-└── .cursor-plugin/   # Per-skill Cursor plugin manifest (so the skill can be published as a Cursor plugin)
+├── evals/            # Internal: eval suites used by this repo's tooling, not by agents at runtime (not vendored)
+└── .cursor-plugin/   # Per-skill Cursor plugin manifest (so the skill can be published as a Cursor plugin; not vendored)
 ```
 
 Use [skills/redis-core/](skills/redis-core/) as the reference layout. Editorial convention across this repo: keep `SKILL.md` under ~150 lines with summary tables and key principles inline; move full Python/Java code samples into `references/<topic>.md` (one file per source rule). The agent loads `SKILL.md` once on activation; reference files are loaded only when the task requires them.
@@ -47,17 +60,19 @@ Use [skills/redis-core/](skills/redis-core/) as the reference layout. Editorial 
 3. If the skill needs internal eval coverage, add `evals/<suite-name>/{evals.json, model-matrix.json}`, run the suite, and promote a baseline (`npm run eval:baseline`) — validation requires every suite to carry a current baseline.
 4. Create `.cursor-plugin/plugin.json` (`name`, `version`, `description`, `license`, `keywords` — see any existing skill).
 5. To publish via the marketplaces:
-   - Claude Code: symlink the new skill into `plugins/redis-development/skills/`.
-   - Cursor: add an entry to `.cursor-plugin/marketplace.json` pointing at `<skill-name>`.
+   - Claude Code: nothing to wire up. The sync vendors every skill under `skills/`, so committing runs it and the directory's nightly bot picks the change up.
+   - Cursor: add an entry to `.cursor-plugin/marketplace.json` pointing at `<skill-name>`, then re-submit the repo at [cursor.com/marketplace/publish](https://cursor.com/marketplace/publish). Cursor does not pull from git.
 6. Validate: `npm run validate` (covers plugin manifests, eval baselines, and the agentskills.io spec).
 
 ## Running Validators
 
 ```bash
-npm run validate                   # plugin manifests + eval baselines + agentskills.io spec
+npm run validate                   # plugin manifests + vendored copies + eval baselines + agentskills.io spec
 npm run validate:eval-baselines    # every eval suite has a baseline matching its evals and matrix
 npm run validate:skill-structure   # spec validation only (across all skills)
-npm run validate:plugins           # claude + cursor plugin manifests only
+npm run validate:plugins           # claude + cursor plugin manifests + vendored copies
+npm run validate:plugin-skills     # vendored copies match skills/, with no symlinks
+npm run sync:plugins               # regenerate the vendored copies (the fix when the above fails)
 ```
 
 CI runs the full `validate` on every PR. The husky pre-commit hook runs only the

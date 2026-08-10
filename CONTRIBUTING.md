@@ -23,6 +23,19 @@ CI enforces it, so install it before opening a PR. CI reads the version from the
 `skillValidatorVersion` field in `package.json`; keep the command above in sync
 with it.
 
+## Source of Truth
+
+`skills/` is where you edit. `plugins/redis-development/skills/` is generated from it: real copies, committed, because Claude Code and Cursor both drop symlinks that escape a plugin root when a plugin is installed from git, and because the Claude Code directory only notices an update when that subdirectory itself changes.
+
+Editing a skill therefore touches two paths, and the hook handles the second one:
+
+```bash
+npm run sync:plugins            # regenerate the copies (the hook runs this and stages it)
+npm run validate:plugin-skills  # what CI runs; fails on drift or on any symlink
+```
+
+Never hand-edit anything under `plugins/redis-development/skills/` — the next sync overwrites it. `evals/` and `.cursor-plugin/` are deliberately not vendored, so an eval-only change stays out of the published plugin. Full rationale in [AGENTS.md](AGENTS.md#where-skills-live).
+
 ## Skill Structure
 
 Skills should move toward the standard Agent Skills package structure described in the [Anthropic Agent Skills documentation](https://docs.claude.com/en/docs/agents-and-tools/agent-skills).
@@ -115,10 +128,12 @@ manual validation you performed instead.
 ## Commands
 
 ```bash
-npm run validate                  # Plugin manifests + eval baselines + agentskills.io spec (what CI runs)
+npm run validate                  # Plugin manifests + vendored copies + eval baselines + agentskills.io spec (what CI runs)
 npm run validate:eval-baselines   # Every eval suite has a baseline, and it is not stale
 npm run validate:skill-structure  # Skill-structure validation only
-npm run validate:plugins          # Claude + Cursor plugin manifests only
+npm run validate:plugins          # Claude + Cursor plugin manifests + vendored copies
+npm run validate:plugin-skills    # Vendored plugin copies match skills/, with no symlinks
+npm run sync:plugins              # Regenerate the vendored plugin copies
 npm run eval                      # Run configured skill eval suites
 ```
 

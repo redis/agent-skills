@@ -42,7 +42,7 @@ This repository also includes Cursor plugin packaging. Run this command in chat:
 /add-plugin redis
 ```
 
-The top-level `skills/` directory remains the source of truth. Plugin folders symlink only the skill directories they expose.
+The top-level `skills/` directory remains the source of truth. `plugins/redis-development/skills/` holds generated real copies of it (not symlinks, which Claude Code and Cursor drop when a plugin is installed from git); `npm run sync:plugins` regenerates them and the pre-commit hook keeps them current. See [AGENTS.md](AGENTS.md#where-skills-live).
 
 ## Usage
 
