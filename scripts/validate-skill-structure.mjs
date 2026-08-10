@@ -27,6 +27,11 @@ if (!isValidatorInstalled()) {
 const skillDirs = resolveSkillDirs(options);
 
 if (skillDirs.length === 0) {
+  // --all resolving to nothing means the walk is broken, not an empty repo.
+  if (options.all) {
+    fail("No skill directories found under skills/.");
+  }
+
   const message = options.changedBaseRef
     ? `No changed skill directories found against ${options.changedBaseRef}.`
     : "No skill directories found.";
