@@ -22,6 +22,7 @@ import type {
 } from "./html-template.js";
 import {
   EVAL_WORKSPACES_DIR,
+  EVALS_DIR,
   formatUsd,
   isNodeError,
   numberOrZero,
@@ -425,10 +426,8 @@ async function readEvalNames(context: {
   if (!context.skill_name || !context.suite_name) return names;
 
   const evalsPath = join(
-    REPO_ROOT,
-    "skills",
+    EVALS_DIR,
     context.skill_name,
-    "evals",
     context.suite_name,
     "evals.json",
   );
@@ -458,10 +457,8 @@ async function readBaselineComparison(
   if (!context.skill_name || !context.suite_name) return undefined;
 
   const baselinePath = join(
-    REPO_ROOT,
-    "skills",
+    EVALS_DIR,
     context.skill_name,
-    "evals",
     context.suite_name,
     "baselines",
     "aggregate-benchmark.json",

@@ -34,7 +34,7 @@ npm run sync:plugins            # regenerate the copies (the hook runs this and 
 npm run validate:plugin-skills  # what CI runs; fails on drift or on any symlink
 ```
 
-Never hand-edit anything under `plugins/redis-development/skills/` — the next sync overwrites it. `evals/` and `.cursor-plugin/` are deliberately not vendored, so an eval-only change stays out of the published plugin. Full rationale in [AGENTS.md](AGENTS.md#where-skills-live).
+Never hand-edit anything under `plugins/redis-development/skills/` — the next sync overwrites it. `.cursor-plugin/` is deliberately not vendored, since Cursor reads it from `skills/`. Full rationale in [AGENTS.md](AGENTS.md#where-skills-live).
 
 ## Skill Structure
 
@@ -65,17 +65,20 @@ For the eval framework — schema, grading flow, report structure, and baseline
 workflow — see [#18 — Add Redis skills eval](https://github.com/redis/agent-skills/pull/18),
 which introduced this system.
 
-Place eval suites next to the skill they exercise:
+Eval suites live at the repo root, keyed by the skill they exercise:
 
 ```text
-skills/<skill-name>/evals/<suite-name>/
+evals/<skill-name>/<suite-name>/
   evals.json
   model-matrix.json
+  baselines/
 ```
 
-Use the [Redis Development evals README](skills/redis-development/evals/README.md)
-for the eval format, setup steps, grading flow, report structure, and baseline
-workflow.
+They are deliberately **not** inside `skills/`. A `with_skill` run gives the model
+read access to `skills/<skill-name>/`, and `evals.json` holds `expected_output`
+and the grading `expectations` — inside the skill directory, that is the answer
+sheet. Everything under `skills/` is also what the marketplaces publish. See
+[AGENTS.md](AGENTS.md#running-evals).
 
 Before opening a PR, run the relevant evals:
 
@@ -102,7 +105,7 @@ npm run eval:baseline -- --skill <skill-name> --suite <suite-name>
 ### Every suite needs a current baseline
 
 `npm run validate` enforces that each eval suite has a committed baseline under
-`evals/<suite-name>/baselines/`, and that the baseline still describes the suite
+`evals/<skill-name>/<suite-name>/baselines/`, and that the baseline still describes the suite
 next to it. It fails when:
 
 - the baseline is missing,

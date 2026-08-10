@@ -4,7 +4,7 @@
  *
  * Purpose:
  *   Promotes an existing generated benchmark iteration into a curated baseline
- *   that can be committed under `skills/<skill>/evals/<suite>/baselines/`.
+ *   that can be committed under `evals/<skill>/<suite>/baselines/`.
  *   It refreshes the combined aggregate report first, then copies only the
  *   stable summary artifacts instead of raw per-run model outputs.
  */
@@ -20,7 +20,7 @@ import {
   readJson,
   resolveRepoPath,
   REPO_ROOT,
-  SKILLS_DIR,
+  EVALS_DIR,
 } from './utils.js'
 
 interface ModelMatrix {
@@ -191,7 +191,7 @@ async function targetFromInputRoot(inputRoot: string): Promise<BaselineTarget> {
     )
   }
 
-  const suiteDir = join(SKILLS_DIR, skill, 'evals', suite)
+  const suiteDir = join(EVALS_DIR, skill, suite)
   await access(join(suiteDir, 'evals.json'))
   await access(join(suiteDir, 'model-matrix.json'))
   await access(inputRoot)

@@ -10,7 +10,7 @@ import path from "node:path";
 import process from "node:process";
 
 const repoRoot = process.cwd();
-const skillsRoot = path.join(repoRoot, "skills");
+const evalsRoot = path.join(repoRoot, "evals");
 const errors = [];
 
 const REQUIRED_BASELINE_FILES = [
@@ -57,10 +57,10 @@ async function listDirectories(target) {
 // keeps this from demanding baselines for a directory that cannot be run yet.
 async function findEvalSuites() {
   const suites = [];
-  for (const skill of await listDirectories(skillsRoot)) {
-    const evalsDir = path.join(skillsRoot, skill, "evals");
-    for (const suite of await listDirectories(evalsDir)) {
-      const suiteDir = path.join(evalsDir, suite);
+  for (const skill of await listDirectories(evalsRoot)) {
+    const skillEvalsDir = path.join(evalsRoot, skill);
+    for (const suite of await listDirectories(skillEvalsDir)) {
+      const suiteDir = path.join(skillEvalsDir, suite);
       try {
         await fs.access(path.join(suiteDir, "evals.json"));
         await fs.access(path.join(suiteDir, "model-matrix.json"));

@@ -5,6 +5,9 @@ import { fileURLToPath } from 'url'
 export const EVAL_UTILS_DIRNAME = dirname(fileURLToPath(import.meta.url))
 export const REPO_ROOT = resolve(EVAL_UTILS_DIRNAME, '../../../..')
 export const SKILLS_DIR = join(REPO_ROOT, 'skills')
+// Eval suites sit outside skills/ so a run cannot hand the model its own
+// expected output, and so they stay out of what the plugins publish.
+export const EVALS_DIR = join(REPO_ROOT, 'evals')
 export const EVAL_WORKSPACES_DIR = join(REPO_ROOT, 'eval-workspaces')
 
 export interface EvalSuitePathParts {
@@ -17,7 +20,7 @@ export async function discoverEvalSuiteDirs(): Promise<string[]> {
   let skillEntries
 
   try {
-    skillEntries = await readdir(SKILLS_DIR, { withFileTypes: true })
+    skillEntries = await readdir(EVALS_DIR, { withFileTypes: true })
   } catch (error) {
     if (isNodeError(error) && error.code === 'ENOENT') return []
     throw error
@@ -26,10 +29,10 @@ export async function discoverEvalSuiteDirs(): Promise<string[]> {
   for (const skillEntry of skillEntries) {
     if (!skillEntry.isDirectory()) continue
 
-    const evalsDir = join(SKILLS_DIR, skillEntry.name, 'evals')
+    const skillEvalsDir = join(EVALS_DIR, skillEntry.name)
     let suiteEntries
     try {
-      suiteEntries = await readdir(evalsDir, { withFileTypes: true })
+      suiteEntries = await readdir(skillEvalsDir, { withFileTypes: true })
     } catch (error) {
       if (isNodeError(error) && error.code === 'ENOENT') continue
       throw error
@@ -37,7 +40,7 @@ export async function discoverEvalSuiteDirs(): Promise<string[]> {
 
     for (const suiteEntry of suiteEntries) {
       if (!suiteEntry.isDirectory()) continue
-      const suiteDir = join(evalsDir, suiteEntry.name)
+      const suiteDir = join(skillEvalsDir, suiteEntry.name)
       if (await isEvalSuiteDir(suiteDir)) {
         suiteDirs.push(suiteDir)
       }
@@ -65,10 +68,10 @@ export async function assertEvalSuiteDir(suiteDir: string): Promise<void> {
 }
 
 export function evalSuitePathParts(suiteDir: string): EvalSuitePathParts {
-  const parts = relative(SKILLS_DIR, suiteDir).split(/[\\/]/)
+  const parts = relative(EVALS_DIR, suiteDir).split(/[\\/]/)
   return {
     skill: parts[0] ?? '',
-    suite: parts[2] ?? '',
+    suite: parts[1] ?? '',
   }
 }
 

@@ -16,11 +16,9 @@ import process from "node:process";
 
 const PLUGIN_SKILLS_RELATIVE = path.join("plugins", "redis-development", "skills");
 
-// Repo-internal, never loaded by an agent at runtime, so the published copy
-// leaves them out: eval suites and their baselines can outweigh the skill
-// itself, and Cursor reads each `.cursor-plugin/` manifest from `skills/`,
-// where its marketplace `pluginRoot` points.
-const EXCLUDED_TOP_LEVEL = new Set(["evals", ".cursor-plugin"]);
+// Cursor reads each `.cursor-plugin/` manifest from `skills/`, where its
+// marketplace `pluginRoot` points, so the published copy leaves it out.
+const EXCLUDED_TOP_LEVEL = new Set([".cursor-plugin"]);
 
 const repoRoot = process.cwd();
 const skillsRoot = path.join(repoRoot, "skills");

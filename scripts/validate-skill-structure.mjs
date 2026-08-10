@@ -12,12 +12,6 @@ const skillsRoot = path.join(repoRoot, "skills");
 // have it. package.json is the single source for the version CI installs.
 const VALIDATOR_MODULE = "github.com/agent-ecosystem/skill-validator/cmd/skill-validator";
 
-// Subdirectories that exist for repo tooling (not the agent runtime) and that
-// skill-validator should accept without "unknown directory" warnings. The
-// agentskills.io spec explicitly allows additional files and directories at
-// the skill root.
-const ALLOW_DIRS = ["evals"];
-
 const options = parseArgs(process.argv.slice(2));
 
 if (!isValidatorInstalled()) {
@@ -190,11 +184,7 @@ function changedSkillDirs(baseRef) {
 }
 
 function validateSkill(skillDir) {
-  const args = ["check", "-o", "json"];
-  if (ALLOW_DIRS.length > 0) {
-    args.push(`--allow-dirs=${ALLOW_DIRS.join(",")}`);
-  }
-  args.push(skillDir);
+  const args = ["check", "-o", "json", skillDir];
 
   const command = spawnSync("skill-validator", args, {
     cwd: repoRoot,
