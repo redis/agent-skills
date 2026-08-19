@@ -1,0 +1,5 @@
+interface:
+  display_name: "Redis Clustering"
+  short_description: "Design reliable Redis Cluster key and read patterns"
+  brand_color: "#FF4438"
+  default_prompt: "Use $redis-clustering to review these Redis Cluster keys and operations."

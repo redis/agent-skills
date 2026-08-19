@@ -1,0 +1,5 @@
+interface:
+  display_name: "Redis Connections"
+  short_description: "Tune Redis clients, pooling, pipelines, and timeouts"
+  brand_color: "#FF4438"
+  default_prompt: "Use $redis-connections to review this Redis client configuration."

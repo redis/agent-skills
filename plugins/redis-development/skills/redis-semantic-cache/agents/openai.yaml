@@ -1,0 +1,5 @@
+interface:
+  display_name: "Redis Semantic Cache"
+  short_description: "Build semantic LLM caching with Redis LangCache"
+  brand_color: "#FF4438"
+  default_prompt: "Use $redis-semantic-cache to design an LLM semantic cache."

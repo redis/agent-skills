@@ -1,0 +1,5 @@
+interface:
+  display_name: "Iris Agent Memory"
+  short_description: "Build agent memory workflows with Redis Iris"
+  brand_color: "#FF4438"
+  default_prompt: "Use $iris-development to design a Redis Agent Memory workflow."

@@ -1,0 +1,5 @@
+interface:
+  display_name: "Redis Observability"
+  short_description: "Monitor and troubleshoot Redis production workloads"
+  brand_color: "#FF4438"
+  default_prompt: "Use $redis-observability to troubleshoot this Redis performance issue."
