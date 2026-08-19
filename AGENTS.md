@@ -34,6 +34,8 @@ All skills follow the [agentskills.io specification](https://agentskills.io/spec
 ```
 skills/<skill-name>/
 ├── SKILL.md          # Required: YAML frontmatter (name, description, license, metadata) + agent-facing instructions
+├── agents/
+│   └── openai.yaml   # ChatGPT/Codex interface metadata (display name, description, starter prompt)
 ├── references/       # Optional: long-form content loaded on demand (one file per topic)
 ├── scripts/          # Optional: executable code agents may invoke
 ├── assets/           # Optional: static resources (templates, schemas, images)
@@ -58,11 +60,12 @@ Use [skills/redis-core/](skills/redis-core/) as the reference layout. Editorial 
 2. Add long-form examples under `references/`.
 3. If the skill needs internal eval coverage, add `evals/<skill-name>/<suite-name>/{evals.json, model-matrix.json}` at the repo root, run the suite, and promote a baseline (`npm run eval:baseline`) — validation requires every suite to carry a current baseline.
 4. Create `.cursor-plugin/plugin.json` (`name`, `version`, `description`, `license`, `keywords` — see any existing skill).
-5. To publish via the marketplaces:
+5. Create `agents/openai.yaml` with the skill's ChatGPT/Codex interface metadata and a default prompt that mentions `$<skill-name>`.
+6. To publish via the marketplaces:
    - ChatGPT and Codex: the sync vendors every skill into `plugins/redis-development/`; keep its `.codex-plugin/plugin.json` version aligned with the Claude manifest before submitting the package to OpenAI.
    - Claude Code: nothing to wire up. The sync vendors every skill under `skills/`, so committing runs it and the directory's nightly bot picks the change up.
    - Cursor: add an entry to `.cursor-plugin/marketplace.json` pointing at `<skill-name>`, then re-submit the repo at [cursor.com/marketplace/publish](https://cursor.com/marketplace/publish). Cursor does not pull from git.
-6. Validate: `npm run validate` (covers plugin manifests, the vendored copies, eval baselines, and the agentskills.io spec).
+7. Validate: `npm run validate` (covers plugin manifests, the vendored copies, eval baselines, and the agentskills.io spec).
 
 ## Running Validators
 
