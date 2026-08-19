@@ -1,0 +1,5 @@
+interface:
+  display_name: "Redis Security"
+  short_description: "Harden Redis authentication, ACLs, TLS, and networks"
+  brand_color: "#FF4438"
+  default_prompt: "Use $redis-security to audit this Redis deployment."

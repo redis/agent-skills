@@ -1,0 +1,5 @@
+interface:
+  display_name: "Redis Core"
+  short_description: "Choose Redis data structures and key conventions"
+  brand_color: "#FF4438"
+  default_prompt: "Use $redis-core to design a Redis data model for this feature."

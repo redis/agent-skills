@@ -1,0 +1,5 @@
+interface:
+  display_name: "Redis Search"
+  short_description: "Build and optimize Redis Search and vector queries"
+  brand_color: "#FF4438"
+  default_prompt: "Use $redis-search to design a Redis Search schema and query."

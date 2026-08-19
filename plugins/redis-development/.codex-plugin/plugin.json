@@ -36,6 +36,7 @@
       "Build a Redis Search schema and query for this application."
     ],
     "brandColor": "#FF4438",
+    "composerIcon": "./assets/redis-logo.png",
     "logo": "./assets/redis-logo.png"
   }
 }
