@@ -76,17 +76,6 @@ To add the server to any MCP client by hand:
 claude mcp add --transport http redis-docs https://redis.io/mcp
 ```
 
-Two things worth knowing:
-
-- **`ask` is rate-limited** to roughly 4 requests/minute per IP, and that budget is shared across
-  everyone behind the same NAT. `search` + `fetch` carry a much looser limit and are the intended
-  default path.
-- **Questions leave your machine.** Text passed to these tools reaches Redis and the model provider
-  behind the gateway. Don't send proprietary source, credentials, or customer data.
-
-If egress to `redis.io` is blocked the server will fail to connect. That is not a broken install —
-every skill in this repo is static guidance and works offline.
-
 ## Usage
 
 Skills are automatically available once installed. The agent will use them when relevant tasks are detected.
