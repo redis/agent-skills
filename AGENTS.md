@@ -64,6 +64,39 @@ Use [skills/redis-core/](skills/redis-core/) as the reference layout. Editorial 
    - Cursor: add an entry to `.cursor-plugin/marketplace.json` pointing at `<skill-name>`, then re-submit the repo at [cursor.com/marketplace/publish](https://cursor.com/marketplace/publish). Cursor does not pull from git.
 6. Validate: `npm run validate` (covers plugin manifests, the vendored copies, eval baselines, and the agentskills.io spec).
 
+## Bundled MCP Servers
+
+The plugin package declares the public Redis docs MCP server at `https://redis.io/mcp`, so enabling
+the plugin connects it with no user configuration. MCP is always a **plugin-level** component: the
+agentskills.io format has no MCP field, so a skill can describe tools but never carry them.
+
+One shared file, [plugins/redis-development/.mcp.json](plugins/redis-development/.mcp.json),
+referenced by both manifests as `"mcpServers": "./.mcp.json"`. Claude Code and Codex accept the same
+shape, so there is no reason to keep two copies:
+
+```json
+{ "mcpServers": { "redis-docs": { "type": "http", "url": "https://redis.io/mcp" } } }
+```
+
+Constraints worth knowing before editing it:
+
+- **`type` is required.** Claude Code reads a `url` with no `type` as a stdio server, skips it at
+  startup, and reports it as misconfigured. Codex is the same: its own bundled plugins (see
+  `~/.codex/.tmp/plugins/plugins/github/.mcp.json`) carry `"type": "http"`. `validate:claude-plugins`
+  enforces this and the accepted transports (`http`, `streamable-http`, `sse`, `ws`).
+- **The file belongs at the plugin root.** Codex resolves `mcpServers` relative to the plugin root
+  and did not pick the server up from a nested path in testing; the root location is also what
+  Claude Code auto-discovers, so the explicit reference and the default agree.
+- **Version bumps move together.** `validate:codex-plugins` fails unless the Codex and Claude
+  manifests agree on `name`, `version`, `repository`, and `license`.
+- **The server key is not the skill name.** The key `redis-docs` composes into the callable tool
+  name (`mcp__plugin_redis-development_redis-docs__search` in Claude Code), so renaming it changes
+  permission rules, `allowed-tools` entries, and hook matchers.
+
+Cursor is not covered here. Its marketplace `pluginRoot` is `skills`, so every Cursor plugin is a
+single skill directory and its declaration ships with the `redis-docs-mcp` skill instead. The
+`npx skills add` path carries no MCP at all.
+
 ## Running Validators
 
 ```bash
