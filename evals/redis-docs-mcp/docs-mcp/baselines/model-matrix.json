@@ -1,0 +1,16 @@
+{
+  "eval_suite": "docs-mcp",
+  "description": "Cross-model run plan for the redis-docs-mcp eval suite (section-scoped ids, id construction, metadata.version, corpus boundaries, ask economics). Anthropic skill-creator tooling owns generation, grading, per-model benchmark.json, and benchmark.md; this file records the model matrix we run before combining per-model benchmark files. Note the harness gives runs no MCP access, so the suite grades stated approach rather than tool calls.",
+  "models": [
+    "claude-opus-5",
+    "claude-sonnet-5",
+    "claude-haiku-4-5-20251001"
+  ],
+  "configurations": [
+    "with_skill",
+    "without_skill"
+  ],
+  "repetitions": 2,
+  "judge_model": "claude-sonnet-5",
+  "default_iteration": "iteration-1"
+}

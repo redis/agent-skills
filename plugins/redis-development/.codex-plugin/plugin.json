@@ -1,7 +1,7 @@
 {
   "name": "redis-development",
-  "version": "1.4.0",
-  "description": "Redis development best practices for data modeling, search, caching, connections, clustering, security, observability, and agent memory",
+  "version": "1.6.0",
+  "description": "Redis development best practices for data modeling, search, caching, connections, clustering, security, observability, and agent memory, plus live lookup of the official redis.io documentation",
   "author": {
     "name": "Redis",
     "email": "support@redis.com",
@@ -16,9 +16,11 @@
     "caching",
     "vector-search",
     "performance",
-    "best-practices"
+    "best-practices",
+    "documentation"
   ],
   "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
   "interface": {
     "displayName": "Redis Development",
     "shortDescription": "Build reliable, production-ready Redis applications",
