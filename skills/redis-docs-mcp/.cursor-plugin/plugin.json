@@ -1,0 +1,18 @@
+{
+  "name": "redis-docs-mcp",
+  "version": "1.0.0",
+  "description": "Official Redis documentation lookup over MCP — search the redis.io docs index, fetch the exact section, or get a grounded answer with citations, instead of relying on stale model recall.",
+  "author": {
+    "name": "Redis",
+    "email": "support@redis.com"
+  },
+  "homepage": "https://redis.io",
+  "repository": "https://github.com/redis/agent-skills",
+  "license": "MIT",
+  "keywords": ["redis", "documentation", "mcp", "search", "reference"],
+  "mcpServers": {
+    "redis-docs": {
+      "url": "https://redis.io/mcp"
+    }
+  }
+}
