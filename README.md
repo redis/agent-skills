@@ -51,6 +51,30 @@ This repository also includes Cursor plugin packaging. Run this command in chat:
 
 The top-level `skills/` directory remains the source of truth. `plugins/redis-development/skills/` holds generated real copies used by the ChatGPT, Codex, and Claude Code plugin package (not symlinks, which plugin installation flows may drop); `npm run sync:plugins` regenerates them and the pre-commit hook keeps them current. See [AGENTS.md](AGENTS.md#where-skills-live).
 
+### Redis Docs MCP server
+
+The ChatGPT, Codex, and Claude Code plugin package bundles the official Redis documentation MCP
+server at `https://redis.io/mcp`, so an agent can look up authoritative docs instead of relying on
+stale training data. It needs **no credentials, no local Redis, and no configuration** — a public,
+read-only, hosted endpoint that connects automatically once the plugin is enabled.
+
+Three read-only tools: `search` (query the docs index), `fetch` (retrieve a section by id), and
+`ask` (a grounded answer with citations).
+
+| Channel | Carries the MCP server? |
+|---------|-------------------------|
+| Claude Code plugin | Yes |
+| ChatGPT / Codex plugin | Yes |
+| Cursor plugins | Not yet — Cursor packages one plugin per skill, so it arrives with the `redis-docs-mcp` skill |
+| Agent Skills CLI (`npx skills add`) | No — the Agent Skills format has no MCP component |
+
+Both manifests point at one shared [`plugins/redis-development/.mcp.json`](plugins/redis-development/.mcp.json).
+To add the server to any MCP client by hand:
+
+```bash
+claude mcp add --transport http redis-docs https://redis.io/mcp
+```
+
 ## Usage
 
 Skills are automatically available once installed. The agent will use them when relevant tasks are detected.
