@@ -30,8 +30,7 @@ npx skills add redis/agent-skills
 You can also install the skills as a Claude Code plugin:
 
 ```
-/plugin marketplace add redis/agent-skills
-/plugin install redis-development@redis
+/plugin install redis-development@claude-plugins-official
 ```
 
 ### ChatGPT and Codex Plugin
