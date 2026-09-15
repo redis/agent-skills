@@ -111,6 +111,8 @@ r = redis.Redis(
 
 Rule of thumb: connect timeout shorter than read/write timeout. Tight timeouts + retry-on-timeout for latency-sensitive paths; longer timeouts for batch jobs.
 
+**A timeout does not cover every failure.** A plaintext `redis://` against a TLS-only endpoint is reset with `ECONNRESET` rather than a TLS error, and a reconnect policy with no ceiling makes a dead endpoint *hang* instead of failing — no single operation times out, so there is nothing for a timeout to catch. Use `rediss://` for TLS endpoints, and bound the retry count.
+
 See [references/timeouts.md](references/timeouts.md).
 
 ## References
