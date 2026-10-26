@@ -90,10 +90,10 @@ r.ft("idx:bicycle").alter_schema_add(["subtitle", "TEXT", "WEIGHT", "1.5"])
 
 ```java
 // Jedis — STEP_START index_management
-import redis.clients.jedis.UnifiedJedis;
+import redis.clients.jedis.RedisClient;
 import redis.clients.jedis.search.schemafields.TextField;
 
-try (UnifiedJedis jedis = new UnifiedJedis("redis://localhost:6379")) {
+try (RedisClient jedis = RedisClient.create("redis://localhost:6379")) {
     // Atomic alias swap
     jedis.ftAliasUpdate("bicycle", "idx:bicycle_v2");
     jedis.ftDropIndex("idx:bicycle_v1");

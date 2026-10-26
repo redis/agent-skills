@@ -117,12 +117,12 @@ r.ft("idx:logs").create_index(
 
 ```java
 // Jedis — STEP_START ft_create_options
-import redis.clients.jedis.UnifiedJedis;
+import redis.clients.jedis.RedisClient;
 import redis.clients.jedis.search.FTCreateParams;
 import redis.clients.jedis.search.IndexDataType;
 import redis.clients.jedis.search.schemafields.*;
 
-try (UnifiedJedis jedis = new UnifiedJedis("redis://localhost:6379")) {
+try (RedisClient jedis = RedisClient.create("redis://localhost:6379")) {
     jedis.ftCreate("idx:events",
         FTCreateParams.createParams().on(IndexDataType.HASH).prefix("event:").skipInitialScan(),
         TagField.of("topic"), NumericField.of("ts").sortable());

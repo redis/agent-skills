@@ -154,12 +154,12 @@ totals = r.ft("idx:bicycle").aggregate(agg)
 ```java
 // Jedis — STEP_START command_selection
 // Mirrors SearchQuickstartExample.java
-import redis.clients.jedis.UnifiedJedis;
+import redis.clients.jedis.RedisClient;
 import redis.clients.jedis.search.Query;
 import redis.clients.jedis.search.aggr.AggregationBuilder;
 import redis.clients.jedis.search.aggr.Reducers;
 
-try (UnifiedJedis jedis = new UnifiedJedis("redis://localhost:6379")) {
+try (RedisClient jedis = RedisClient.create("redis://localhost:6379")) {
     jedis.ftSearch("idx:bicycle", new Query("@type:{mountain} @price:[100 500]"));
     AggregationBuilder agg = new AggregationBuilder("@type:{mountain}")
         .groupBy("@brand", Reducers.avg("@price").as("avg_price"));

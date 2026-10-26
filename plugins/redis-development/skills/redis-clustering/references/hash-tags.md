@@ -23,10 +23,11 @@ redis.lmove("{user:1001}:pending", "{user:1001}:processed", "LEFT", "RIGHT")
 
 **Java** (Jedis):
 ```java
-import redis.clients.jedis.UnifiedJedis;
+import redis.clients.jedis.HostAndPort;
+import redis.clients.jedis.RedisClusterClient;
 import java.util.Set;
 
-try (UnifiedJedis jedis = new UnifiedJedis("redis://localhost:6379")) {
+try (RedisClusterClient jedis = RedisClusterClient.create(new HostAndPort("localhost", 6379))) {
     // Hash tags ensure keys go to the same slot
     jedis.sadd("{bikes:racing}:france", "bike:1", "bike:2", "bike:3");
     jedis.sadd("{bikes:racing}:usa", "bike:1", "bike:4");
