@@ -45,11 +45,11 @@ r.ft("idx:bicycle").search("@model:hyperion", dialect=2)
 ```java
 // Jedis — STEP_START dialect
 // Mirrors SearchQuickstartExample.java
-import redis.clients.jedis.UnifiedJedis;
+import redis.clients.jedis.RedisClient;
 import redis.clients.jedis.search.FTSearchParams;
 import redis.clients.jedis.search.SearchResult;
 
-try (UnifiedJedis jedis = new UnifiedJedis("redis://localhost:6379")) {
+try (RedisClient jedis = RedisClient.create("redis://localhost:6379")) {
     SearchResult res = jedis.ftSearch("idx:bicycle",
         "@model:hyperion",
         FTSearchParams.searchParams().dialect(2));

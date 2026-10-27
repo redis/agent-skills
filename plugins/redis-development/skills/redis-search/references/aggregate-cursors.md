@@ -79,12 +79,12 @@ while res.cursor and res.cursor.cid:
 
 ```java
 // Jedis — STEP_START aggregate_cursor
-import redis.clients.jedis.UnifiedJedis;
+import redis.clients.jedis.RedisClient;
 import redis.clients.jedis.search.aggr.AggregationBuilder;
 import redis.clients.jedis.search.aggr.AggregationResult;
 import redis.clients.jedis.search.aggr.Reducers;
 
-try (UnifiedJedis jedis = new UnifiedJedis("redis://localhost:6379")) {
+try (RedisClient jedis = RedisClient.create("redis://localhost:6379")) {
     AggregationBuilder agg = new AggregationBuilder("*")
         .groupBy("@brand", Reducers.count().as("bike_count"))
         .cursor(1000, 30000)

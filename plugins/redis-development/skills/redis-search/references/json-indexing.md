@@ -112,12 +112,12 @@ r.ft("idx:bicycle").create_index(schema, definition=IndexDefinition(prefix=["bic
 ```java
 // Jedis — STEP_START json_indexing
 // Mirrors JsonExample.java + HomeJsonExample.java
-import redis.clients.jedis.UnifiedJedis;
+import redis.clients.jedis.RedisClient;
 import redis.clients.jedis.search.FTCreateParams;
 import redis.clients.jedis.search.IndexDataType;
 import redis.clients.jedis.search.schemafields.*;
 
-try (UnifiedJedis jedis = new UnifiedJedis("redis://localhost:6379")) {
+try (RedisClient jedis = RedisClient.create("redis://localhost:6379")) {
     jedis.ftCreate("idx:bicycle",
         FTCreateParams.createParams().on(IndexDataType.JSON).prefix("bicycle:"),
         TextField.of("$.model").as("model").weight(2.0),

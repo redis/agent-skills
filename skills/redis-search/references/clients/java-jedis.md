@@ -37,6 +37,7 @@ redis-py equivalent: see [`python-redis-py.md#1-minimum-supported-versions`](./p
 | Component | Minimum | Notes |
 |-----------|---------|-------|
 | Jedis | **5.0** | 4.x predates the `redis.clients.jedis.search.schemafields.*` package and the fluent `SchemaField[]` API. Examples in this reference will not compile against 4.x. |
+| Jedis (`RedisClient`) | **7.2** | `RedisClient`, `RedisClusterClient` and `RedisSentinelClient` were introduced in 7.2.0. On Jedis 8.0+ they are the only way to construct a client: `JedisPooled`, `JedisSentineled` and the public `UnifiedJedis` constructors were removed. |
 | Jedis (FT.HYBRID high-level API) | **6.0** | `ftHybrid` / `FTHybridParams` are not in Jedis 5.x — fall back to `sendCommand(SearchCommand.HYBRID, ...)` (see §11). |
 | Redis server (FT.SEARCH / FT.AGGREGATE) | **7.4** | Redis Search ships built-in from Redis 8.0; on 7.4 the RediSearch module must be loaded. |
 | Redis server (`FT.HYBRID`) | **8.4.0** | Hard floor. `ftHybrid` returns `JedisDataException: unknown command 'FT.HYBRID'` on older Redis. Fall back to pre-filter + `=>[KNN ...]` via FT.SEARCH. |
@@ -51,17 +52,32 @@ redis-py has a single client class (`redis.Redis`); no equivalent client-choice 
 
 Jedis has accumulated several entry points. Pick **one** per project and stay consistent — mixing them in the same codebase forces conversions and confuses readers.
 
+**Check the installed Jedis version first.** Read it from `pom.xml`, `build.gradle` / `build.gradle.kts`, or the dependency lockfile before writing any Jedis code, then use the classes that version supports:
+
+| Installed Jedis | Pooled standalone client | Cluster client | Protocol default |
+|---|---|---|---|
+| **8.0+** | `RedisClient` | `RedisClusterClient` (`JedisCluster` still works but is deprecated) | RESP3, negotiated with `HELLO 3`, RESP2 fallback |
+| **7.2 – 7.x** | `RedisClient` (preferred) or `JedisPooled` | `RedisClusterClient` or `JedisCluster` | RESP2 unless `protocol(RedisProtocol.RESP3)` is set |
+| **5.0 – 7.1** | `JedisPooled` (`RedisClient` does not exist yet) | `JedisCluster` | RESP2 unless `protocol(RedisProtocol.RESP3)` is set |
+
+- **Match the installed version.** Do not bump the Jedis dependency just to use a newer API unless the user asks for the upgrade.
+- **New project, no Jedis yet:** add the current Jedis release and use `RedisClient`.
+- **Existing code on Jedis 7.x or earlier:** leave working `JedisPooled` / `JedisCluster` code alone unless the task is the upgrade itself. Rewriting it only to swap class names adds churn without changing behaviour.
+- **Upgrading to 8.0:** the swap to `RedisClient` / `RedisClusterClient` is required, because the old construction lines no longer compile. Review raw-reply parsing at the same time, since the protocol default changes to RESP3.
+
+The examples in this reference use `RedisClient` (Jedis 7.2+). On 5.0 – 7.1, replace `RedisClient.create(...)` with `new JedisPooled(...)` taking the same URI or host and port; the FT.* calls are identical.
+
 | Class | Use when… | Threading | Notes |
 |-------|-----------|-----------|-------|
 | `RedisClient` | **Current upstream default.** All examples under `redis/jedis/src/test/java/io/redis/examples` use this. Constructed via `RedisClient.create("redis://localhost:6379")`. | Internal pool; safe to share across threads. | Use this for new code. |
-| `UnifiedJedis` | Single sync client without a pool wrapper — useful for tests, scripts, or single-threaded callers. | Single connection; **not** thread-safe. | Parent class of `RedisClient` and `JedisPooled`; appears in internal test base classes. |
-| `JedisPooled` | Pre-`RedisClient` recommended pooled client. Still widely used in existing apps. | Internal `JedisPool`; thread-safe. | Functionally equivalent to `RedisClient` for FT.* calls. Don't rewrite working `JedisPooled` code just to swap names. |
+| `UnifiedJedis` | Do not construct directly. | n/a | Base class of `RedisClient` and `RedisClusterClient`. Its public constructors were **removed in Jedis 8.0**, so `new UnifiedJedis(...)` no longer compiles. It is still a valid type for a variable or parameter. |
+| `JedisPooled` | Existing apps on Jedis 7.x or earlier, and the only pooled client on 5.0 – 7.1. | Internal `JedisPool`; thread-safe. | **Removed in Jedis 8.0.** Deprecated since 7.2. Same FT.* methods as `RedisClient`. Keep working `JedisPooled` code as is on 7.x; replace it when upgrading to 8.0. |
 | `Jedis` (legacy) | A single raw connection, the original 4.x-era API. | One connection; **not** thread-safe. Must be returned to a pool or `close()`'d per use. | Avoid in new code. Many community blog posts still show this pattern. |
-| `JedisCluster` | Redis Cluster. | Cluster-aware pool. | FT.* indexes are not sharded across cluster slots — see Redis Search cluster docs before using. |
+| `RedisClusterClient` | Redis Cluster. | Cluster-aware pool. | Replaces `JedisCluster`, which is deprecated in Jedis 8.0. FT.* indexes are not sharded across cluster slots — see Redis Search cluster docs before using. |
 
-**Migration path:** `Jedis` → `JedisPooled` (same API + connection management) → `RedisClient` (same API, current upstream name). All three accept the same `ftSearch`, `ftCreate`, `ftAggregate` etc. methods, so migration is mostly a constructor swap.
+**Migration path:** `Jedis` / `JedisPooled` / `new UnifiedJedis(...)` → `RedisClient`, and `JedisCluster` → `RedisClusterClient`. They accept the same `ftSearch`, `ftCreate`, `ftAggregate` etc. methods, so migration is a constructor swap. Do it as part of an upgrade to Jedis 8.0, where it is required; on 7.x it is optional. See the [Jedis v7 to v8 migration guide](https://redis.github.io/jedis/migration-guides/v7-to-v8/).
 
-**Divergence to flag:** upstream Jedis examples (`SearchQuickstartExample.java`) use `RedisClient.create("localhost", 6379)` while most public-internet blog posts and older Redis docs still show `UnifiedJedis` or `JedisPooled`. If you're porting code from those sources, the FT.* method names are identical — only the construction line differs.
+**Divergence to flag:** upstream Jedis examples (`SearchQuickstartExample.java`) use `RedisClient.create("localhost", 6379)` while most public-internet blog posts and older Redis docs still show `UnifiedJedis` or `JedisPooled`. If you're porting code from those sources, the FT.* method names are identical — only the construction line differs, and the old construction line does not compile on Jedis 8.
 
 
 ## 3. Connection setup
@@ -86,7 +102,9 @@ try (RedisClient jedis = RedisClient.create("redis://localhost:6379")) {
 }
 ```
 
-For TLS / auth, prefer the URI form: `redis://user:password@host:6379` or `rediss://...` for TLS. Configuration of pool size, timeouts, and SSL contexts goes through `DefaultJedisClientConfig.builder()` — out of scope here, see Jedis docs.
+For TLS / auth, prefer the URI form: `redis://user:password@host:6379` or `rediss://...` for TLS. Timeouts, credentials and TLS (`SslOptions`) go through `DefaultJedisClientConfig.builder()`, passed to `RedisClient.builder().clientConfig(...)`; pool size goes through `.poolConfig(...)`. Out of scope here, see [Jedis: Connect to the server](https://redis.io/docs/latest/develop/clients/jedis/connect/).
+
+Jedis 8.0 negotiates RESP3 by default (it sends `HELLO 3` and falls back to RESP2). Several FT.* replies differ in shape between protocols — see §12 and §13. To pin RESP2, pass `DefaultJedisClientConfig.builder().resp2().build()` as the client config.
 
 
 ## 4. Schema imports
@@ -751,8 +769,8 @@ import redis.clients.jedis.util.SafeEncoder;
 
 byte[] queryBytes = RediSearchUtil.toByteArray(embedding);   // FLOAT32 little-endian
 
-// UnifiedJedis (parent of RedisClient / JedisPooled) exposes sendCommand(ProtocolCommand, byte[]...).
-Object raw = ((UnifiedJedis) jedis).sendCommand(
+// RedisClient inherits sendCommand(ProtocolCommand, byte[]...) from its base class UnifiedJedis.
+Object raw = jedis.sendCommand(
     SearchCommand.HYBRID,
     SafeEncoder.encode("idx:products"),
     SafeEncoder.encode("SEARCH"),      SafeEncoder.encode("laptop"),
@@ -773,7 +791,7 @@ Object raw = ((UnifiedJedis) jedis).sendCommand(
 Key points:
 
 - Use `SearchCommand.HYBRID` (`redis.clients.jedis.search.SearchProtocol.SearchCommand`) rather than an ad-hoc `ProtocolCommand` anonymous class — it's the canonical enum and survives upstream renames.
-- Use `((UnifiedJedis) jedis).sendCommand(ProtocolCommand, byte[]...)` (the **binary** varargs form, defined on `UnifiedJedis`). The `String...` overload silently UTF-8-encodes its arguments and **mangles vector bytes** on the wire.
+- Use `jedis.sendCommand(ProtocolCommand, byte[]...)` (the **binary** varargs form, defined on `UnifiedJedis` and inherited by `RedisClient`). The `String...` overload silently UTF-8-encodes its arguments and **mangles vector bytes** on the wire.
 - `SafeEncoder.encode(String)` is Jedis's canonical UTF-8 string→`byte[]` helper — use it for every text argument so the wire bytes match what the high-level API would emit.
 - The vector `byte[]` is passed in directly; no `new String(queryBytes, ISO_8859_1)` round-trip.
 
@@ -917,6 +935,8 @@ redis-py equivalent: see [`python-redis-py.md#13-common-errors--version-gotchas`
 | `Cannot resolve method 'addTextField'` after upgrade to Jedis 5.x | Code uses deprecated `Schema` class. | Migrate to `SchemaField[]` (see migration below). |
 | `Cannot resolve symbol 'Path'` after upgrade | Code uses `redis.clients.jedis.json.Path`. | Switch to `redis.clients.jedis.json.Path2` — current path API for FT.* and JSON commands. |
 | Empty `getDocuments()` but non-zero `getTotalResults()` | `.noContent()` was set. | Remove `.noContent()` or call `.returnFields(...)`. |
+| `cannot find symbol: class JedisPooled`, or `UnifiedJedis(...) has protected access` / no suitable constructor, after upgrading to Jedis 8.0 | `JedisPooled`, `JedisSentineled` and the public `UnifiedJedis` constructors were removed in 8.0. | Construct `RedisClient.create(...)` / `RedisClient.builder()`, `RedisClusterClient`, or `RedisSentinelClient` instead. See §2. |
+| `ftInfo` / `ftProfile` / raw `sendCommand` replies change type after upgrading to Jedis 8.0 | Jedis 8.0 negotiates RESP3 by default. | Cast defensively (see §12 and §13), or pin RESP2 with `DefaultJedisClientConfig.builder().resp2()`. |
 
 ### `Schema` → `SchemaField[]` migration
 

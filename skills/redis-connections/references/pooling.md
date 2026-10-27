@@ -13,19 +13,46 @@ pool = redis.ConnectionPool(host='localhost', port=6379, max_connections=50)
 r = redis.Redis(connection_pool=pool)
 ```
 
-**Java** (Jedis):
+**Java** (Jedis 7.2+):
 ```java
-import redis.clients.jedis.JedisPooled;
+import redis.clients.jedis.RedisClient;
 
-// JedisPooled manages a connection pool internally
-try (JedisPooled jedis = new JedisPooled("redis://localhost:6379")) {
+// RedisClient manages a connection pool internally and is thread-safe.
+// Create one per application and reuse it.
+try (RedisClient jedis = RedisClient.create("redis://localhost:6379")) {
     jedis.set("testKey", "testValue");
 }
 ```
 
+To size the pool, pass a `ConnectionPoolConfig` to the builder:
+
+```java
+import redis.clients.jedis.ConnectionPoolConfig;
+import redis.clients.jedis.RedisClient;
+
+ConnectionPoolConfig poolConfig = new ConnectionPoolConfig();
+poolConfig.setMaxTotal(16);  // default is 8; size to your concurrency
+
+RedisClient jedis = RedisClient.builder()
+        .hostAndPort("localhost", 6379)
+        .poolConfig(poolConfig)
+        .build();
+```
+
+Check the Jedis version in `pom.xml` or `build.gradle` before choosing a class, and match it rather than bumping the dependency:
+
+| Installed Jedis | Pooled client | Notes |
+|---|---|---|
+| 8.0+ | `RedisClient` | `JedisPooled` and the public `UnifiedJedis` constructors were removed; code using them does not compile. Use `RedisClusterClient` for Cluster and `RedisSentinelClient` for Sentinel. |
+| 7.2 – 7.x | `RedisClient` (preferred) or `JedisPooled` | Both work. Leave working `JedisPooled` code alone unless the task is upgrading to 8.0. |
+| 5.0 – 7.1 | `JedisPooled` | `RedisClient` does not exist yet: `new JedisPooled("redis://localhost:6379")`. |
+
 **Correct:** Use multiplexing (Lettuce, NRedisStack).
 
 ```java
+import io.lettuce.core.RedisClient;  // Lettuce's RedisClient, not Jedis's
+import io.lettuce.core.api.StatefulRedisConnection;
+
 // Lettuce uses multiplexing by default - single connection handles all traffic
 RedisClient client = RedisClient.create("redis://localhost:6379");
 StatefulRedisConnection<String, String> connection = client.connect();
@@ -48,7 +75,7 @@ def get_user(user_id):
 ```java
 // Bad: Creating new client per request
 public String getUser(String userId) {
-    try (UnifiedJedis jedis = new UnifiedJedis("redis://localhost:6379")) {
+    try (RedisClient jedis = RedisClient.create("redis://localhost:6379")) {
         return jedis.get("user:" + userId);  // Don't do this
     }
 }
@@ -59,4 +86,4 @@ public String getUser(String userId) {
 - **Multiplexing**: Single connection handles all traffic (NRedisStack, Lettuce)
 - Multiplexing cannot support blocking commands (BLPOP, etc.) as they would stall all callers
 
-Reference: [Connection Pools and Multiplexing](https://redis.io/docs/latest/develop/clients/pools-and-muxing/)
+Reference: [Connection Pools and Multiplexing](https://redis.io/docs/latest/develop/clients/pools-and-muxing/), [Jedis: Configure a connection pool](https://redis.io/docs/latest/develop/clients/jedis/connect/#configure-a-connection-pool), [Jedis v7 to v8 migration guide](https://redis.github.io/jedis/migration-guides/v7-to-v8/)

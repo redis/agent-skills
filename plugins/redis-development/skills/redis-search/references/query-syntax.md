@@ -176,9 +176,9 @@ r.ft("idx:bicycle").search("(@type:{mountain}|@type:{road}) -@condition:{used}")
 ```java
 // Jedis — STEP_START query_syntax
 // Mirrors QueryFtExample.java + QueryEmExample.java
-import redis.clients.jedis.UnifiedJedis;
+import redis.clients.jedis.RedisClient;
 import redis.clients.jedis.search.Query;
-try (UnifiedJedis jedis = new UnifiedJedis("redis://localhost:6379")) {
+try (RedisClient jedis = RedisClient.create("redis://localhost:6379")) {
     // TAG with escaped hyphen — note Java requires double-escaping the backslash
     jedis.ftSearch("idx:bicycle", new Query("@brand:{Giant\\-Cycles}"));
     jedis.ftSearch("idx:bicycle", new Query("@price:[100 500]"));

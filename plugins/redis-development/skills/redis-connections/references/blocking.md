@@ -25,11 +25,11 @@ while True:
 
 **Java** (Jedis):
 ```java
+import redis.clients.jedis.RedisClient;
 import redis.clients.jedis.ScanIteration;
-import redis.clients.jedis.UnifiedJedis;
 import java.util.List;
 
-try (UnifiedJedis jedis = new UnifiedJedis("redis://localhost:6379")) {
+try (RedisClient jedis = RedisClient.create("redis://localhost:6379")) {
     // ScanIteration manages the cursor automatically
     ScanIteration scan = jedis.scanIteration(10, "user:*", "hash");
 

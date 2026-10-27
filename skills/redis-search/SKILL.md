@@ -2,6 +2,7 @@
 name: redis-search
 description: Redis Search guidance covering FT.CREATE schema design, field type selection (TEXT, TAG, NUMERIC, GEO, GEOSHAPE, VECTOR, JSON path), DIALECT 2 query syntax, FT.SEARCH / FT.AGGREGATE / FT.HYBRID command selection, vector similarity with HNSW or FLAT, hybrid retrieval combining lexical and vector ranking, RAG pipelines, zero-downtime index updates via aliases, and debugging with FT.PROFILE and FT.EXPLAIN. Use when defining a search index on Hash or JSON documents, writing FT.SEARCH queries with filters, sorting, aggregation, or vector KNN, tuning HNSW parameters, building a RAG retrieval pipeline, or troubleshooting slow or empty search results.
 license: MIT
+compatibility: Java examples use the Jedis 7.2+ RedisClient API; check the installed Jedis version first (see references/clients/java-jedis.md for older releases).
 metadata:
   author: Redis, Inc.
   version: "1.0.0"

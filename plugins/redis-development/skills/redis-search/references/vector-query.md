@@ -79,13 +79,13 @@ results = r.ft("idx:bicycle").search(q, query_params={"vec": vec_blob})
 ```java
 // Jedis — STEP_START vector_query
 // Mirrors VectorSearchExample.java
-import redis.clients.jedis.UnifiedJedis;
+import redis.clients.jedis.RedisClient;
 import redis.clients.jedis.search.Query;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
 byte[] vecBlob = floatArrayToBytes(queryEmbedding);  // little-endian FLOAT32
-try (UnifiedJedis jedis = new UnifiedJedis("redis://localhost:6379")) {
+try (RedisClient jedis = RedisClient.create("redis://localhost:6379")) {
     Query q = new Query(
         "(@type:{mountain} @price:[100 500])=>[KNN 10 @description_embeddings $vec AS score]")
         .setSortBy("score", true)

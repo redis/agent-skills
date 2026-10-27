@@ -55,10 +55,10 @@ context = "\n\n".join(d.description for d in passages.docs)
 
 ```java
 // Jedis — STEP_START rag_pipeline
-import redis.clients.jedis.UnifiedJedis;
+import redis.clients.jedis.RedisClient;
 import redis.clients.jedis.search.Query;
 
-try (UnifiedJedis jedis = new UnifiedJedis("redis://localhost:6379")) {
+try (RedisClient jedis = RedisClient.create("redis://localhost:6379")) {
     byte[] vec = embed("lightweight mountain bicycle for trails"); // FLOAT32 little-endian
     Query q = new Query("(@type:{mountain})=>[KNN 5 @description_embeddings $vec AS score]")
         .setSortBy("score", true)
