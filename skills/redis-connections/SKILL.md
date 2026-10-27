@@ -2,6 +2,7 @@
 name: redis-connections
 description: Redis client and connection guidance covering connection pooling, multiplexing, pipelining, client-side caching with RESP3, avoiding slow commands (KEYS, SMEMBERS, HGETALL), and tuning socket timeouts. Use when configuring a Redis client (redis-py, Jedis, Lettuce, NRedisStack), batching commands for throughput, eliminating per-request connection creation, iterating large keyspaces with SCAN, enabling client-side caching for read-heavy workloads, setting connect and read timeouts, or upgrading to a client release that defaults to RESP3 (Jedis 8, redis-py 8, node-redis 6, ioredis 6, StackExchange.Redis 3).
 license: MIT
+compatibility: Java examples use the Jedis 7.2+ RedisClient API; check the installed Jedis version before applying them (see references/pooling.md for older releases).
 metadata:
   author: Redis, Inc.
   version: "0.1.0"
@@ -37,7 +38,7 @@ pool = redis.ConnectionPool(host="localhost", port=6379, max_connections=50)
 r = redis.Redis(connection_pool=pool)
 ```
 
-See [references/pooling.md](references/pooling.md) for Python + Java + Lettuce examples. On Jedis, use `RedisClient` (7.2+): Jedis 8.0 removed `JedisPooled` and the public `UnifiedJedis` constructors.
+See [references/pooling.md](references/pooling.md) for Python + Java + Lettuce examples. On Jedis, check the installed version in `pom.xml` or `build.gradle` first: use `RedisClient` on 7.2+ (required on 8.0, which removed `JedisPooled` and the public `UnifiedJedis` constructors), and `JedisPooled` on 5.0 – 7.1. Don't bump the dependency to change APIs unless the user asks for the upgrade.
 
 ## 2. Pipeline bulk work
 

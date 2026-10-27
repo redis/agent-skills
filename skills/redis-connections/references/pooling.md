@@ -39,7 +39,13 @@ RedisClient jedis = RedisClient.builder()
         .build();
 ```
 
-Jedis 8.0 removed `JedisPooled` and the public `UnifiedJedis` constructors. Code that uses them does not compile on Jedis 8; replace them with `RedisClient` (standalone), `RedisClusterClient` (Cluster), or `RedisSentinelClient` (Sentinel).
+Check the Jedis version in `pom.xml` or `build.gradle` before choosing a class, and match it rather than bumping the dependency:
+
+| Installed Jedis | Pooled client | Notes |
+|---|---|---|
+| 8.0+ | `RedisClient` | `JedisPooled` and the public `UnifiedJedis` constructors were removed; code using them does not compile. Use `RedisClusterClient` for Cluster and `RedisSentinelClient` for Sentinel. |
+| 7.2 – 7.x | `RedisClient` (preferred) or `JedisPooled` | Both work. Leave working `JedisPooled` code alone unless the task is upgrading to 8.0. |
+| 5.0 – 7.1 | `JedisPooled` | `RedisClient` does not exist yet: `new JedisPooled("redis://localhost:6379")`. |
 
 **Correct:** Use multiplexing (Lettuce, NRedisStack).
 

@@ -52,15 +52,30 @@ redis-py has a single client class (`redis.Redis`); no equivalent client-choice 
 
 Jedis has accumulated several entry points. Pick **one** per project and stay consistent — mixing them in the same codebase forces conversions and confuses readers.
 
+**Check the installed Jedis version first.** Read it from `pom.xml`, `build.gradle` / `build.gradle.kts`, or the dependency lockfile before writing any Jedis code, then use the classes that version supports:
+
+| Installed Jedis | Pooled standalone client | Cluster client | Protocol default |
+|---|---|---|---|
+| **8.0+** | `RedisClient` | `RedisClusterClient` (`JedisCluster` still works but is deprecated) | RESP3, negotiated with `HELLO 3`, RESP2 fallback |
+| **7.2 – 7.x** | `RedisClient` (preferred) or `JedisPooled` | `RedisClusterClient` or `JedisCluster` | RESP2 unless `protocol(RedisProtocol.RESP3)` is set |
+| **5.0 – 7.1** | `JedisPooled` (`RedisClient` does not exist yet) | `JedisCluster` | RESP2 unless `protocol(RedisProtocol.RESP3)` is set |
+
+- **Match the installed version.** Do not bump the Jedis dependency just to use a newer API unless the user asks for the upgrade.
+- **New project, no Jedis yet:** add the current Jedis release and use `RedisClient`.
+- **Existing code on Jedis 7.x or earlier:** leave working `JedisPooled` / `JedisCluster` code alone unless the task is the upgrade itself. Rewriting it only to swap class names adds churn without changing behaviour.
+- **Upgrading to 8.0:** the swap to `RedisClient` / `RedisClusterClient` is required, because the old construction lines no longer compile. Review raw-reply parsing at the same time, since the protocol default changes to RESP3.
+
+The examples in this reference use `RedisClient` (Jedis 7.2+). On 5.0 – 7.1, replace `RedisClient.create(...)` with `new JedisPooled(...)` taking the same URI or host and port; the FT.* calls are identical.
+
 | Class | Use when… | Threading | Notes |
 |-------|-----------|-----------|-------|
 | `RedisClient` | **Current upstream default.** All examples under `redis/jedis/src/test/java/io/redis/examples` use this. Constructed via `RedisClient.create("redis://localhost:6379")`. | Internal pool; safe to share across threads. | Use this for new code. |
 | `UnifiedJedis` | Do not construct directly. | n/a | Base class of `RedisClient` and `RedisClusterClient`. Its public constructors were **removed in Jedis 8.0**, so `new UnifiedJedis(...)` no longer compiles. It is still a valid type for a variable or parameter. |
-| `JedisPooled` | Existing apps on Jedis 7.x or earlier. | Internal `JedisPool`; thread-safe. | **Removed in Jedis 8.0.** Deprecated since 7.2. Same FT.* methods as `RedisClient`, so replacing it is a constructor swap. Migrate before upgrading to 8.0. |
+| `JedisPooled` | Existing apps on Jedis 7.x or earlier, and the only pooled client on 5.0 – 7.1. | Internal `JedisPool`; thread-safe. | **Removed in Jedis 8.0.** Deprecated since 7.2. Same FT.* methods as `RedisClient`. Keep working `JedisPooled` code as is on 7.x; replace it when upgrading to 8.0. |
 | `Jedis` (legacy) | A single raw connection, the original 4.x-era API. | One connection; **not** thread-safe. Must be returned to a pool or `close()`'d per use. | Avoid in new code. Many community blog posts still show this pattern. |
 | `RedisClusterClient` | Redis Cluster. | Cluster-aware pool. | Replaces `JedisCluster`, which is deprecated in Jedis 8.0. FT.* indexes are not sharded across cluster slots — see Redis Search cluster docs before using. |
 
-**Migration path:** `Jedis` / `JedisPooled` / `new UnifiedJedis(...)` → `RedisClient`, and `JedisCluster` → `RedisClusterClient`. They accept the same `ftSearch`, `ftCreate`, `ftAggregate` etc. methods, so migration is a constructor swap. On Jedis 8.0+ the swap is required, not optional. See the [Jedis v7 to v8 migration guide](https://redis.github.io/jedis/migration-guides/v7-to-v8/).
+**Migration path:** `Jedis` / `JedisPooled` / `new UnifiedJedis(...)` → `RedisClient`, and `JedisCluster` → `RedisClusterClient`. They accept the same `ftSearch`, `ftCreate`, `ftAggregate` etc. methods, so migration is a constructor swap. Do it as part of an upgrade to Jedis 8.0, where it is required; on 7.x it is optional. See the [Jedis v7 to v8 migration guide](https://redis.github.io/jedis/migration-guides/v7-to-v8/).
 
 **Divergence to flag:** upstream Jedis examples (`SearchQuickstartExample.java`) use `RedisClient.create("localhost", 6379)` while most public-internet blog posts and older Redis docs still show `UnifiedJedis` or `JedisPooled`. If you're porting code from those sources, the FT.* method names are identical — only the construction line differs, and the old construction line does not compile on Jedis 8.
 
