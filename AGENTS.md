@@ -13,7 +13,13 @@ A collection of agentskills.io-compliant skills for AI coding agents working wit
 - [redis-clustering](skills/redis-clustering/) — hash tags, multi-key ops, read replicas
 - [redis-security](skills/redis-security/) — AUTH, TLS, ACLs, network exposure, command renaming
 - [redis-observability](skills/redis-observability/) — INFO, SLOWLOG, MEMORY DOCTOR, FT.PROFILE, Redis Insight
-- [iris-development](skills/iris-development/) — Iris Redis Agent Memory: provisioning, SDK auth, session events, long-term memory
+- [add-redis-iris](skills/add-redis-iris/) — Redis Iris entry point: detects the framework, routes to a product skill
+- [add-agent-memory](skills/add-agent-memory/) — Redis Iris Agent Memory: provision, recall, write-back
+- [add-agent-playbooks](skills/add-agent-playbooks/) — Redis Iris Agent Playbooks: published Skills and approved FAQs
+- [add-context-gateway](skills/add-context-gateway/) — Redis Iris Context Gateway: one MCP endpoint for every upstream server
+- [add-intent-router](skills/add-intent-router/) — Redis Iris Intent Router: semantic routing by example phrasings
+
+The `add-*` Iris skills are copied from [redis/redis-iris](https://github.com/redis/redis-iris/tree/main/skills), which is their source of truth; edit them there and re-copy, adding this repo's `license` and `metadata` frontmatter and turning `../<skill>/SKILL.md` links into plain skill names (the validator rejects links that leave the skill directory).
 
 ## Where Skills Live
 
