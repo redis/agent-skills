@@ -15,7 +15,11 @@ Skills follow the [Agent Skills](https://agentskills.io/) format.
 | [redis-clustering](skills/redis-clustering/) | Hash tags for multi-key operations, avoiding CROSSSLOT, reading from replicas. |
 | [redis-security](skills/redis-security/) | Authentication and TLS, ACL-based least privilege, network bind, firewall, command renaming. |
 | [redis-observability](skills/redis-observability/) | Key metrics (INFO), debugging commands (SLOWLOG, MEMORY DOCTOR, FT.PROFILE), Redis Insight. |
-| [iris-development](skills/iris-development/) | Iris: Redis Agent Memory — provisioning, SDK auth, session events, long-term memory search, async promotion. |
+| [add-redis-iris](skills/add-redis-iris/) | Redis Iris: detect the agent's framework and route to the right Iris product skill. Start here. |
+| [add-agent-memory](skills/add-agent-memory/) | Redis Iris Agent Memory: provision with the `iris` CLI, wire recall and write-back so the agent remembers users across sessions. |
+| [add-agent-playbooks](skills/add-agent-playbooks/) | Redis Iris Agent Playbooks: publish procedures (Skills) and approved answers (FAQs), answer from published content only. |
+| [add-context-gateway](skills/add-context-gateway/) | Redis Iris Context Gateway: put the agent's MCP servers behind one endpoint and one key, with tool caching and result handles. |
+| [add-intent-router](skills/add-intent-router/) | Redis Iris Intent Router: replace hand-written routing with example phrasings and a score threshold. |
 
 ## Installation
 

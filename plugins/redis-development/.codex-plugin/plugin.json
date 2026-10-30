@@ -1,6 +1,6 @@
 {
   "name": "redis-development",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "description": "Redis development best practices for data modeling, search, caching, connections, clustering, security, observability, and agent memory",
   "author": {
     "name": "Redis",
@@ -22,7 +22,7 @@
   "interface": {
     "displayName": "Redis Development",
     "shortDescription": "Build reliable, production-ready Redis applications",
-    "longDescription": "Design, implement, review, and troubleshoot Redis applications with focused guidance for data structures, connections, Redis Search, semantic caching, clustering, security, observability, and Iris agent memory.",
+    "longDescription": "Design, implement, review, and troubleshoot Redis applications with focused guidance for data structures, connections, Redis Search, semantic caching, clustering, security, observability, and Redis Iris (Agent Memory, Agent Playbooks, Context Gateway, Intent Router).",
     "developerName": "Redis",
     "category": "Developer Tools",
     "capabilities": [
