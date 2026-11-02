@@ -49,7 +49,22 @@ This repository also includes Cursor plugin packaging. Run this command in chat:
 /add-plugin redis
 ```
 
-The top-level `skills/` directory remains the source of truth. `plugins/redis-development/skills/` holds generated real copies used by the ChatGPT, Codex, and Claude Code plugin package (not symlinks, which plugin installation flows may drop); `npm run sync:plugins` regenerates them and the pre-commit hook keeps them current. See [AGENTS.md](AGENTS.md#where-skills-live).
+### Google Antigravity Plugin
+
+The same plugin directory carries an Antigravity manifest at
+`plugins/redis-development/.antigravity-plugin/plugin.json`. To install it
+locally, clone this repository and point the `agy` CLI at the plugin
+directory—not the repository root:
+
+```bash
+git clone https://github.com/redis/agent-skills.git
+agy plugin install ./agent-skills/plugins/redis-development
+```
+
+You can also install it in the app from **Customizations → Plugins → + Install from URL**
+using the local path above. Skills are exposed as slash commands, for example `/redis-core`.
+
+The top-level `skills/` directory remains the source of truth. `plugins/redis-development/skills/` holds generated real copies used by the ChatGPT, Codex, Claude Code, Cursor, and Antigravity plugin package (not symlinks, which plugin installation flows may drop); `npm run sync:plugins` regenerates them and the pre-commit hook keeps them current. See [AGENTS.md](AGENTS.md#where-skills-live).
 
 ## Usage
 

@@ -12,11 +12,12 @@
     "validate": "npm run validate:plugins && npm run validate:eval-baselines && npm run validate:skill-structure",
     "validate:eval-baselines": "node scripts/validate-eval-baselines.mjs",
     "validate:skill-structure": "node scripts/validate-skill-structure.mjs --all --enforce",
+    "validate:antigravity-plugins": "node scripts/validate-antigravity-plugins.mjs",
     "validate:codex-plugins": "node scripts/validate-codex-plugins.mjs",
     "validate:claude-plugins": "node scripts/validate-claude-plugins.mjs",
     "validate:cursor-plugins": "node scripts/validate-cursor-plugins.mjs",
     "validate:plugin-skills": "node scripts/sync-plugin-skills.mjs --check",
-    "validate:plugins": "npm run validate:codex-plugins && npm run validate:claude-plugins && npm run validate:cursor-plugins && npm run validate:plugin-skills",
+    "validate:plugins": "npm run validate:antigravity-plugins && npm run validate:codex-plugins && npm run validate:claude-plugins && npm run validate:cursor-plugins && npm run validate:plugin-skills",
     "prepare": "husky"
   },
   "skillValidatorVersion": "v1.5.6",

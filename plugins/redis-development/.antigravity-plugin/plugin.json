@@ -1,0 +1,23 @@
+{
+  "name": "redis-development",
+  "displayName": "Redis Development",
+  "version": "1.4.0",
+  "description": "Redis development best practices for data modeling, search, caching, connections, clustering, security, observability, and agent memory",
+  "logo": "assets/redis-icon.svg",
+  "suggestedPrompts": [
+    "Design the Redis layer for this AI agent: long-term memory, semantic caching of LLM calls, and vector search over our docs.",
+    "Add hybrid product search to this app with Redis: vector and keyword ranking, filtered by price and category.",
+    "Get this Redis setup production-ready: ACLs and TLS, cluster-safe keys, connection pooling, and the metrics to alert on."
+  ],
+  "category": "Databases",
+  "keywords": ["redis", "database", "caching", "vector-search", "search", "agent-memory", "performance", "best-practices"],
+  "author": {
+    "name": "Redis",
+    "email": "support@redis.com",
+    "url": "https://redis.io"
+  },
+  "homepage": "https://redis.io",
+  "repository": "https://github.com/redis/agent-skills",
+  "license": "MIT",
+  "skills": ["./skills"]
+}
