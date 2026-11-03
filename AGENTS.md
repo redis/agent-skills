@@ -18,6 +18,7 @@ A collection of agentskills.io-compliant skills for AI coding agents working wit
 - [add-agent-playbooks](skills/add-agent-playbooks/) — Redis Iris Agent Playbooks: published Skills and approved FAQs
 - [add-context-gateway](skills/add-context-gateway/) — Redis Iris Context Gateway: one MCP endpoint for every upstream server
 - [add-intent-router](skills/add-intent-router/) — Redis Iris Intent Router: semantic routing by example phrasings
+- [add-lens](skills/add-lens/) — Redis Iris Lens: per-turn tracing of LLM calls, tools, and retrievals
 
 The `add-*` Iris skills are copied from [redis/redis-iris](https://github.com/redis/redis-iris/tree/main/skills), which is their source of truth; edit them there and re-copy, adding this repo's `license` and `metadata` frontmatter and turning `../<skill>/SKILL.md` links into plain skill names (the validator rejects links that leave the skill directory).
 

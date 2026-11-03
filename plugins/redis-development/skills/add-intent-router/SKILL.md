@@ -57,7 +57,7 @@ intents:
     minScore: 0.4   # stricter than the Router's default for this one
 ```
 
-Provision from the terminal. Intent Router is self-managed for now: a `cloud` profile refuses the control-plane commands with `cloud_unsupported`. Add `--local` for a local stack (it assumes `127.0.0.1:9400` and `9401`), or let the person export `IRIS_INTENT_ROUTER_SERVICE_URL`, `IRIS_INTENT_ROUTER_SERVICE_TOKEN`, `IRIS_INTENT_ROUTER_URL`, `IRIS_IDENTITY_URL` and `IRIS_IDENTITY_TOKEN` ([Intent Router CLI](https://github.com/redis/redis-iris/blob/main/docs/user_guides/intent-router-cli.md#before-you-start)).
+Provision from the terminal on a self-managed suite. A `cloud` profile refuses the control-plane commands with `cloud_unsupported`: the person creates the Router in **Iris → Intent Router → New Intent Router** and its key in **Iris → Access & Identity**. Add `--local` for a local stack (it assumes `127.0.0.1:9400` and `9401`), or let the person export `IRIS_INTENT_ROUTER_SERVICE_URL`, `IRIS_INTENT_ROUTER_SERVICE_TOKEN`, `IRIS_INTENT_ROUTER_URL`, `IRIS_IDENTITY_URL` and `IRIS_IDENTITY_TOKEN` ([Intent Router CLI](https://github.com/redis/redis-iris/blob/main/docs/user_guides/intent-router-cli.md#before-you-start)).
 
 ```
 iris --json --no-input intent-router service create --name support --provider openai --model text-embedding-3-small --dimensions 1536 --role read --dry-run

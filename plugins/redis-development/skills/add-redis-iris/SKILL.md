@@ -1,6 +1,6 @@
 ---
 name: add-redis-iris
-description: Add Redis Iris to an existing AI agent in any framework (LangGraph, LangChain, OpenAI Agents SDK, Google ADK, Pydantic AI, CrewAI, or a plain loop). Use when the user asks to add Iris, Redis Agent Memory, Agent Playbooks, Context Gateway, or Intent Router to their agent, or asks which Iris product their agent needs. Detects the framework and routes to the product skill.
+description: Add Redis Iris to an existing AI agent in any framework (LangGraph, LangChain, OpenAI Agents SDK, Google ADK, Pydantic AI, CrewAI, or a plain loop). Use when the user asks to add Iris, Redis Agent Memory, Agent Playbooks, Context Gateway, Intent Router, or Lens to their agent, or asks which Iris product their agent needs. Detects the framework and routes to the product skill.
 license: MIT
 metadata:
   author: redis
@@ -45,8 +45,11 @@ Note the version from the lockfile. Product skills look up that version's API ov
 | A semantic response cache: model answers stored and re-served to later users, curated by hand | Agent Playbooks | `add-agent-playbooks`, "Replacing a response cache" |
 | Several MCP servers configured one by one in the agent, each with its own secret, or too many tool schemas in the prompt | Context Gateway | `add-context-gateway` |
 | A keyword if/else router, or an LLM call just to pick a route | Intent Router | `add-intent-router` |
+| No per-turn tracing: no way to see which LLM calls, tools and retrievals one answer used, or what it cost | Lens | `add-lens` |
 
 If the user named a product, use that. If unclear, ask once, listing what you found.
+
+Lens goes next to any product, or on its own: it traces the turn, and every Iris product traces itself inside it. Offer it alongside whatever else you add.
 
 ## 4. Install
 
