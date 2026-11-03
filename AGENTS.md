@@ -20,7 +20,7 @@ A collection of agentskills.io-compliant skills for AI coding agents working wit
 - [add-intent-router](skills/add-intent-router/) — Redis Iris Intent Router: semantic routing by example phrasings
 - [add-lens](skills/add-lens/) — Redis Iris Lens: per-turn tracing of LLM calls, tools, and retrievals
 
-The `add-*` Iris skills are copied from [redis/redis-iris](https://github.com/redis/redis-iris/tree/main/skills), which is their source of truth; edit them there and re-copy, adding this repo's `license` and `metadata` frontmatter and turning `../<skill>/SKILL.md` links into plain skill names (the validator rejects links that leave the skill directory).
+The `add-*` Iris skills are copied from [redis/redis-iris](https://github.com/redis/redis-iris/tree/main/skills), which is their source of truth; edit them there and re-copy, adding this repo's `license` and `metadata` frontmatter and turning `../<skill>/SKILL.md` links into plain skill names (the validator rejects links that leave the skill directory). They also drop every link into `redis/redis-iris`, which is private: public users and the link validator get HTTP 404. Instead the copies inline what the agent needs (the `iris.toml` layout, the CLI error-code table, per-product identity tokens, the Agent Memory console steps, the uv pre-release fix) and point to `iris <product> <command> --help` for CLI detail. Re-apply these edits on every re-copy, or `validate:skill-structure` fails.
 
 ## Where Skills Live
 

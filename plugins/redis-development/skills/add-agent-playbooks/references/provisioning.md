@@ -1,6 +1,31 @@
 # Connect or provision a Playbook
 
-Read this when the application needs Playbook connection settings or a new service. Reuse an existing Playbook when supplied. Start `iris.toml` and env examples from [project setup](https://github.com/redis/redis-iris/tree/main/examples/project_setup), selecting `cloud/` or `onprem/`.
+Read this when the application needs Playbook connection settings or a new service. Reuse an existing Playbook when supplied. Start the project's `iris.toml`. Only the `iris` CLI reads `iris.toml`; the app reads env vars. It holds URLs only: a token in TOML makes the CLI exit 2. Select the profile with `IRIS_CONFIG=./iris.toml` and `IRIS_PROFILE=cloud` or `IRIS_PROFILE=suite`.
+
+Redis Cloud. The person fills `.env` from the console: `IRIS_AGENT_PLAYBOOKS_URL` (the Agent endpoint), `IRIS_AGENT_PLAYBOOKS_PLAYBOOK_ID` and `IRIS_AGENT_PLAYBOOKS_API_KEY`.
+
+```toml
+[profiles.cloud]
+kind = "cloud"
+console_url = "https://cloud.redis.io"
+
+[profiles.cloud.agent_playbooks]
+url = "https://playbook.example.com"  # the data-plane URL from the console
+```
+
+Self-managed suite. The operator's tokens go in `.env.admin`, never the app's `.env`; `service create --write-env .env` writes the app's `.env`.
+
+```toml
+[profiles.suite]
+kind = "self-managed"
+
+[profiles.suite.agent_playbooks]
+service_url = "https://playbook-admin.example.com"  # control plane: the CLI calls it for service create and check
+url = "https://playbook.example.com"  # data plane: what the agent calls
+identity_url = "https://playbook-identity.example.com"  # Identity Service that mints the agent's keys
+```
+
+A suite with one shared Identity Service sets `[profiles.suite.identity]` `url` once instead of each `identity_url`. `IRIS_<PRODUCT>_SERVICE_URL`, `IRIS_<PRODUCT>_URL` and `IRIS_<PRODUCT>_IDENTITY_URL` override the profile.
 
 ## Check prerequisites and choose the route
 
@@ -18,7 +43,11 @@ uv run iris --json --no-input agent-playbooks service check --help
 Use equivalent commands for other package managers. If absent, add `redis-iris`
 through that manager; use `redis-iris[langgraph]` for its LangGraph adapter.
 Respect the project's version constraints and the release's installation guidance,
-including pre-release requirements in the [README](https://github.com/redis/redis-iris#install).
+including its pre-release requirements. On a uv project, a pre-release `redis-iris`
+pins its product SDK pre-releases exactly, so `uv add` fails with
+`hint: pre-releases weren't enabled`. Restate those pins under `[tool.uv]`
+`constraint-dependencies` in `pyproject.toml`, copying the `==` pre-release entries
+from that release's dependencies on its PyPI page (https://pypi.org/project/redis-iris/).
 Check that the installed CLI/SDK exposes the options and methods the chosen path
 uses; resolve incompatibilities before relying on them. An agent using another
 language needs its documented integration rather than a replacement Python app.
@@ -78,6 +107,8 @@ embedding: {provider: openai, model: text-embedding-3-small, dimensions: 1536}
 
 For a suite, let the operator configure its service/Identity URLs and tokens in `.env.admin` and the selected profile. Load those credentials only in administrative command processes. For a local stack, append `--local` to each `service` command below. It selects development URLs and credentials, not a production deployment.
 
+**Identity tokens.** Each product chart can run its own Identity Service. Then set the product's own `IRIS_AGENT_PLAYBOOKS_IDENTITY_TOKEN` (and `IRIS_AGENT_PLAYBOOKS_IDENTITY_URL`, or the profile's `identity_url`), and leave `IRIS_IDENTITY_URL` unset: it overrides every product's `identity_url` in the profile. On a suite with one shared Identity Service, `IRIS_IDENTITY_TOKEN` and `IRIS_IDENTITY_URL` cover every product. The CLI takes the token from `--identity-token`, then `IRIS_AGENT_PLAYBOOKS_IDENTITY_TOKEN`, then `IRIS_IDENTITY_TOKEN`, then the product's service token, which only works when the two are the same secret. The dry run lists that fallback under `warnings`.
+
 ```bash
 iris --json --no-input agent-playbooks service create --from playbook.yaml --dry-run
 iris --json --no-input agent-playbooks service create --from playbook.yaml --write-env .env
@@ -95,7 +126,7 @@ Use the Cloud console for service administration. `service create`, `key`, `show
 
 Have the operator create or select the Playbook in **Iris → Agent Playbooks**, obtain its Agent endpoint and Playbook ID from the Connect step or Configuration, and create keys in **Iris → Access & Identity**. The application needs `read`, plus `propose` if chosen. The separate content credential needs the permissions to read, write, and publish entries. Put the runtime settings in `.env` and the content key in `.env.content` using a local editor or secret manager.
 
-Copy connection variable names into `.env.example` with empty values. Verify readiness, embedding/discovery settings, and key access in the console; then use the data-plane content commands and discovery. Continue at content authoring in the main skill. Console handoff details: [Cloud configuration](https://github.com/redis/redis-iris/blob/main/docs/user_guides/configuration.md#redis-cloud-do-it-in-the-console).
+Copy connection variable names into `.env.example` with empty values. Verify readiness, embedding/discovery settings, and key access in the console; then use the data-plane content commands and discovery. Continue at content authoring in the main skill.
 
 ## CLI execution and recovery
 
@@ -106,4 +137,17 @@ Copy connection variable names into `.env.example` with empty values. Verify rea
 - On `resource_exists`, use an existing-resource choice already authorized by the request or ask whether to reuse `details.id` or choose a different name. Never delete to retry. If a failed create reports `details.created: true`, reuse the created resource with `--reuse --write-env` to finish key delivery.
 - Run `check` with the written env files after self-managed provisioning. Report the failing `details.hop`, `details.step`, and `details.cause`; it stops at the first failed hop. Agent grants require `read`, with `propose` checked when `--require-propose` is present. That option reports `grant_unverified` if the generated agent key name cannot be found; inspect custom-named keys in the Identity Service. Content grants always require `read,write,publish`.
 
-[Provision without the UI](https://github.com/redis/redis-iris/blob/main/docs/user_guides/provision-without-the-ui.md#hand-back-to-a-person) maps the error codes to operator actions.
+Every error is one JSON value on stderr with `error.code`; credential errors also carry `details.env` and `details.obtain`, never the value. Stop on the first failure and relay it:
+
+| `error.code` | Who acts | Action |
+|---|---|---|
+| `credential_required` | person | Set the variable in `details.env` in the agent's shell. See "Identity tokens" above. |
+| `unauthenticated` | person | The token from `details.source` was refused: it expired or belongs to another deployment. Issue a new one. |
+| `forbidden` | person | The token is valid but lacks the role or tenant. Use a token with the right role for that product. |
+| `configuration_error` | person or agent | A URL is missing, such as `url`. Add it to the profile. |
+| `invalid_request` | agent | HTTP 400. Fix the request the message names. |
+| `resource_exists` | person | Decide: re-run with `--reuse` to adopt `details.id`, or choose another name. |
+| `unavailable` | person | The hop is unreachable. Check the URL, the ingress and the service's pods. |
+| `check_failed` | person | `details.hop` and `details.cause` name the broken hop. Fix it and re-run the check. |
+| `cloud_unsupported` | person | The profile is `kind = "cloud"`. Follow `details.steps` in the console. |
+| `input_error`, `usage_error` | agent | Fix the command. A destructive command under `--no-input` needs `--yes` from a person. |

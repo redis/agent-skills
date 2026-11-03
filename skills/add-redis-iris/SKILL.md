@@ -63,12 +63,37 @@ If resolution fails on pre-releases, retry with `uv add --prerelease=allow redis
 
 Follow each chosen product skill. More than one product: each skill adds its own calls. Optionally build them from one config with `Iris.from_env()` (`iris.agent_memory()`, `iris.agent_playbooks()`, `iris.context_gateway()`, `iris.intent_router()`).
 
-Ask once whether the services run on Redis Cloud or a self-managed suite, then start the project's config from [examples/project_setup](https://github.com/redis/redis-iris/tree/main/examples/project_setup): `cloud/` (an `iris.toml` with the `cloud` profile and a `.env.example` the person fills from the console) or `onprem/` (an `iris.toml` with the `suite` profile, `admin.env.example` for the operator's tokens, and the `.env` the CLI writes).
+Ask once whether the services run on Redis Cloud or a self-managed suite, then write the project's `iris.toml` profile. Only the `iris` CLI reads `iris.toml`; the app reads env vars. It holds URLs only: a token in TOML makes the CLI exit 2. Select the profile with `IRIS_CONFIG=./iris.toml` and `IRIS_PROFILE=cloud` or `IRIS_PROFILE=suite`.
+
+Redis Cloud. The person fills `.env` from the console: `IRIS_<PRODUCT>_URL`, its ID and `_API_KEY` per product.
+
+```toml
+[profiles.cloud]
+kind = "cloud"
+console_url = "https://cloud.redis.io"
+
+[profiles.cloud.agent_memory]
+url = "https://gcp-us-east4.memory.redis.io"  # the data-plane URL from the console
+```
+
+Self-managed suite. The operator's tokens go in `.env.admin`, never the app's `.env`; `service create --write-env .env` writes the app's `.env`.
+
+```toml
+[profiles.suite]
+kind = "self-managed"
+
+[profiles.suite.agent_memory]
+service_url = "https://memory-admin.example.com"  # control plane: the CLI calls it for service create and check
+url = "https://memory.example.com"  # data plane: what the agent calls
+identity_url = "https://memory-identity.example.com"  # Identity Service that mints the agent's keys
+```
+
+Add one table per product the app uses: `agent_memory`, `agent_playbooks`, `context_gateway`, `intent_router`. `[profiles.suite.context_gateway]` has no `url`: `service create --write-env` writes the Gateway's endpoint. A suite with one shared Identity Service sets `[profiles.suite.identity]` `url` once instead of each `identity_url`. `IRIS_<PRODUCT>_SERVICE_URL`, `IRIS_<PRODUCT>_URL` and `IRIS_<PRODUCT>_IDENTITY_URL` override the profile.
 
 ## Rules
 
 - Keep the user's framework, graph, and prompts. Smallest diff.
 - Never guess framework APIs from memory. Look them up over MCP (see each product skill).
-- Only use APIs in [`src/redis_iris`](https://github.com/redis/redis-iris/blob/main/src/redis_iris/__init__.py). `redis_iris.integrations.langgraph.attach` (extra `redis-iris[langgraph]`) and `redis_iris.integrations.adk.attach` (no extra) exist; there is no `IrisTool`, `iris.tools()`, or `iris.turn()`.
+- Only use APIs in `redis_iris`. `redis_iris.integrations.langgraph.attach` (extra `redis-iris[langgraph]`) and `redis_iris.integrations.adk.attach` (no extra) exist; there is no `IrisTool`, `iris.tools()`, or `iris.turn()`.
 - The SDK raises on a missing setting or an outage. Ask whether a product failure may fail the turn; most production agents catch it and continue with an empty block.
 - Never commit secrets.

@@ -21,4 +21,4 @@ A binding in `BLOCKED` reports a reason such as `source_not_found` or `source_ac
 iris --json --no-input agent-playbooks extraction enable BINDING_ID --playbook-id PLAYBOOK_ID
 ```
 
-[Extraction reference](https://github.com/redis/redis-iris/blob/main/docs/user_guides/agent-playbooks-cli.md#extraction-from-agent-memory).
+Extraction reference: `iris agent-playbooks extraction --help`.

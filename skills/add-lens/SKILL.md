@@ -11,7 +11,7 @@ metadata:
 
 One trace per agent turn, visible in the Lens UI under the agent's `agent_id`. Lens runs inside `redis-iris`; it has no service to provision and no CLI. Two lines at start-up, one turn per message, then close the gaps the agent has. Lens sits next to any other Iris product, or none.
 
-Full reference: [Lens](https://github.com/redis/redis-iris/blob/main/docs/core/lens.md).
+Full reference: Lens (`docs/core/lens.md` in `redis-iris`).
 
 ## 1. Discover
 
@@ -172,7 +172,7 @@ List the agent shape and who opens the turn, the `agent_id`, where the session a
 ## Rules
 
 - Keep the user's framework, graph, and prompts. Smallest diff.
-- Only use APIs in [`redis_iris.lens`](https://github.com/redis/redis-iris/blob/main/src/redis_iris/lens/__init__.py). Never call `trace.set_tracer_provider()` or `trace.get_tracer()` for Lens.
+- Only use APIs in `redis_iris.lens`. Never call `trace.set_tracer_provider()` or `trace.get_tracer()` for Lens.
 - Lens never raises into the agent (except under `IRIS_LENS_STRICT`), so it needs no try/except.
 - Never ask for a secret in chat. Never commit `.env`.
 - Other Iris products: `add-redis-iris`.

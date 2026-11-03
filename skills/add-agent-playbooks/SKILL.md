@@ -29,7 +29,7 @@ Prefer progressive disclosure when the agent can execute tools; use score-based 
 
 Follow [provisioning](references/provisioning.md) for the short prerequisite check and new, partial, or existing setup. Reuse usable configuration and published content. Local defaults require a running stack; Cloud and self-managed administration use different paths.
 
-Check framework APIs against the installed version before editing. Use an available docs MCP or fetch the relevant pages from the [docs index](https://github.com/redis/redis-iris/blob/main/docs/index.md), [CLI guide](https://github.com/redis/redis-iris/blob/main/docs/user_guides/agent-playbooks-cli.md), and [SDK reference](https://github.com/redis/redis-iris/blob/main/docs/core/agent-playbooks.md); raw GitHub files work without MCP. Inspect installed package source when documentation does not match the installed API. Report unresolved compatibility questions.
+Check framework APIs against the installed version before editing. Use an available docs MCP. For the CLI, run `iris agent-playbooks <command> --help`. Inspect installed package source when documentation does not match the installed API. Report unresolved compatibility questions.
 
 ## 3. Publish the first relevant content
 

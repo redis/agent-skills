@@ -53,8 +53,8 @@ Preserve the application's response/authorization rules in `BASE_SYSTEM` and its
 | CrewAI | Add context to task/agent inputs before execution; use the final accepted task output for `after`. |
 | Plain loop | Assemble context before the model call; call `after` after the final answer. |
 
-Use the configured `context` object throughout. Passing `playbook` to `attach` constructs fresh default hooks and loses the choices above. Framework registration examples: [answer from approved policy](https://github.com/redis/redis-iris/blob/main/docs/user_guides/answer-from-approved-policy.md#wire-it-into-your-agent).
+Use the configured `context` object throughout. Passing `playbook` to `attach` constructs fresh default hooks and loses the choices above.
 
 `propose_uncovered=True` files the final answer unchanged as an FAQ proposal only when discovery is empty and neither truncation flag is set. It has no source or evidence. If submission needs a judge, normalization, provenance, or evidence, leave automatic proposals off and call `playbook.propose_faq(...)` behind the application's existing gate. An identical candidate resolves to an existing proposal; a different answer can create another.
 
-For direct retrieval, custom filters, version-frozen turns, FAQ/Skill proposal APIs, and package submission, use the [SDK reference](https://github.com/redis/redis-iris/blob/main/docs/core/agent-playbooks.md). If sessions are also recorded in Agent Memory, read [memory extraction](memory-extraction.md) before enabling a second proposal path.
+For direct retrieval, custom filters, version-frozen turns, FAQ/Skill proposal APIs, and package submission, inspect the installed `redis_iris.agent_playbooks` source. If sessions are also recorded in Agent Memory, read [memory extraction](memory-extraction.md) before enabling a second proposal path.

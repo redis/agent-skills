@@ -57,7 +57,7 @@ iris --json --no-input agent-playbooks faqs sync ./faqs --publish changed
 
 `sync` without publication creates or updates drafts. `--publish changed` (also bare `--publish`) publishes entries created or changed by that sync; it leaves identical drafts unpublished. To serve an existing draft, publish its reviewed version explicitly with `skills publish KEY --version N` or `faqs publish KEY --version N`. Use `sync --publish all` only when every matching latest version is intended for publication.
 
-Include the content files in the project's change. Authoring and lifecycle details: [Agent Playbooks CLI](https://github.com/redis/redis-iris/blob/main/docs/user_guides/agent-playbooks-cli.md).
+Include the content files in the project's change. Authoring and lifecycle details: `iris agent-playbooks skills --help` and `iris agent-playbooks faqs --help`.
 
 ## Maintain the content
 

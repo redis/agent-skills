@@ -70,7 +70,9 @@ Add both names to `.env.example` with empty values, and never commit `.env`. The
 
 ### Self-managed
 
-Let the person export `IRIS_CONTEXT_GATEWAY_SERVICE_URL`, `IRIS_CONTEXT_GATEWAY_SERVICE_TOKEN`, `IRIS_IDENTITY_URL` and `IRIS_IDENTITY_TOKEN`. For the local Compose stack, `--local` after the command (`service list --local`) supplies the service URL and token, but not the Identity URL, so `IRIS_IDENTITY_URL` is still needed for `create` ([Provision without the UI](https://github.com/redis/redis-iris/blob/main/docs/user_guides/provision-without-the-ui.md)).
+Let the person export `IRIS_CONTEXT_GATEWAY_SERVICE_URL`, `IRIS_CONTEXT_GATEWAY_SERVICE_TOKEN`, `IRIS_IDENTITY_URL` and `IRIS_IDENTITY_TOKEN`. For the local Compose stack, `--local` after the command (`service list --local`) supplies the service URL and token, but not the Identity URL, so `IRIS_IDENTITY_URL` is still needed for `create`.
+
+**Identity tokens.** Each product chart can run its own Identity Service. Then set the product's own `IRIS_CONTEXT_GATEWAY_IDENTITY_TOKEN` (and `IRIS_CONTEXT_GATEWAY_IDENTITY_URL`, or the profile's `identity_url`), and leave `IRIS_IDENTITY_URL` unset: it overrides every product's `identity_url` in the profile. On a suite with one shared Identity Service, `IRIS_IDENTITY_TOKEN` and `IRIS_IDENTITY_URL` cover every product. The CLI takes the token from `--identity-token`, then `IRIS_CONTEXT_GATEWAY_IDENTITY_TOKEN`, then `IRIS_IDENTITY_TOKEN`, then the product's service token, which only works when the two are the same secret.
 
 ```
 iris --json --no-input context-gateway service list
@@ -123,7 +125,20 @@ Database requirements:
 5. Upstream secrets go in by reference only: `env:NAME`, `file:PATH` or `-`. Ask the person to export the variable; never write the secret yourself.
 6. On `resource_exists`, ask whether to `--reuse` `details.gatewayId` or pick another name. Never delete to retry. If `create` fails with `details.created: true`, re-run with `--reuse --write-env`.
 
-[Provision without the UI](https://github.com/redis/redis-iris/blob/main/docs/user_guides/provision-without-the-ui.md#hand-back-to-a-person) maps every error code to the person's action.
+Every error is one JSON value on stderr with `error.code`; credential errors also carry `details.env` and `details.obtain`, never the value. Stop on the first failure and relay it:
+
+| `error.code` | Who acts | Action |
+|---|---|---|
+| `credential_required` | person | Set the variable in `details.env` in the agent's shell. See "Identity tokens" above. |
+| `unauthenticated` | person | The token from `details.source` was refused: it expired or belongs to another deployment. Issue a new one. |
+| `forbidden` | person | The token is valid but lacks the role or tenant. Use a token with the right role for that product. |
+| `configuration_error` | person or agent | A URL is missing, such as `url`. Add it to the profile. |
+| `invalid_request` | agent | HTTP 400. Fix the request the message names. |
+| `resource_exists` | person | Decide: re-run with `--reuse` to adopt `details.gatewayId`, or choose another name. |
+| `unavailable` | person | The hop is unreachable. Check the URL, the ingress and the service's pods. |
+| `check_failed` | person | `details.hop` and `details.cause` name the broken hop. Fix it and re-run the check. |
+| `cloud_unsupported` | person | The profile is `kind = "cloud"`. Follow `details.steps` in the console. |
+| `input_error`, `usage_error` | agent | Fix the command. A destructive command under `--no-input` needs `--yes` from a person. |
 
 `--write-env .env` writes `IRIS_CONTEXT_GATEWAY_URL` (the Gateway's MCP endpoint), `IRIS_CONTEXT_GATEWAY_ID` and `IRIS_CONTEXT_GATEWAY_API_KEY`. Add the same three names to `.env.example` with empty values. Never commit `.env`.
 
@@ -205,7 +220,7 @@ iris --json --no-input context-gateway --gateway-id gw_0123456789abcdef012345678
 - A second developer on the same Gateway: `service env gw_0123456789abcdef0123456789abcdef --write .env` writes the URL and ID without minting a key, then `service key` gives them their own.
 - New Upstream secret: have the person export the new value, then `upstream update crm --bearer-secret env:CRM_TOKEN` (or `--header-secret`) and `upstream refresh crm`.
 
-Full reference: [Context Gateway CLI](https://github.com/redis/redis-iris/blob/main/docs/user_guides/context-gateway-cli.md).
+Full reference: `iris context-gateway <command> --help` (for example `iris context-gateway upstream add --help`).
 
 ## 4. Repoint the agent
 

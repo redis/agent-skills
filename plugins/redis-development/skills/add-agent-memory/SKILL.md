@@ -74,10 +74,37 @@ iris --json --no-input agent-memory service check <storeId from the result> --en
 | Stack | Before running |
 |---|---|
 | Local on-prem (Agent Memory service `http://127.0.0.1:9100`, Agent Memory URL `http://127.0.0.1:9000`) | Add `--local` |
-| Self-managed suite | The person exports `IRIS_AGENT_MEMORY_SERVICE_TOKEN`, `IRIS_IDENTITY_TOKEN` and, on a multi-tenant Identity Service, `IRIS_IDENTITY_TENANT`; URLs come from `IRIS_AGENT_MEMORY_SERVICE_URL`, `IRIS_AGENT_MEMORY_URL` and `IRIS_IDENTITY_URL`, or a profile ([Provision without the UI](https://github.com/redis/redis-iris/blob/main/docs/user_guides/provision-without-the-ui.md)) |
+| Self-managed suite | The person exports `IRIS_AGENT_MEMORY_SERVICE_TOKEN`, `IRIS_IDENTITY_TOKEN` and, on a multi-tenant Identity Service, `IRIS_IDENTITY_TENANT`; URLs come from `IRIS_AGENT_MEMORY_SERVICE_URL`, `IRIS_AGENT_MEMORY_URL` and `IRIS_IDENTITY_URL`, or a profile. See "Identity tokens" below |
 | Redis Cloud | Service commands return `cloud_unsupported`; see the console note below |
 
-Start the project's `iris.toml` and env files from [examples/project_setup](https://github.com/redis/redis-iris/tree/main/examples/project_setup): `cloud/` for Redis Cloud, `onprem/` for a self-managed suite (admin tokens in `.env.admin`, never the app's `.env`).
+**Identity tokens.** Each product chart can run its own Identity Service. Then set the product's own `IRIS_AGENT_MEMORY_IDENTITY_TOKEN` (and `IRIS_AGENT_MEMORY_IDENTITY_URL`, or the profile's `identity_url`), and leave `IRIS_IDENTITY_URL` unset: it overrides every product's `identity_url` in the profile. On a suite with one shared Identity Service, `IRIS_IDENTITY_TOKEN` and `IRIS_IDENTITY_URL` cover every product. The CLI takes the token from `--identity-token`, then `IRIS_AGENT_MEMORY_IDENTITY_TOKEN`, then `IRIS_IDENTITY_TOKEN`, then the product's service token, which only works when the two are the same secret. The dry run lists that fallback under `warnings`.
+
+Start the project's `iris.toml`. Only the `iris` CLI reads `iris.toml`; the app reads env vars. It holds URLs only: a token in TOML makes the CLI exit 2. Select the profile with `IRIS_CONFIG=./iris.toml` and `IRIS_PROFILE=cloud` or `IRIS_PROFILE=suite`.
+
+Redis Cloud. The person fills `.env` from the console: `IRIS_AGENT_MEMORY_URL`, `IRIS_AGENT_MEMORY_STORE_ID` and `IRIS_AGENT_MEMORY_API_KEY`.
+
+```toml
+[profiles.cloud]
+kind = "cloud"
+console_url = "https://cloud.redis.io"
+
+[profiles.cloud.agent_memory]
+url = "https://gcp-us-east4.memory.redis.io"  # the data-plane URL from the console
+```
+
+Self-managed suite. The operator's tokens go in `.env.admin`, never the app's `.env`; `service create --write-env .env` writes the app's `.env`.
+
+```toml
+[profiles.suite]
+kind = "self-managed"
+
+[profiles.suite.agent_memory]
+service_url = "https://memory-admin.example.com"  # control plane: the CLI calls it for service create and check
+url = "https://memory.example.com"  # data plane: what the agent calls
+identity_url = "https://memory-identity.example.com"  # Identity Service that mints the agent's keys
+```
+
+A suite with one shared Identity Service sets `[profiles.suite.identity]` `url` once instead of each `identity_url`. `IRIS_<PRODUCT>_SERVICE_URL`, `IRIS_<PRODUCT>_URL` and `IRIS_<PRODUCT>_IDENTITY_URL` override the profile.
 
 ### Run the CLI as an agent
 
@@ -90,11 +117,31 @@ Every `iris` call you make follows the same loop:
 5. After provisioning, run `service check ID --env-file .env` (the file `create` wrote; the key stays out of your shell) and report each step. On failure, report the failing hop (`details.hop`, `details.step`, `details.cause`), not a guess.
 6. On `resource_exists`, ask the person whether to `--reuse` `details.id` or pick another name. Never delete to retry. If `create` fails with `details.created: true`, the resource exists but has no key yet: re-run with `--reuse --write-env`.
 
-[Provision without the UI](https://github.com/redis/redis-iris/blob/main/docs/user_guides/provision-without-the-ui.md#hand-back-to-a-person) maps every error code to the person's action.
+Every error is one JSON value on stderr with `error.code`; credential errors also carry `details.env` and `details.obtain`, never the value. Stop on the first failure and relay it:
+
+| `error.code` | Who acts | Action |
+|---|---|---|
+| `credential_required` | person | Set the variable in `details.env` in the agent's shell. See "Identity tokens" above. |
+| `unauthenticated` | person | The token from `details.source` was refused: it expired or belongs to another deployment. Issue a new one. |
+| `forbidden` | person | The token is valid but lacks the role or tenant. Use a token with the right role for that product. |
+| `configuration_error` | person or agent | A URL is missing, such as `url`. Add it to the profile. |
+| `invalid_request` | agent | HTTP 400. Fix the request the message names. |
+| `resource_exists` | person | Decide: re-run with `--reuse` to adopt `details.id`, or choose another name. |
+| `unavailable` | person | The hop is unreachable. Check the URL, the ingress and the service's pods. |
+| `check_failed` | person | `details.hop` and `details.cause` name the broken hop. Fix it and re-run the check. |
+| `cloud_unsupported` | person | The profile is `kind = "cloud"`. Follow `details.steps` in the console. |
+| `input_error`, `usage_error` | agent | Fix the command. A destructive command under `--no-input` needs `--yes` from a person. |
 
 `--write-env .env` writes `IRIS_AGENT_MEMORY_URL`, `IRIS_AGENT_MEMORY_STORE_ID`, `IRIS_AGENT_MEMORY_API_KEY`. Add the same three names to `.env.example` with empty values. Never commit `.env`. Later: `iris agent-memory service list | show STORE_ID | env STORE_ID [--write PATH]` (add `--local` for a local stack).
 
-No access to the Agent Memory service? Create the service in the Redis Cloud console and copy the three values by hand: [Agent Memory settings](https://github.com/redis/redis-iris/blob/main/docs/core/agent-memory.md#settings).
+No access to the Agent Memory service, or on Redis Cloud? The person creates the service in the Redis Cloud console: **Iris → Agent Memory → New service**. They enter a Service name and pick a Database; **Customize settings** sets TTLs, extraction cadence, summarization, custom memory types and exclusions. Then they copy the **Store ID** and a URL from the **URL List** on the store's **Configuration** tab, and create an API key with access to the store in **Iris → Access & Identity**. The API key is shown once.
+
+| Console | Env var | Required |
+|---|---|---|
+| URL List | `IRIS_AGENT_MEMORY_URL` | yes |
+| Store ID | `IRIS_AGENT_MEMORY_STORE_ID` | yes |
+| API key | `IRIS_AGENT_MEMORY_API_KEY` | yes |
+| | `IRIS_AGENT_MEMORY_TIMEOUT` | no, seconds, default `30` |
 
 Create once at startup:
 
@@ -134,8 +181,6 @@ Every row is the same two calls, with nothing framework-specific: `hooks = memor
 | Pydantic AI | dynamic `@agent.system_prompt`, user id in deps | after `agent.run` returns | `Tool` / `@agent.tool` |
 | CrewAI | inject into the task or agent inputs before `kickoff` | after `kickoff` returns, or `task_callback` | `@tool` / `BaseTool` |
 | Plain loop | before the model call | after the model call | function definition in the request |
-
-LangGraph code that must keep calling `store.search(("memories", user_id), ...)`: adapt the prototype [`AgentMemoryStore`](https://github.com/redis/redis-iris/blob/main/examples/example/langgraph_glue.py) into the project. Otherwise call `recall` in the node.
 
 Remove the replaced memory code. Keep the checkpointer if the graph uses it for thread state.
 
