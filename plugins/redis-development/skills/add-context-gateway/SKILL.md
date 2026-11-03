@@ -52,10 +52,10 @@ Do this before writing code. Never guess framework APIs from memory.
 ### Install the CLI
 
 ```
-pip install "redis-iris>=1.0.0b2"
+pip install redis-iris
 ```
 
-It needs Python 3.11 or later. On LangGraph, install `"redis-iris[langgraph]>=1.0.0b2"`. Use the release after 1.0.0b2 once it's on PyPI: it's the first that reads `tools call namespace__tool` the way the Gateway names tools. 1.0.0b2 splits a name at the first `.`, so on a search-mode Gateway `tools call crm__lookup_customer` fails with `tool_not_found` whenever a Gateway ID is set (`--gateway-id` or `IRIS_CONTEXT_GATEWAY_ID`). Until then, run `tools call` with `IRIS_CONTEXT_GATEWAY_URL` set and no Gateway ID: the CLI resolves the name through `search_tools`, which works.
+It needs Python 3.11 or later. On LangGraph, install `redis-iris[langgraph]`. If `tools call crm__lookup_customer` fails with `tool_not_found` on a search-mode Gateway while a Gateway ID is set (`--gateway-id` or `IRIS_CONTEXT_GATEWAY_ID`), the installed release splits tool names at the first `.`: upgrade redis-iris, or run `tools call` with `IRIS_CONTEXT_GATEWAY_URL` set and no Gateway ID, so the CLI resolves the name through `search_tools`.
 
 ### In Redis Cloud
 
