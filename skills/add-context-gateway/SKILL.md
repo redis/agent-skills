@@ -229,6 +229,8 @@ gateway = ContextGateway.from_env()
 tools = gateway.model_tools()  # framework-free Tool objects, one per Gateway tool
 ```
 
+TypeScript agents: see the [`@redis-iris/context-gateway` API](https://www.npmjs.com/package/@redis-iris/context-gateway).
+
 On LangGraph, `langchain_tools(gateway.hooks())` from `redis_iris.integrations.langgraph` gives LangChain tools for a `ToolNode`. With Agent Memory or Agent Playbooks also wired, stack them so the model gets every product's tools from one place:
 
 ```python
