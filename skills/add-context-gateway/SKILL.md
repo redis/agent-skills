@@ -33,7 +33,7 @@ Then ask the developer these five questions, nothing more. A shrug takes the def
 | | A Redis database the agent should query | A Context Surface Upstream: `--kind context-surface --surface-database-id ID --data-model FILE` (self-managed, the ID can be left out and defaults from the deployment config. In Redis Cloud the console's Create Context Surface asks for the database). Write the data model first: see "Write the data model" |
 | How many tools does the agent see in total? | Tens (default) | `--tool-exposure-mode full`: every tool, namespaced |
 | | Hundreds, or schemas crowd the prompt | `--tool-exposure-mode search`: the model sees `search_tools` and `run_tool` |
-| Which read-only tools return the same answer for the same arguments? | Lookups, searches, reference data | `policy set UPSTREAM TOOL --cache-ttl DURATION` per tool, and a Gateway with a database and `cache` enabled (see "Gateway switches and database") |
+| Which read-only tools return the same answer for the same arguments? | Lookups, searches, reference data | A Gateway with a database and `cache` enabled (see "Gateway switches and database"), then `policy set UPSTREAM TOOL --cache-ttl DURATION` per tool |
 | | None, or not sure | No cache policies |
 | Which tools return results too large to read whole? | Exports, list endpoints, logs | A Gateway with a `noeviction` database and `compression` enabled (see "Gateway switches and database"). Then the deployment's handle defaults, or `--compression-ttl DURATION` per tool, and `--compression-capture never` for a tool that must always return whole |
 | Does the framework connect to MCP servers itself? | Yes: Claude Code, Cursor, ADK, OpenAI Agents SDK, LangChain MCP adapters | Point its MCP client at the Gateway URL and key |
@@ -55,13 +55,13 @@ Do this before writing code. Never guess framework APIs from memory.
 pip install "redis-iris>=1.0.0b2"
 ```
 
-It needs Python 3.11 or later. Use the release after 1.0.0b2 once it's on PyPI: it's the first that reads `tools call namespace__tool` the way the Gateway names tools. 1.0.0b2 splits a name at the first `.`, so `tools call crm__lookup_customer` with `--gateway-id` and a self-managed control plane fails in search mode.
+It needs Python 3.11 or later. On LangGraph, install `"redis-iris[langgraph]>=1.0.0b2"`. Use the release after 1.0.0b2 once it's on PyPI: it's the first that reads `tools call namespace__tool` the way the Gateway names tools. 1.0.0b2 splits a name at the first `.`, so on a search-mode Gateway `tools call crm__lookup_customer` fails with `tool_not_found` whenever a Gateway ID is set (`--gateway-id` or `IRIS_CONTEXT_GATEWAY_ID`). Until then, run `tools call` with `IRIS_CONTEXT_GATEWAY_URL` set and no Gateway ID: the CLI resolves the name through `search_tools`, which works.
 
 ### In Redis Cloud
 
 Redis Cloud has no API for Gateway setup yet. The control plane takes only the console session, so a `cloud` profile refuses `service`, `upstream` and `policy` commands with `cloud_unsupported`, and the agent can't provision. The developer does it in the console:
 
-1. **Iris → Context Gateways**: create the Gateway, or open an existing one.
+1. **Iris → Context Gateway**: create the Gateway, or open an existing one.
 2. On the Gateway, **Upstreams**: **Add MCP server** for each HTTP server from question 1, or **Create Context Surface** for a Redis database (write the data model first: see "Write the data model").
 3. On the connect step, copy the MCP endpoint and create an agent key.
 4. Put them in `IRIS_CONTEXT_GATEWAY_URL` and `IRIS_CONTEXT_GATEWAY_API_KEY` in the agent's environment or its `.env`. The developer sets them, never the agent: don't ask for the key in chat, and never echo, `cat` or `grep` the env file.
@@ -70,27 +70,29 @@ Add both names to `.env.example` with empty values, and never commit `.env`. The
 
 ### Self-managed
 
-Add `--local` for the local Compose stack, or let the person export `IRIS_CONTEXT_GATEWAY_SERVICE_URL`, `IRIS_CONTEXT_GATEWAY_SERVICE_TOKEN`, `IRIS_IDENTITY_URL` and `IRIS_IDENTITY_TOKEN` ([Provision without the UI](https://github.com/redis/redis-iris/blob/main/docs/user_guides/provision-without-the-ui.md)).
+Let the person export `IRIS_CONTEXT_GATEWAY_SERVICE_URL`, `IRIS_CONTEXT_GATEWAY_SERVICE_TOKEN`, `IRIS_IDENTITY_URL` and `IRIS_IDENTITY_TOKEN`. For the local Compose stack, `--local` after the command (`service list --local`) supplies the service URL and token, but not the Identity URL, so `IRIS_IDENTITY_URL` is still needed for `create` ([Provision without the UI](https://github.com/redis/redis-iris/blob/main/docs/user_guides/provision-without-the-ui.md)).
 
 ```
 iris --json --no-input context-gateway service list
 iris --json --no-input context-gateway service create --name support --tool-exposure-mode full --write-env .env
-iris --json --no-input context-gateway service check <gatewayId from the result>
+set -a; . ./.env; set +a; iris --json --no-input context-gateway service check <gatewayId from the result>
 ```
+
+The Gateway CLI reads `IRIS_CONTEXT_GATEWAY_API_KEY` from the environment only, never from `.env`, so `service check`, `tools` and `handle` fail with `configuration_error` until the key is in the command's environment. Load the file inside the same shell command, as above (or `uv run --env-file .env iris ...`), so the key never reaches your output.
 
 ### Gateway switches and database
 
-Each Gateway has two switches, `cache` and `compression`, each `ENABLED` or `DISABLED`. `service show gw_0123456789abcdef0123456789abcdef` prints both. A tool policy does nothing while its Gateway switch is off, and both features also need the operator's deployment switches (`cache.enabled` and `compression.enabled` in the data plane config, off by default).
+Each Gateway has two switches, `cache` and `compression`, each `ENABLED` or `DISABLED`. `service show gw_0123456789abcdef0123456789abcdef` prints both. A `--cache-ttl` policy is refused with a 400 while the Gateway's `cache` is `DISABLED`, so enable `cache` first. A compression policy is stored but does nothing while `compression` is off. Both features also need the operator's deployment switches (`cache.enabled` and `compression.enabled` in the data plane config, off by default).
 
 | Create | `cache` and `compression` |
 |---|---|
 | With a database: `--database-id ID`, or the on-prem default `defaultDatabases.gatewayDb` | Both `ENABLED` |
 | Without one | Both `DISABLED`. Sending `ENABLED` with no database is a 400 on that field |
-| With a defaulted database that can't take compression (below) | `cache` `ENABLED`, `compression` stored `DISABLED` |
+| With a database that can't take compression (below, or unreachable), and `compression` omitted | `cache` `ENABLED`, `compression` stored `DISABLED` |
 
 | Feature | Works only when |
 |---|---|
-| Caching | Gateway `cache` is `ENABLED`, the tool is read-only, and it has a `--cache-ttl` policy |
+| Caching | Gateway `cache` is `ENABLED`, the tool is cacheable (not marked `readOnlyHint: false` or `destructiveHint: true`; a tool with no hints counts, so opt in only tools you know are read-only), and it has a `--cache-ttl` policy |
 | Compression | Gateway `compression` is `ENABLED`, and the tool's policy is not `--compression-capture never` |
 
 `service create` and `service update` accept `--cache enabled|disabled` and `--compression enabled|disabled` in either case and send uppercase API values. Omitted flags leave the server defaults or existing values unchanged. Adding a database later does not enable either feature, so enable them explicitly:
@@ -103,8 +105,8 @@ To detach the database, pass `--clear-database --cache disabled --compression di
 
 Database requirements:
 
-- **Compression** needs a Gateway database with `maxmemory-policy noeviction` and the JSON module. Enabling it (create, update, or a `databaseId` change while it stays enabled) on another policy is a 400 with an `errors[]` entry pointing to `/compression`, with a reason such as `database lru-db uses allkeys-lru, compression needs noeviction`. An unreachable database is a 503: retry. A create that omits `compression` on an unsuitable default database is not refused: it stores `compression` `DISABLED`, so read it back with `service show`.
-- **Cache only** works on any Gateway database. Handles and cache entries share it, so give it room under `maxmemory`.
+- **Compression** needs a Gateway database with `maxmemory-policy noeviction` and the JSON module. Enabling it (create, update, or a `databaseId` change while it stays enabled) on another policy is a 400 with an `errors[]` entry pointing to `/compression`, with a reason such as `database lru-db uses allkeys-lru, compression needs noeviction`. When you send `compression enabled`, an unreachable database is a 503: retry. A create that omits `compression` on an unsuitable or unreachable database is not refused: it stores `compression` `DISABLED`, so read it back with `service show`.
+- **Cache only** works on any Gateway database. Handles and cache entries share it, so give it room under `maxmemory`. On a cache-only database with an evicting policy, Redis evicts entries and the share limits below don't apply.
 - **Each side has its own share of `maxmemory`.** Handles stop at `compression.max_memory_share` (default 0.5) and the cache at `cache.max_memory_share` (default 0.4), at most 0.95 together, so neither takes the other's room. Both also stop above 90% of `maxmemory`, but that's only a backstop for what the shares miss.
 - **When the handle share is full**, an automatic capture returns the result whole, and an explicit `run_tool_as_handle` answers a tool error: `handle storage is full, release handles or narrow the query`. A full cache share just skips the write and returns the result. Releasing handles frees their share at once, and expired ones free it within about 10 s.
 - **Size the Gateway database for its TTLs.** Handles and cache entries stay until their TTL ends (15 minutes for handles by default), so each share needs room for `creates per second x TTL x stored size`. Don't estimate the stored size from the result size. Measure it: `service diagnose --metrics-url` shows the cache and compression counters, and a rising `skipped_low_memory` or `out_of_memory` outcome means that side is full. Lower `--compression-ttl` or `--cache-ttl`, or raise `maxmemory` or the operator's share, if it doesn't fit.
@@ -115,9 +117,9 @@ Database requirements:
 ### Run the CLI as an agent
 
 1. Always put `--json --no-input` before the product name. You get one JSON value on stdout, errors as one JSON value on stderr, and no prompts.
-2. Read before you write. `service create` has no `--dry-run`, so run `service list` first: it proves the service URL and token, and a `credential_required` or `configuration_error` there means hand off (step 4) before anything is created.
+2. Read before you write. `service create` has no `--dry-run`, so run `service list` first: it proves the service URL and token, and a `configuration_error`, `unauthenticated` or `forbidden` there means hand off (step 4) before anything is created.
 3. Always deliver keys with `--write-env PATH` (or `--write PATH` on `service key`). Never run `create` or `key` with `--json` and no file: that prints the key into your transcript.
-4. On `credential_required`, stop. Tell the person which variable to set (`details.env`) and link `details.obtain`. Never ask for a secret in chat, pass one on the command line, or echo, `cat` or `grep` an env file.
+4. On `configuration_error`, `unauthenticated` or `forbidden`, stop. Tell the person which variable to set (the message, or `details.env`) and link `details.obtain` when present. Never ask for a secret in chat, pass one on the command line, or echo, `cat` or `grep` an env file.
 5. Upstream secrets go in by reference only: `env:NAME`, `file:PATH` or `-`. Ask the person to export the variable; never write the secret yourself.
 6. On `resource_exists`, ask whether to `--reuse` `details.gatewayId` or pick another name. Never delete to retry. If `create` fails with `details.created: true`, re-run with `--reuse --write-env`.
 
@@ -125,7 +127,7 @@ Database requirements:
 
 `--write-env .env` writes `IRIS_CONTEXT_GATEWAY_URL` (the Gateway's MCP endpoint), `IRIS_CONTEXT_GATEWAY_ID` and `IRIS_CONTEXT_GATEWAY_API_KEY`. Add the same three names to `.env.example` with empty values. Never commit `.env`.
 
-Add the Upstreams (question 1). `IRIS_CONTEXT_GATEWAY_ID` is not a secret; pass `--gateway-id` with the `gatewayId` `create` printed (`gw_` and 32 hex characters) rather than sourcing `.env`:
+Add the Upstreams (question 1). `IRIS_CONTEXT_GATEWAY_ID` is not a secret; pass `--gateway-id` with the `gatewayId` `create` printed (`gw_` and 32 hex characters):
 
 ```
 iris --json --no-input context-gateway --gateway-id gw_0123456789abcdef0123456789abcdef upstream add --name CRM --endpoint https://crm.example.com/mcp --bearer-secret env:CRM_TOKEN
@@ -133,7 +135,7 @@ iris --json --no-input context-gateway --gateway-id gw_0123456789abcdef012345678
 iris --json --no-input context-gateway --gateway-id gw_0123456789abcdef0123456789abcdef upstream tools crm
 ```
 
-An `upstream add` that prints `initialCatalogFailure` still created the Upstream: 422 means the Upstream refused the credentials (fix with `upstream update`, then `upstream refresh`), 424 means discovery failed (check the control plane can reach the endpoint), 408 means it timed out.
+An `upstream add` that prints `initialCatalogFailure` still created the Upstream: 422 means the Upstream refused the credentials (fix with `upstream update`, then `upstream refresh`), 424 means discovery failed (check the control plane can reach the endpoint), 408 means it timed out. For a `--kind context-surface` Upstream, 422 means the Surface database refused the control plane's login and 424 means tool generation failed (for example a Redis `NOPERM`): both are fixed in the deployment config, then `upstream refresh`.
 
 ### Write the data model
 
@@ -148,9 +150,9 @@ A Context Surface Upstream takes a data model: JSON that says which records the 
 
 Rules:
 
-- Every `{placeholder}` in the key template is a field with `is_key_component: true`. A key field takes no index. The text before the first placeholder (`order:`) must be a literal: it is the index prefix.
+- Every `{placeholder}` in the key template is a field with `is_key_component: true`. A key field takes no index. The text before the first placeholder (`order:`) must be a literal that ends in `:`, `_`, `-`, `/` or `.`: it is the index prefix.
 - Field `type` is `str`, `int`, `float`, `bool`, `list[str]`, `list[float]`, `geo`, `timestamp` or `object`. `object` can't be indexed.
-- Records are stored as RedisJSON by default. `"document_type": "hash"` stores an entity as a Hash, for scalar fields only.
+- Records are stored as RedisJSON by default. `"document_type": "hash"` stores an entity as a Hash: no `object` fields, `list[float]` only with a vector index, and key fields must be scalar.
 - The Gateway refuses `acl_field_mappings` with a 400, so leave it out: every agent key with access to the Gateway reads every record of the Surface. The example file in the iris repo carries it, so don't copy that one.
 
 Pick an index by how the agent asks:
@@ -159,7 +161,7 @@ Pick an index by how the agent asks:
 |---|---|---|---|
 | `tag` | `str`, `bool`, `list[str]` | Exact filters: status, IDs, categories. `allowed_values` lists the legal values | `filter_<entity>` |
 | `text` | `str` | Full text over names, descriptions, notes. `weight` ranks fields, `no_stem` turns stemming off | `search_<entity>_by_text` |
-| `numeric` | `int`, `float`, `timestamp` | Ranges and sorting. `sortable: true` is required for a `timestamp` and for `list_` | `filter_<entity>`, `list_<entity>`, `summarize_<entity>` |
+| `numeric` | `int`, `float`, `timestamp` | Ranges and sorting. Sortable unless you set `sortable: false`; `list_` needs a sortable field, and a `timestamp` can't be `sortable: false` | `filter_<entity>`, `list_<entity>`, `summarize_<entity>` |
 | `vector` | `list[float]` | Meaning-based search. Needs `vector_dim` and `distance_metric` (`cosine`, `euclidean`, `dot_product`), and an embedding service on the data plane. Redis Cloud can't embed queries yet, so these tools fail there today | `search_<entity>_by_<field>_semantic` when `source_field` names the text field it embeds, else `_similarity` |
 | `geo` | `geo` | Records within a radius | `find_<entity>_near_<field>` |
 
@@ -232,7 +234,7 @@ graph.add_node("tools", ToolNode(langchain_tools(hooks)))
 app = attach(hooks, graph).compile()
 ```
 
-`gateway.call("crm__lookup_customer", id="cust-1042")` calls a tool directly (`result.data`, `result.is_error`), and `gateway.call_as_handle(...)` keeps a large result on the Gateway as a `Handle` (`page()`, `query()`, `count()`, `aggregate()`, `release()`). Async twins: `atools`, `acall` and so on.
+`gateway.call("crm__lookup_customer", id="cust-1042")` calls a tool directly (`result.data`, `result.is_error`), and `gateway.call_as_handle(...)` keeps a large result on the Gateway as a `Handle`. The reads are on the gateway: `gateway.page(handle, limit=5)`, `gateway.query(handle, ...)`, `count`, `aggregate`, `describe` and `gateway.release(handle)`. Async twins: `atools`, `acall`, `apage` and so on.
 
 Then remove what the Gateway replaced: each per-server MCP entry, each per-server secret from the agent's environment (the Gateway holds them now), and any hand-written namespacing or tool filtering.
 
@@ -240,7 +242,7 @@ Tool names change to `namespace__tool`, for example `crm__lookup_customer`. Upda
 
 ### Handles from the agent's side
 
-With Gateway `compression` enabled, `tools/list` adds seven tools, in both exposure modes: `run_tool_as_handle`, `describe_result`, `count_results`, `page_results`, `query_results`, `aggregate_results` and `release_results`. A tool result over 32 KiB then comes back as a small stub holding a handle (`h_` and 32 hex digits) with a preview and the next step, in place of the full payload. A tool with `--compression-capture never` always returns whole. Tell the agent in its prompt to read a handle with the tools below and never to ask for the whole payload again.
+With Gateway `compression` enabled, `tools/list` adds seven tools, in both exposure modes: `run_tool_as_handle`, `describe_result`, `count_results`, `page_results`, `query_results`, `aggregate_results` and `release_results`. A tool result over 32 KiB then comes back as a small stub holding a handle (`h_` and 32 hex digits) with a preview and the next step, in place of the full payload. In full mode, a tool that declares an `outputSchema` returns whole. A tool with `--compression-capture never` returns whole, and `run_tool_as_handle` on it is a tool error telling the agent to call the tool directly. Tell the agent in its prompt to read a handle with the tools below and never to ask for the whole payload again.
 
 | The agent wants | Call |
 |---|---|
@@ -252,7 +254,7 @@ With Gateway `compression` enabled, `tools/list` adds seven tools, in both expos
 | To read items in order, or a text result by bytes | `page_results` with `offset` and `limit` |
 | To free the memory early | `release_results` |
 
-A handle expires after the deployment's TTL (15 minutes by default) or the tool's `--compression-ttl`, and a read never extends it. An expired, released or another key's handle is a Gateway refusal with reason `unknown_handle`, which the CLI's `handle` commands report as `handle_not_found` (exit 1): call the tool again for a new one. A partial handle (one page of a longer answer) says so in its `completeness` and `warning`. To fetch the next page, call `run_tool_as_handle` again with the paging arguments. With compression `DISABLED`, the seven tools are gone from `tools/list`. From the SDK, `gateway.call_as_handle(...)` returns a `Handle`, and `redis_context_gateway.mcp.HANDLE_TOOLS` lists the seven names.
+A handle expires after the deployment's TTL (15 minutes by default) or the tool's `--compression-ttl`, and a read never extends it. An expired, released or another key's handle is a Gateway refusal with reason `unknown_handle`, which the CLI's `handle` commands report as `handle_not_found` (exit 1): call the tool again for a new one. A partial handle (one page of a longer answer) says so in its `completeness` and `warning`. To fetch the next page, call `run_tool_as_handle` again with the paging arguments. A Context Surface capture reads every page itself, up to the deployment limits (10,000 rows), so one large Surface query can fill handle storage (known issue MOD-20735). With compression `DISABLED`, the seven tools are gone from `tools/list`. From the SDK, `gateway.call_as_handle(...)` returns a `Handle`, and `redis_context_gateway.mcp.HANDLE_TOOLS` lists the seven names.
 
 ## 5. Verify
 
