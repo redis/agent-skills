@@ -162,7 +162,7 @@ Pick an index by how the agent asks:
 | `tag` | `str`, `bool`, `list[str]` | Exact filters: status, IDs, categories. `allowed_values` lists the legal values | `filter_<entity>` |
 | `text` | `str` | Full text over names, descriptions, notes. `weight` ranks fields, `no_stem` turns stemming off | `search_<entity>_by_text` |
 | `numeric` | `int`, `float`, `timestamp` | Ranges and sorting. Sortable unless you set `sortable: false`; `list_` needs a sortable field, and a `timestamp` can't be `sortable: false` | `filter_<entity>`, `list_<entity>`, `summarize_<entity>` |
-| `vector` | `list[float]` | Meaning-based search. Needs `vector_dim` and `distance_metric` (`cosine`, `euclidean`, `dot_product`), and an embedding service on the data plane. Redis Cloud can't embed queries yet, so these tools fail there today | `search_<entity>_by_<field>_semantic` when `source_field` names the text field it embeds, else `_similarity` |
+| `vector` | `list[float]` | Meaning-based search. Needs `vector_dim` and `distance_metric` (`cosine`, `euclidean`, `dot_product`), and an embedding service on the data plane. Redis Cloud can't embed queries yet, so these tools fail there today | `search_<entity>_by_<field>_semantic` when `source_field` names the text field it embeds, else `_similarity`. Also `search_<entity>_by_<field>_hybrid` (text and vector ranked together) when that text field has a `text` index and the Surface Redis supports native hybrid search over RESP3 |
 | `geo` | `geo` | Records within a radius | `find_<entity>_near_<field>` |
 
 An entity whose key template has one placeholder also gets `get_<entity>_by_id`, and `count_<entity>` counts records. Across entities, the set tools `intersect_results`, `union_results`, `except_results` and `expand_results` combine filters and follow relationships. Each tool is read-only and appears as `<namespace>__<tool>`, for example `orders__search_order_by_text`. A tool only exists when the model has the field it needs: no `text` index, no text search.
@@ -198,6 +198,12 @@ Set policies (questions 3 and 4). `upstream tools` says which tools are cacheabl
 iris --json --no-input context-gateway --gateway-id gw_0123456789abcdef0123456789abcdef policy set crm search_customers --cache-ttl 5m
 iris --json --no-input context-gateway --gateway-id gw_0123456789abcdef0123456789abcdef policy set crm export_orders --compression-ttl 1h
 ```
+
+### Rotate keys and secrets
+
+- New agent key: `service key gw_0123456789abcdef0123456789abcdef --write .env` mints one and upserts it into the file. Restart the agent so it reads the new value.
+- A second developer on the same Gateway: `service env gw_0123456789abcdef0123456789abcdef --write .env` writes the URL and ID without minting a key, then `service key` gives them their own.
+- New Upstream secret: have the person export the new value, then `upstream update crm --bearer-secret env:CRM_TOKEN` (or `--header-secret`) and `upstream refresh crm`.
 
 Full reference: [Context Gateway CLI](https://github.com/redis/redis-iris/blob/main/docs/user_guides/context-gateway-cli.md).
 
@@ -240,6 +246,8 @@ Then remove what the Gateway replaced: each per-server MCP entry, each per-serve
 
 Tool names change to `namespace__tool`, for example `crm__lookup_customer`. Update any prompt text or code that names a tool.
 
+In search mode the model never sees those names in `tools/list`. It calls `search_tools` with a `query` (and an optional `limit`, default 5), gets back full MCP tool definitions, and runs one with `run_tool`: `tool` holds the `upstreamId` and `originalName` from the match, and `toolArgs` the arguments. Prompt text should describe the task a tool does, not name the tool. Code that calls a tool by name keeps working through the SDK and CLI, which resolve `namespace__tool` for you.
+
 ### Handles from the agent's side
 
 With Gateway `compression` enabled, `tools/list` adds seven tools, in both exposure modes: `run_tool_as_handle`, `describe_result`, `count_results`, `page_results`, `query_results`, `aggregate_results` and `release_results`. A tool result over 32 KiB then comes back as a small stub holding a handle (`h_` and 32 hex digits) with a preview and the next step, in place of the full payload. In full mode, a tool that declares an `outputSchema` returns whole. A tool with `--compression-capture never` returns whole, and `run_tool_as_handle` on it is a tool error telling the agent to call the tool directly. Tell the agent in its prompt to read a handle with the tools below and never to ask for the whole payload again.
@@ -254,9 +262,13 @@ With Gateway `compression` enabled, `tools/list` adds seven tools, in both expos
 | To read items in order, or a text result by bytes | `page_results` with `offset` and `limit` |
 | To free the memory early | `release_results` |
 
+When `run_tool_as_handle` answers `handle storage is full, release handles or narrow the query`, the agent should call `release_results` on handles it no longer needs, then retry with a narrower query or call the tool directly.
+
 A handle expires after the deployment's TTL (15 minutes by default) or the tool's `--compression-ttl`, and a read never extends it. An expired, released or another key's handle is a Gateway refusal with reason `unknown_handle`, which the CLI's `handle` commands report as `handle_not_found` (exit 1): call the tool again for a new one. A partial handle (one page of a longer answer) says so in its `completeness` and `warning`. To fetch the next page, call `run_tool_as_handle` again with the paging arguments. A Context Surface capture reads every page itself, up to the deployment limits (10,000 rows), so one large Surface query can fill handle storage (known issue MOD-20735). With compression `DISABLED`, the seven tools are gone from `tools/list`. From the SDK, `gateway.call_as_handle(...)` returns a `Handle`, and `redis_context_gateway.mcp.HANDLE_TOOLS` lists the seven names.
 
 ## 5. Verify
+
+Checks 1, 3, 4, 6 and 7 need the agent key in the command's environment: run them as `set -a; . ./.env; set +a; iris ...` in one shell command, never by printing the file.
 
 In Redis Cloud, run 3, 4, 8 and 9 without `--gateway-id`: the `tools` commands use `IRIS_CONTEXT_GATEWAY_URL` and the agent key. The other checks call the control plane or need cache and handles, which cloud doesn't offer.
 
