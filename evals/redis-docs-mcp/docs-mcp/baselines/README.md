@@ -1,6 +1,6 @@
 # docs-mcp Baseline
 
-Updated: 2026-08-24T08:30:10.470Z
+Updated: 2026-11-04T14:23:36.809Z
 
 Skill: `redis-docs-mcp`
 
