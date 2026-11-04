@@ -1,6 +1,12 @@
 ---
 name: redis-docs-mcp
-description: Working with the redis-docs MCP server (search / fetch / ask at redis.io/mcp) — how its index is shaped and how to read what it returns. Use when those tools are available and you are about to look something up in the Redis documentation, or when a result is confusing — fetch returned one short section instead of a page, several hits share one url, ids look like #sec:w1, metadata.version reads 1.0.0, a search came back empty, or ask was rate-limited or said the docs do not cover it. Also covers what redis.io does and does not index.
+description: >-
+  Working with the redis-docs MCP server (search / fetch / ask at redis.io/mcp) — how its index is
+  shaped and how to read what it returns. Use when those tools are available and you are about to
+  look something up in the Redis documentation, or when a result is confusing — fetch returned one
+  short section instead of a page, several hits share one url, ids look like #sec:w1,
+  metadata.version reads 1.0.0, a search came back empty, or ask was rate-limited or said the docs
+  do not cover it. Also covers what redis.io does and does not index.
 license: MIT
 metadata:
   author: Redis, Inc.
@@ -25,7 +31,7 @@ The tool descriptions say `search` returns "pages" and `fetch` returns "one Redi
 
 | Shape | Example | What `fetch` returns |
 |---|---|---|
-| Bare page | `commands/expire` | The whole page — ~7 KB for EXPIRE, examples and appendices included |
+| Bare page | `commands/expire` | The whole page — ~8.5 KB for EXPIRE, examples and appendices included |
 | Named anchor | `develop/using-commands/keyspace#sec:key-expiration` | That section |
 | Ordinal window | `develop/ai/search-and-query/advanced-concepts/expiration#sec:w0` | That window, ~1–2 KB |
 | Anchor + window | `develop/clients/jedis/connect#sec:configure-a-connection-pool-w0` | That window of that section |
@@ -38,7 +44,7 @@ What follows from this:
 - **Snippets are truncated prefixes of the body, not summaries.** When one cuts off mid-word right at the interesting part, `fetch` on that id is guaranteed to contain the continuation — no need to re-search with different words.
 - **Cite the page `url` and name the section in prose.** `#sec:w1` is an index address, not a web anchor; only the named-anchor shape yields a url with a usable fragment.
 
-Link targets are stripped from returned text — `` [`DEL`]( ) `` — so a link cannot be followed out of a fetched body. `search` for the term instead.
+Links in returned text point at source files — `` [`DEL`](/content/commands/del.md) `` — which are neither web URLs nor `fetch` ids. Don't cite them or turn them into ids; `search` for the term instead.
 
 ## 2. `metadata.version` means "added in", not "current as of"
 
@@ -50,11 +56,11 @@ So never answer "did this change in Redis N?" from `metadata.version`. Read it f
 
 The index is redis.io only — but that is broader than it sounds. Per-language client **usage guides** are indexed and returned (`develop/clients/redis-py/connect#sec:…`, `develop/clients/jedis/connect#sec:…`), along with the `integrate/…` pages, the Redis Software and Redis Cloud operational docs under `operate/…`, and the Kubernetes operator's generated CRD reference. So search first, including for client-library and Enterprise questions.
 
-The gap worth knowing is symbol-level reference for client libraries: search for how to use a connection pool and you will find it, search for every keyword argument on its constructor and you will not. That lives in the library's own API reference or source.
+Details often sit past the snippet. A search for redis-py's `max_connections` returns `develop/clients/redis-py/async#sec:connection-pools` with a snippet that never mentions it, yet the fetched section documents it. For a library's complete signatures, its own API reference or source is the authority.
 
 Genuinely outside the index: GitHub issues and discussions, package-manager pages (PyPI, npm, Maven), and third-party posts.
 
-When a search misses, that means "not on redis.io" — not "does not exist". Say which one you mean.
+So `fetch` the relevant hits before concluding anything is missing, and even then report it as "not found in the results I retrieved" — never as "not on redis.io" or "does not exist".
 
 ## 4. `ask` costs more than it looks
 
