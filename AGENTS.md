@@ -13,7 +13,14 @@ A collection of agentskills.io-compliant skills for AI coding agents working wit
 - [redis-clustering](skills/redis-clustering/) — hash tags, multi-key ops, read replicas
 - [redis-security](skills/redis-security/) — AUTH, TLS, ACLs, network exposure, command renaming
 - [redis-observability](skills/redis-observability/) — INFO, SLOWLOG, MEMORY DOCTOR, FT.PROFILE, Redis Insight
-- [iris-development](skills/iris-development/) — Iris Redis Agent Memory: provisioning, SDK auth, session events, long-term memory
+- [add-redis-iris](skills/add-redis-iris/) — Redis Iris entry point: detects the framework, routes to a product skill
+- [add-agent-memory](skills/add-agent-memory/) — Redis Iris Agent Memory: provision, recall, write-back
+- [add-agent-playbooks](skills/add-agent-playbooks/) — Redis Iris Agent Playbooks: published Skills and approved FAQs
+- [add-context-gateway](skills/add-context-gateway/) — Redis Iris Context Gateway: one MCP endpoint for every upstream server
+- [add-intent-router](skills/add-intent-router/) — Redis Iris Intent Router: semantic routing by example phrasings
+- [add-lens](skills/add-lens/) — Redis Iris Lens: per-turn tracing of LLM calls, tools, and retrievals
+
+The `add-*` Iris skills are copied from [redis/redis-iris](https://github.com/redis/redis-iris/tree/main/skills), which is their source of truth; edit them there and re-copy, adding this repo's `license` and `metadata` frontmatter and turning `../<skill>/SKILL.md` links into plain skill names (the validator rejects links that leave the skill directory). They also drop every link into `redis/redis-iris`, which is private: public users and the link validator get HTTP 404. Instead the copies inline what the agent needs (the `iris.toml` layout, the CLI error-code table, per-product identity tokens, the Agent Memory console steps, the uv pre-release fix) and point to `iris <product> <command> --help` for CLI detail. Re-apply these edits on every re-copy, or `validate:skill-structure` fails.
 
 ## Where Skills Live
 
