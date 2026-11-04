@@ -15,7 +15,12 @@ Skills follow the [Agent Skills](https://agentskills.io/) format.
 | [redis-clustering](skills/redis-clustering/) | Hash tags for multi-key operations, avoiding CROSSSLOT, reading from replicas. |
 | [redis-security](skills/redis-security/) | Authentication and TLS, ACL-based least privilege, network bind, firewall, command renaming. |
 | [redis-observability](skills/redis-observability/) | Key metrics (INFO), debugging commands (SLOWLOG, MEMORY DOCTOR, FT.PROFILE), Redis Insight. |
-| [iris-development](skills/iris-development/) | Iris: Redis Agent Memory — provisioning, SDK auth, session events, long-term memory search, async promotion. |
+| [add-redis-iris](skills/add-redis-iris/) | Redis Iris: detect the agent's framework and route to the right Iris product skill. Start here. |
+| [add-agent-memory](skills/add-agent-memory/) | Redis Iris Agent Memory: provision with the `iris` CLI, wire recall and write-back so the agent remembers users across sessions. |
+| [add-agent-playbooks](skills/add-agent-playbooks/) | Redis Iris Agent Playbooks: publish procedures (Skills) and approved answers (FAQs), answer from published content only. |
+| [add-context-gateway](skills/add-context-gateway/) | Redis Iris Context Gateway: put the agent's MCP servers behind one endpoint and one key, with tool caching and result handles. |
+| [add-intent-router](skills/add-intent-router/) | Redis Iris Intent Router: replace hand-written routing with example phrasings and a score threshold. |
+| [add-lens](skills/add-lens/) | Redis Iris Lens: trace every agent turn (LLM calls, tokens, tools, retrievals) in the Lens UI. |
 
 ## Installation
 
@@ -30,8 +35,7 @@ npx skills add redis/agent-skills
 You can also install the skills as a Claude Code plugin:
 
 ```
-/plugin marketplace add redis/agent-skills
-/plugin install redis-development@redis
+/plugin install redis-development@claude-plugins-official
 ```
 
 ### ChatGPT and Codex Plugin
@@ -39,8 +43,9 @@ You can also install the skills as a Claude Code plugin:
 The distributable plugin package for ChatGPT and Codex lives at
 [`plugins/redis-development/`](plugins/redis-development/). It includes the
 required `.codex-plugin/plugin.json` manifest and real copies of every skill.
-Archive that directory—not the repository root—when preparing a skills-only
-submission to the OpenAI plugin submission portal.
+Archive that directory—not the repository root—when preparing a submission to
+the OpenAI plugin submission portal. The archive includes the shared `.mcp.json`,
+so it carries the Redis Docs MCP server as well as the skills.
 
 ### Cursor Plugin
 
@@ -54,23 +59,26 @@ The top-level `skills/` directory remains the source of truth. `plugins/redis-de
 
 ### Redis Docs MCP server
 
-The ChatGPT, Codex, and Claude Code plugin package bundles the official Redis documentation MCP
+The Claude Code, ChatGPT and Codex, and Cursor plugins bundle the official Redis documentation MCP
 server at `https://redis.io/mcp`, so an agent can look up authoritative docs instead of relying on
 stale training data. It needs **no credentials, no local Redis, and no configuration** — a public,
 read-only, hosted endpoint that connects automatically once the plugin is enabled.
 
-Three read-only tools: `search` (query the docs index), `fetch` (retrieve a section by id), and
+Three read-only tools: `search` (query the docs index), `fetch` (retrieve a page or a section by its id), and
 `ask` (a grounded answer with citations).
+
+Each tool call sends the agent's query text to redis.io. If that conflicts with your data
+policy, disable the `redis-docs` server in your client's MCP settings (in Claude Code, `/mcp`).
 
 | Channel | Carries the MCP server? |
 |---------|-------------------------|
 | Claude Code plugin | Yes |
 | ChatGPT / Codex plugin | Yes |
-| Cursor plugins | Not yet — Cursor packages one plugin per skill, so it arrives with the `redis-docs-mcp` skill |
+| Cursor plugin | Yes |
 | Agent Skills CLI (`npx skills add`) | No — the Agent Skills format has no MCP component |
 
-Both manifests point at one shared [`plugins/redis-development/.mcp.json`](plugins/redis-development/.mcp.json).
-To add the server to any MCP client by hand:
+All three manifests point at one shared [`plugins/redis-development/.mcp.json`](plugins/redis-development/.mcp.json).
+To add the server to Claude Code without the plugin:
 
 ```bash
 claude mcp add --transport http redis-docs https://redis.io/mcp

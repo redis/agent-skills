@@ -34,7 +34,7 @@ npm run sync:plugins            # regenerate the copies (the hook runs this and 
 npm run validate:plugin-skills  # what CI runs; fails on drift or on any symlink
 ```
 
-Never hand-edit anything under `plugins/redis-development/skills/` — the next sync overwrites it. `.cursor-plugin/` is deliberately not vendored, since Cursor reads it from `skills/`. Full rationale in [AGENTS.md](AGENTS.md#where-skills-live).
+Never hand-edit anything under `plugins/redis-development/skills/` — the next sync overwrites it. Full rationale in [AGENTS.md](AGENTS.md#where-skills-live).
 
 ## Skill Structure
 

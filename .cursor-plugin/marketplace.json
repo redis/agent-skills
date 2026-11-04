@@ -6,81 +6,16 @@
   },
   "metadata": {
     "description": "Official Redis plugins for Cursor",
-    "version": "1.5.0",
-    "pluginRoot": "skills"
+    "version": "1.7.0"
   },
   "plugins": [
     {
-      "name": "redis-core",
-      "source": "redis-core",
-      "description": "Core Redis modeling — data structures, key naming, memory and TTL, atomic primitives, JSON vs Hash, Streams vs Pub/Sub.",
-      "version": "1.0.0",
+      "name": "redis-development",
+      "source": "./plugins/redis-development",
+      "description": "Redis development best practices — data structures, Redis Search (lexical + vector + hybrid retrieval), caching, and performance optimization, plus Redis Iris (Agent Memory, Agent Playbooks, Context Gateway, Intent Router, Lens), and live lookup of the official redis.io documentation.",
+      "version": "1.7.0",
       "category": "database",
-      "tags": ["redis", "database", "data-modeling"]
-    },
-    {
-      "name": "redis-connections",
-      "source": "redis-connections",
-      "description": "Redis client and connection guidance — pooling, multiplexing, pipelining, client-side caching, timeouts, slow commands.",
-      "version": "1.0.0",
-      "category": "database",
-      "tags": ["redis", "performance", "connections"]
-    },
-    {
-      "name": "redis-search",
-      "source": "redis-search",
-      "description": "Redis Search — FT.CREATE schema, FT.SEARCH / FT.AGGREGATE / FT.HYBRID, DIALECT 2, vector similarity (HNSW / FLAT), hybrid retrieval, RAG pipelines, zero-downtime index updates.",
-      "version": "1.0.0",
-      "category": "database",
-      "tags": ["redis", "search", "query-engine", "vector-search", "hybrid", "rag", "ai"]
-    },
-    {
-      "name": "redis-semantic-cache",
-      "source": "redis-semantic-cache",
-      "description": "Redis LangCache — cache-aside flow for LLM responses, similarity threshold tuning, per-task cache separation.",
-      "version": "1.0.0",
-      "category": "database",
-      "tags": ["redis", "semantic-cache", "langcache", "ai"]
-    },
-    {
-      "name": "redis-clustering",
-      "source": "redis-clustering",
-      "description": "Redis Cluster and replication — hash tags for multi-key operations, avoiding CROSSSLOT, reading from replicas.",
-      "version": "1.0.0",
-      "category": "database",
-      "tags": ["redis", "cluster", "replication"]
-    },
-    {
-      "name": "redis-security",
-      "source": "redis-security",
-      "description": "Redis security hardening — authentication and TLS, ACL-based least privilege, network bind, firewall, command renaming.",
-      "version": "1.0.0",
-      "category": "database",
-      "tags": ["redis", "security", "acl", "tls"]
-    },
-    {
-      "name": "redis-observability",
-      "source": "redis-observability",
-      "description": "Redis observability — key metrics to monitor (INFO), debugging commands (SLOWLOG, MEMORY DOCTOR, FT.PROFILE), Redis Insight.",
-      "version": "1.0.0",
-      "category": "database",
-      "tags": ["redis", "observability", "monitoring"]
-    },
-    {
-      "name": "redis-docs-mcp",
-      "source": "redis-docs-mcp",
-      "description": "Official Redis documentation lookup over MCP — search the redis.io docs index, fetch the exact section, or get a grounded answer with citations, instead of relying on stale model recall.",
-      "version": "1.0.0",
-      "category": "database",
-      "tags": ["redis", "documentation", "mcp", "search", "reference"]
-    },
-    {
-      "name": "iris-development",
-      "source": "iris-development",
-      "description": "Iris: Redis Agent Memory — provisioning a memory service, authenticating the SDK, appending session events, creating and searching long-term memories, and the async promotion contract.",
-      "version": "1.0.0",
-      "category": "ai",
-      "tags": ["iris", "redis", "agent-memory", "ai", "llm"]
+      "tags": ["redis", "database", "caching", "vector-search", "performance", "documentation"]
     }
   ]
 }
