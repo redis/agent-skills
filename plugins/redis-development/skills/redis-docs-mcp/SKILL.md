@@ -64,9 +64,8 @@ So `fetch` the relevant hits before concluding anything is missing, and even the
 
 ## 4. `ask` costs more than it looks
 
-- **~4 requests/minute per IP**, and that budget is shared by everyone behind the same NAT, so an office or a CI runner can exhaust it collectively.
-- **A hard output cap**, so it truncates on broad questions. Ask one narrow thing at a time.
-- **On a refusal, do not retry it reworded.** "The documentation does not cover this" is a grounded result, not a parsing failure. Fall back to `search` + `fetch`, which touches no model and draws on a separate, looser budget.
+- **Rate-limited per IP at a low per-minute budget**, shared by everyone behind the same NAT, so an office or a CI runner can exhaust it collectively. On a rate-limit error, back off before retrying rather than retrying straight away, and ask one narrow question at a time.
+- **On a refusal, do not retry it reworded.** "The documentation does not cover this" is a grounded result, not a parsing failure. Fall back to `search` + `fetch` instead.
 - **`ask` → `sources[].id` → `fetch`** when you want the primary source behind a synthesized answer.
 
 Query text from every tool reaches Redis, and from `ask` the model provider behind the gateway too, so prefer a generic question about the Redis command or behavior over pasting in proprietary code.
