@@ -42,7 +42,7 @@ What follows from this:
 - **`#sec:wN` ordinals are index windows.** They come back in relevance order, not `w0, w1, w2`. Don't try to reassemble a page out of snippets; `fetch` the section you actually need.
 - **Never construct an id.** Valid ids come from a `search` result or an `ask` result's `sources[].id`. Guessing happens to work for `commands/<name>` and fails on everything with sections.
 - **Snippets are truncated prefixes of the body, not summaries.** When one cuts off mid-word right at the interesting part, `fetch` on that id is guaranteed to contain the continuation — no need to re-search with different words.
-- **Cite the page `url` and name the section in prose.** `#sec:w1` is an index address, not a web anchor; only the named-anchor shape yields a url with a usable fragment.
+- **Cite the page `url` and name the section in prose.** `#sec:w1` is an index address, not a web anchor. Ids with a named anchor (`#sec:<name>`, or `#sec:<name>-wN`) return a url with a usable fragment; bare `#sec:wN` ids don't.
 
 Links in returned text point at source files — `` [`DEL`](/content/commands/del.md) `` — which are neither web URLs nor `fetch` ids. Don't cite them or turn them into ids; `search` for the term instead.
 
