@@ -58,7 +58,7 @@ The top-level `skills/` directory remains the source of truth. `plugins/redis-de
 
 ### Redis Docs MCP server
 
-The ChatGPT, Codex, and Claude Code plugin package bundles the official Redis documentation MCP
+The Claude Code, ChatGPT and Codex, and Cursor plugins bundle the official Redis documentation MCP
 server at `https://redis.io/mcp`, so an agent can look up authoritative docs instead of relying on
 stale training data. It needs **no credentials, no local Redis, and no configuration** — a public,
 read-only, hosted endpoint that connects automatically once the plugin is enabled.
@@ -70,10 +70,10 @@ Three read-only tools: `search` (query the docs index), `fetch` (retrieve a sect
 |---------|-------------------------|
 | Claude Code plugin | Yes |
 | ChatGPT / Codex plugin | Yes |
-| Cursor plugin | Not yet |
+| Cursor plugin | Yes |
 | Agent Skills CLI (`npx skills add`) | No — the Agent Skills format has no MCP component |
 
-Both manifests point at one shared [`plugins/redis-development/.mcp.json`](plugins/redis-development/.mcp.json).
+All three manifests point at one shared [`plugins/redis-development/.mcp.json`](plugins/redis-development/.mcp.json).
 To add the server to any MCP client by hand:
 
 ```bash
