@@ -24,7 +24,7 @@
   "interface": {
     "displayName": "Redis Development",
     "shortDescription": "Build reliable, production-ready Redis applications",
-    "longDescription": "Design, implement, review, and troubleshoot Redis applications with focused guidance for data structures, connections, Redis Search, semantic caching, clustering, security, observability, and Redis Iris (Agent Memory, Agent Playbooks, Context Gateway, Intent Router, Lens).",
+    "longDescription": "Design, implement, review, and troubleshoot Redis applications with focused guidance for data structures, connections, Redis Search, semantic caching, clustering, security, observability, and Redis Iris (Agent Memory, Agent Playbooks, Context Gateway, Intent Router, Lens), plus live lookup of the official redis.io documentation.",
     "developerName": "Redis",
     "category": "Developer Tools",
     "capabilities": [

@@ -124,8 +124,10 @@ async function collectMcpServerMaps(pluginDir, value, pluginName) {
     if (config === null) {
       return [];
     }
-    // A file that parses but carries no server map (for example Codex's
-    // snake_case "mcp_servers") would otherwise skip every check below.
+    // A file that parses but carries no server map would otherwise skip every
+    // check below. A likely way to get there: copying the snake_case
+    // "mcp_servers" key from Codex's config.toml, where plugin .mcp.json files
+    // (Codex's included) use camelCase "mcpServers".
     const servers = config?.mcpServers;
     if (!servers || typeof servers !== "object" || Array.isArray(servers)) {
       addError(

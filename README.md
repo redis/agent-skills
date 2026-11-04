@@ -64,8 +64,11 @@ server at `https://redis.io/mcp`, so an agent can look up authoritative docs ins
 stale training data. It needs **no credentials, no local Redis, and no configuration** — a public,
 read-only, hosted endpoint that connects automatically once the plugin is enabled.
 
-Three read-only tools: `search` (query the docs index), `fetch` (retrieve a section by id), and
+Three read-only tools: `search` (query the docs index), `fetch` (retrieve a page or a section by its id), and
 `ask` (a grounded answer with citations).
+
+Each tool call sends the agent's query text to redis.io. If that conflicts with your data
+policy, disable the `redis-docs` server in your client's MCP settings (in Claude Code, `/mcp`).
 
 | Channel | Carries the MCP server? |
 |---------|-------------------------|
