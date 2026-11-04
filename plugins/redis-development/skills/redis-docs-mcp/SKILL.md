@@ -69,4 +69,4 @@ So `fetch` the relevant hits before concluding anything is missing, and even the
 - **On a refusal, do not retry it reworded.** "The documentation does not cover this" is a grounded result, not a parsing failure. Fall back to `search` + `fetch`, which touches no model and draws on a separate, looser budget.
 - **`ask` → `sources[].id` → `fetch`** when you want the primary source behind a synthesized answer.
 
-Question text reaches Redis and the model provider behind the gateway, so prefer a generic question about the Redis command or behavior over pasting in proprietary code.
+Query text from every tool reaches Redis, and from `ask` the model provider behind the gateway too, so prefer a generic question about the Redis command or behavior over pasting in proprietary code.

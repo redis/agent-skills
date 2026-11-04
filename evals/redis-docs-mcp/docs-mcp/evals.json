@@ -1,7 +1,7 @@
 {
   "skill_name": "redis-docs-mcp",
   "eval_suite": "docs-mcp",
-  "description": "Evals for the redis-docs-mcp skill: reading what the redis.io docs MCP server actually returns. Each prompt embeds the server's own instructions and tool descriptions in both arms, because in production the agent always has them - so the measured delta is the skill's guidance alone, not credit for what the tool descriptions already say. The discriminators are section-scoped ids, the metadata.version trap, and treating a search miss as non-existence.",
+  "description": "Evals for the redis-docs-mcp skill: reading what the redis.io docs MCP server actually returns. Each prompt embeds the server's own instructions and tool descriptions in both arms, because in production the agent always has them - so the measured delta is the skill's guidance alone, not credit for what the tool descriptions already say. It covers five rules: section-scoped ids, never constructing an id, what metadata.version means, fetching before reporting a miss, and ask economics. Ask economics and id construction discriminate most; the metadata.version eval barely does, because models mostly avoid that trap unaided.",
   "evals": [
     {
       "id": 1,
