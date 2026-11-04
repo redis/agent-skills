@@ -17,10 +17,6 @@ import process from "node:process";
 
 const PLUGIN_SKILLS_RELATIVE = path.join("plugins", "redis-development", "skills");
 
-// Cursor reads each `.cursor-plugin/` manifest from `skills/`, where its
-// marketplace `pluginRoot` points, so the published copy leaves it out.
-const EXCLUDED_TOP_LEVEL = new Set([".cursor-plugin"]);
-
 const repoRoot = process.cwd();
 const skillsRoot = path.join(repoRoot, "skills");
 const pluginSkillsRoot = path.join(repoRoot, PLUGIN_SKILLS_RELATIVE);
@@ -48,7 +44,7 @@ async function main() {
   const expected = new Map();
   for (const skill of skills) {
     const skillRoot = path.join(skillsRoot, skill);
-    for (const relative of await listFiles(skillRoot, { applyExcludes: true })) {
+    for (const relative of await listFiles(skillRoot)) {
       expected.set(path.join(skill, relative), path.join(skillRoot, relative));
     }
   }
@@ -90,7 +86,7 @@ async function listSkills() {
 
 // Lists files relative to `root`. A symlink is reported rather than followed:
 // one escaping a plugin root is exactly what stops the plugin from publishing.
-async function listFiles(root, { applyExcludes = false } = {}) {
+async function listFiles(root) {
   const files = [];
   const pending = [""];
 
@@ -100,7 +96,6 @@ async function listFiles(root, { applyExcludes = false } = {}) {
 
     for (const entry of entries) {
       const relativePath = relativeDir ? path.join(relativeDir, entry.name) : entry.name;
-      if (applyExcludes && EXCLUDED_TOP_LEVEL.has(relativePath.split(path.sep)[0])) continue;
 
       if (entry.isSymbolicLink()) {
         problems.push(
