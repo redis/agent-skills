@@ -118,7 +118,7 @@ async function main() {
     }
   }
 
-  for (const field of ["name", "version", "repository", "license"]) {
+  for (const field of ["name", "version", "repository", "license", "mcpServers"]) {
     if (manifest[field] !== claudeManifest[field]) {
       addError(`Codex and Claude plugin manifests must agree on ${field}.`);
     }

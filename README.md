@@ -43,8 +43,9 @@ You can also install the skills as a Claude Code plugin:
 The distributable plugin package for ChatGPT and Codex lives at
 [`plugins/redis-development/`](plugins/redis-development/). It includes the
 required `.codex-plugin/plugin.json` manifest and real copies of every skill.
-Archive that directory—not the repository root—when preparing a skills-only
-submission to the OpenAI plugin submission portal.
+Archive that directory—not the repository root—when preparing a submission to
+the OpenAI plugin submission portal. The archive includes the shared `.mcp.json`,
+so it carries the Redis Docs MCP server as well as the skills.
 
 ### Cursor Plugin
 
@@ -74,7 +75,7 @@ Three read-only tools: `search` (query the docs index), `fetch` (retrieve a sect
 | Agent Skills CLI (`npx skills add`) | No — the Agent Skills format has no MCP component |
 
 All three manifests point at one shared [`plugins/redis-development/.mcp.json`](plugins/redis-development/.mcp.json).
-To add the server to any MCP client by hand:
+To add the server to Claude Code without the plugin:
 
 ```bash
 claude mcp add --transport http redis-docs https://redis.io/mcp
