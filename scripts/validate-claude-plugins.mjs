@@ -120,7 +120,20 @@ async function collectMcpServerMaps(pluginDir, value, pluginName) {
       resolved,
       `${pluginName} mcp config "${value}"`,
     );
-    return config?.mcpServers ? [config.mcpServers] : [];
+    // readJsonFile has already reported a missing or unparseable file.
+    if (config === null) {
+      return [];
+    }
+    // A file that parses but carries no server map (for example Codex's
+    // snake_case "mcp_servers") would otherwise skip every check below.
+    const servers = config?.mcpServers;
+    if (!servers || typeof servers !== "object" || Array.isArray(servers)) {
+      addError(
+        `${pluginName}: mcp config "${value}" must contain an "mcpServers" object.`,
+      );
+      return [];
+    }
+    return [servers];
   }
   if (Array.isArray(value)) {
     const maps = [];
@@ -131,6 +144,11 @@ async function collectMcpServerMaps(pluginDir, value, pluginName) {
   }
   if (value && typeof value === "object") {
     return [value];
+  }
+  if (value !== undefined) {
+    addError(
+      `${pluginName}: "mcpServers" must be a path, an array of paths, or an object.`,
+    );
   }
   return [];
 }
