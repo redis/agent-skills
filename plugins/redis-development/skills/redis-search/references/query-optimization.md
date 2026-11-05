@@ -71,9 +71,9 @@ r.ft("idx:bicycle").search(q)
 
 ```java
 // Jedis — STEP_START query_perf
-import redis.clients.jedis.UnifiedJedis;
+import redis.clients.jedis.RedisClient;
 import redis.clients.jedis.search.Query;
-try (UnifiedJedis jedis = new UnifiedJedis("redis://localhost:6379")) {
+try (RedisClient jedis = RedisClient.create("redis://localhost:6379")) {
     Query q = new Query("@type:{mountain} @price:[100 500]")
         .setSortBy("price", true)
         .returnFields("model", "brand", "price")

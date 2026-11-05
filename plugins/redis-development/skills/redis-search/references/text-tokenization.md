@@ -86,11 +86,11 @@ r.ft("idx:bicycle").create_index(schema)
 
 ```java
 // Jedis — STEP_START tokenization
-import redis.clients.jedis.UnifiedJedis;
+import redis.clients.jedis.RedisClient;
 import redis.clients.jedis.search.FTCreateParams;
 import redis.clients.jedis.search.schemafields.*;
 
-try (UnifiedJedis jedis = new UnifiedJedis("redis://localhost:6379")) {
+try (RedisClient jedis = RedisClient.create("redis://localhost:6379")) {
     jedis.ftCreate("idx:bicycle",
         FTCreateParams.createParams(),
         TextField.of("description"),

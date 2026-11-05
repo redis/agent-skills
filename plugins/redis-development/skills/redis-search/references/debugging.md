@@ -78,10 +78,10 @@ print(info["num_docs"], info["hash_indexing_failures"], info["percent_indexed"])
 
 ```java
 // Jedis — STEP_START debugging
-import redis.clients.jedis.UnifiedJedis;
+import redis.clients.jedis.RedisClient;
 import redis.clients.jedis.search.Query;
 
-try (UnifiedJedis jedis = new UnifiedJedis("redis://localhost:6379")) {
+try (RedisClient jedis = RedisClient.create("redis://localhost:6379")) {
     String explain = jedis.ftExplain("idx:bicycle", new Query("@brand:{Giant-Cycles}"));
     System.out.println(explain);
     System.out.println(jedis.ftProfileSearch("idx:bicycle", null,

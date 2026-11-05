@@ -15,31 +15,31 @@ r = redis.Redis(
 )
 ```
 
-**Java** (Jedis):
+**Java** (Jedis 7.2+):
 ```java
 import redis.clients.jedis.*;
-import javax.net.ssl.*;
-import java.security.KeyStore;
+import java.io.File;
 
-// Create SSL context with trust store and key store
-KeyStore trustStore = KeyStore.getInstance("jks");
-trustStore.load(new FileInputStream("./truststore.jks"), "password".toCharArray());
-
-TrustManagerFactory tmf = TrustManagerFactory.getInstance("X509");
-tmf.init(trustStore);
-
-SSLContext sslContext = SSLContext.getInstance("TLS");
-sslContext.init(null, tmf.getTrustManagers(), null);
+// TLS with a trust store (and, if the server requires it, a client key store)
+SslOptions sslOptions = SslOptions.builder()
+    .truststore(new File("./truststore.jks"), "password".toCharArray())
+    .trustStoreType("jks")
+    .sslVerifyMode(SslVerifyMode.FULL)  // verify the certificate and hostname
+    .build();
 
 JedisClientConfig config = DefaultJedisClientConfig.builder()
-    .ssl(true)
-    .sslSocketFactory(sslContext.getSocketFactory())
+    .sslOptions(sslOptions)
     .user("redisUser")
     .password("redisPassword")
     .build();
 
-JedisPooled jedis = new JedisPooled(new HostAndPort("redis-host", 6379), config);
+RedisClient jedis = RedisClient.builder()
+    .hostAndPort(new HostAndPort("redis-host", 6379))
+    .clientConfig(config)
+    .build();
 ```
+
+Jedis 8.0 deprecated the legacy `ssl()`, `sslSocketFactory()`, `sslParameters()` and `hostnameVerifier()` setters in favor of `SslOptions`, and enforces TLS hostname verification by default: a certificate whose CN/SAN does not match the host now fails the handshake.
 
 **Incorrect:** Connecting without authentication.
 
@@ -52,7 +52,7 @@ r = redis.Redis(host='localhost', port=6379)
 **Java** (Jedis):
 ```java
 // Bad: No authentication or TLS
-UnifiedJedis jedis = new UnifiedJedis("redis://localhost:6379");
+RedisClient jedis = RedisClient.create("redis://localhost:6379");
 ```
 
 **Configuration:**

@@ -119,10 +119,10 @@ total = r.ft("idx:bicycle").search(Query("@type:{mountain}").paging(0, 0).dialec
 
 ```java
 // Jedis — STEP_START result_shaping
-import redis.clients.jedis.UnifiedJedis;
+import redis.clients.jedis.RedisClient;
 import redis.clients.jedis.search.Query;
 
-try (UnifiedJedis jedis = new UnifiedJedis("redis://localhost:6379")) {
+try (RedisClient jedis = RedisClient.create("redis://localhost:6379")) {
     Query q = new Query("@type:{mountain}")
         .returnFields("model", "brand", "price")
         .setSortBy("price", true)

@@ -353,12 +353,12 @@ results = r.ft("idx:bicycle").aggregate(req)
 ```java
 // Jedis — STEP_START aggregate_pipeline
 // Mirrors QueryAggExample.java
-import redis.clients.jedis.UnifiedJedis;
+import redis.clients.jedis.RedisClient;
 import redis.clients.jedis.search.aggr.AggregationBuilder;
 import redis.clients.jedis.search.aggr.Reducers;
 import redis.clients.jedis.search.aggr.SortedField;
 
-try (UnifiedJedis jedis = new UnifiedJedis("redis://localhost:6379")) {
+try (RedisClient jedis = RedisClient.create("redis://localhost:6379")) {
     AggregationBuilder agg = new AggregationBuilder("@type:{mountain}")
         .load("@brand", "@price", "@condition")
         .apply("@price * 0.9", "sale_price")

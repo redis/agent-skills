@@ -122,13 +122,13 @@ r.ft("idx:bicycle").create_index(
 ```java
 // Jedis — STEP_START create_index
 // Mirrors SearchQuickstartExample.java + VectorSearchExample.java
-import redis.clients.jedis.UnifiedJedis;
+import redis.clients.jedis.RedisClient;
 import redis.clients.jedis.search.FTCreateParams;
 import redis.clients.jedis.search.IndexDataType;
 import redis.clients.jedis.search.schemafields.*;
 import java.util.Map;
 
-try (UnifiedJedis jedis = new UnifiedJedis("redis://localhost:6379")) {
+try (RedisClient jedis = RedisClient.create("redis://localhost:6379")) {
     jedis.ftCreate("idx:bicycle",
         FTCreateParams.createParams().on(IndexDataType.HASH).prefix("bicycle:"),
         TextField.of("model").weight(2.0),

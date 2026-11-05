@@ -1,7 +1,8 @@
 ---
 name: redis-connections
-description: Redis client and connection guidance covering connection pooling, multiplexing, pipelining, client-side caching with RESP3, avoiding slow commands (KEYS, SMEMBERS, HGETALL), and tuning socket timeouts. Use when configuring a Redis client (redis-py, Jedis, Lettuce, NRedisStack), batching commands for throughput, eliminating per-request connection creation, iterating large keyspaces with SCAN, enabling client-side caching for read-heavy workloads, or setting connect and read timeouts.
+description: Redis client and connection guidance covering connection pooling, multiplexing, pipelining, client-side caching with RESP3, avoiding slow commands (KEYS, SMEMBERS, HGETALL), and tuning socket timeouts. Use when configuring a Redis client (redis-py, Jedis, Lettuce, NRedisStack), batching commands for throughput, eliminating per-request connection creation, iterating large keyspaces with SCAN, enabling client-side caching for read-heavy workloads, setting connect and read timeouts, or upgrading to a client release that defaults to RESP3 (Jedis 8, redis-py 8, node-redis 6, ioredis 6, StackExchange.Redis 3).
 license: MIT
+compatibility: Java examples use the Jedis 7.2+ RedisClient API; check the installed Jedis version before applying them (see references/pooling.md for older releases).
 metadata:
   author: Redis, Inc.
   version: "0.1.0"
@@ -23,7 +24,7 @@ Client-side guidance for talking to Redis efficiently: how to share connections,
 
 The single biggest mistake in Redis client code is opening a new TCP connection for every operation. Always either:
 
-- **Pool** — keep N persistent connections that the application leases per call (redis-py `ConnectionPool`, Jedis `JedisPooled`, go-redis client).
+- **Pool** — keep N persistent connections that the application leases per call (redis-py `ConnectionPool`, Jedis `RedisClient`, go-redis client).
 - **Multiplex** — share a single connection across all requests (Lettuce, NRedisStack).
 
 | Style | Used by | Note |
@@ -37,7 +38,7 @@ pool = redis.ConnectionPool(host="localhost", port=6379, max_connections=50)
 r = redis.Redis(connection_pool=pool)
 ```
 
-See [references/pooling.md](references/pooling.md) for Python + Java + Lettuce examples.
+See [references/pooling.md](references/pooling.md) for Python + Java + Lettuce examples. On Jedis, check the installed version in `pom.xml` or `build.gradle` first: use `RedisClient` on 7.2+ (required on 8.0, which removed `JedisPooled` and the public `UnifiedJedis` constructors), and `JedisPooled` on 5.0 – 7.1. Don't bump the dependency to change APIs unless the user asks for the upgrade.
 
 ## 2. Pipeline bulk work
 
@@ -113,6 +114,22 @@ Rule of thumb: connect timeout shorter than read/write timeout. Tight timeouts +
 
 See [references/timeouts.md](references/timeouts.md).
 
+## 6. Expect RESP3 by default on current clients
+
+Recent major releases switched the default wire protocol from RESP2 to RESP3. Reply shapes for some commands differ between the two (maps instead of flat lists, typed numbers instead of strings), so code written against RESP2 replies can break on upgrade without any change to the Redis server.
+
+| Client | RESP3 default from | Keep RESP2 |
+|---|---|---|
+| redis-py | 8.0 (keeps RESP2-shaped replies unless `legacy_responses=False`) | `protocol=2` |
+| node-redis | 6.0 | `createClient({ RESP: 2 })` |
+| ioredis | 6.0 | `new Redis({ protocol: 2 })` |
+| Jedis | 8.0 (sends `HELLO 3`, falls back to RESP2) | `DefaultJedisClientConfig.builder().resp2()` |
+| StackExchange.Redis | 3.0 | `protocol=resp2` in the configuration string |
+
+- If code parses raw replies (`execute_command`, `sendCommand`, `Execute`, Lua script results), test it under RESP3 before upgrading, or pin RESP2 explicitly.
+- Client-side caching (section 4) requires RESP3. It is not available on a connection pinned to RESP2.
+- For clients not listed here (go-redis, Lettuce), set the protocol explicitly if your code depends on reply shape.
+
 ## References
 
 - [Redis: Connection Pools and Multiplexing](https://redis.io/docs/latest/develop/clients/pools-and-muxing/)
@@ -120,3 +137,4 @@ See [references/timeouts.md](references/timeouts.md).
 - [Redis: SCAN](https://redis.io/docs/latest/commands/scan/)
 - [Redis: Client-side caching](https://redis.io/docs/latest/develop/clients/client-side-caching/)
 - [Redis: Clients](https://redis.io/docs/latest/develop/clients/)
+- [Redis: RESP protocol versions](https://redis.io/docs/latest/develop/reference/protocol-spec/#resp-versions)

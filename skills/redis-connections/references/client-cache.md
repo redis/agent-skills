@@ -23,9 +23,10 @@ value = client.get("frequently:read:key")
 **Java** (Jedis):
 ```java
 import redis.clients.jedis.DefaultJedisClientConfig;
-import redis.clients.jedis.UnifiedJedis;
 import redis.clients.jedis.HostAndPort;
-import redis.clients.jedis.CacheConfig;
+import redis.clients.jedis.RedisClient;
+import redis.clients.jedis.RedisProtocol;
+import redis.clients.jedis.csc.CacheConfig;
 
 HostAndPort endpoint = new HostAndPort("localhost", 6379);
 
@@ -37,7 +38,11 @@ DefaultJedisClientConfig config = DefaultJedisClientConfig
 
 CacheConfig cacheConfig = CacheConfig.builder().maxSize(1000).build();
 
-UnifiedJedis client = new UnifiedJedis(endpoint, config, cacheConfig);
+RedisClient client = RedisClient.builder()
+        .hostAndPort(endpoint)
+        .clientConfig(config)
+        .cacheConfig(cacheConfig)
+        .build();
 ```
 
 **When to use:**
@@ -57,4 +62,4 @@ UnifiedJedis client = new UnifiedJedis(endpoint, config, cacheConfig);
 - Requires RESP3 protocol
 - Cache invalidation adds complexity for frequently changing data
 
-Reference: [Client-side caching](https://redis.io/docs/latest/develop/clients/client-side-caching/)
+Reference: [Client-side caching](https://redis.io/docs/latest/develop/clients/client-side-caching/), [Jedis: Connect using client-side caching](https://redis.io/docs/latest/develop/clients/jedis/connect/#connect-using-client-side-caching)
