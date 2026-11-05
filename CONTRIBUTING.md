@@ -7,7 +7,7 @@ npm install
 ```
 
 This installs dependencies and sets up the Husky pre-commit hook, which validates
-the Codex, Claude, and Cursor plugin manifests and eval baselines before every commit. Skill-structure
+the Antigravity, Codex, Claude, and Cursor plugin manifests and eval baselines before every commit. Skill-structure
 validation runs in CI, not in the hook.
 
 Skill-structure validation additionally needs `skill-validator`, a Go binary that
@@ -25,7 +25,7 @@ with it.
 
 ## Source of Truth
 
-`skills/` is where you edit. `plugins/redis-development/skills/` is generated from it: real copies, committed for the ChatGPT, Codex, and Claude Code package because plugin installers may drop symlinks that escape a plugin root, and because the Claude Code directory only notices an update when that subdirectory itself changes.
+`skills/` is where you edit. `plugins/redis-development/skills/` is generated from it: real copies, committed for the ChatGPT, Codex, Claude Code, Cursor, and Antigravity package because plugin installers may drop symlinks that escape a plugin root, and because the Claude Code directory only notices an update when that subdirectory itself changes.
 
 Editing a skill therefore touches two paths, and the hook handles the second one:
 
@@ -134,7 +134,7 @@ manual validation you performed instead.
 npm run validate                  # Plugin manifests + vendored copies + eval baselines + agentskills.io spec (what CI runs)
 npm run validate:eval-baselines   # Every eval suite has a baseline, and it is not stale
 npm run validate:skill-structure  # Skill-structure validation only
-npm run validate:plugins          # Claude + Cursor plugin manifests + vendored copies
+npm run validate:plugins          # Antigravity + Codex + Claude + Cursor plugin manifests + vendored copies
 npm run validate:plugin-skills    # Vendored plugin copies match skills/, with no symlinks
 npm run sync:plugins              # Regenerate the vendored plugin copies
 npm run eval                      # Run configured skill eval suites

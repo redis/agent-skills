@@ -24,7 +24,9 @@ The `add-*` Iris skills are copied from [redis/redis-iris](https://github.com/re
 
 ## Where Skills Live
 
-`skills/` is the source of truth. `plugins/redis-development/skills/` holds **generated real copies** of it for the ChatGPT, Codex, Claude Code, and Cursor plugin package, committed to the repo, and `npm run sync:plugins` regenerates them. Every marketplace publishes that one plugin directory, each through its own per-plugin manifest inside `plugins/redis-development/` (`.claude-plugin/`, `.codex-plugin/`, `.cursor-plugin/`); the Claude and Cursor listings point at it from the repo-root `.claude-plugin/marketplace.json` and `.cursor-plugin/marketplace.json`.
+`skills/` is the source of truth. `plugins/redis-development/skills/` holds **generated real copies** of it for the ChatGPT, Codex, Claude Code, Cursor, and Google Antigravity plugin package, committed to the repo, and `npm run sync:plugins` regenerates them. Every marketplace publishes that one plugin directory, each through its own per-plugin manifest inside `plugins/redis-development/` (`.antigravity-plugin/`, `.claude-plugin/`, `.codex-plugin/`, `.cursor-plugin/`); the Claude and Cursor listings point at it from the repo-root `.claude-plugin/marketplace.json` and `.cursor-plugin/marketplace.json`.
+
+Antigravity resolves every component path from the plugin root, so `.antigravity-plugin/` holds only `plugin.json`; its logo (`assets/redis-icon.svg`, square with transparent padding) and the pre-install `README.md` live at the plugin root.
 
 Copies rather than symlinks, because Claude Code and Cursor both drop a symlink that escapes the plugin root when a plugin is installed from git, so the plugin loads no skills at all. Real files also survive a Windows checkout, where git writes symlinks as plain text files unless `core.symlinks` is on.
 
@@ -67,6 +69,7 @@ Use [skills/redis-core/](skills/redis-core/) as the reference layout. Editorial 
    - ChatGPT and Codex: the sync vendors every skill into `plugins/redis-development/`; keep its `.codex-plugin/plugin.json` version aligned with the Claude manifest before submitting the package to OpenAI.
    - Claude Code: nothing to wire up. The sync vendors every skill under `skills/`, so committing runs it and the directory's nightly bot picks the change up.
    - Cursor: nothing to wire up either — the single `redis-development` plugin bundles every vendored skill. Cursor does not pull from git, so ask the Cursor marketplace team for a re-index (or re-submit at [cursor.com/marketplace/publish](https://cursor.com/marketplace/publish)) once the change lands.
+   - Google Antigravity: nothing to wire up for the skill itself. Bump `version` in `.antigravity-plugin/plugin.json` with the Claude manifest on every release, because Antigravity clients only download an update when the version increases; the new skill's slash command is its `name`. If a new skill changes what the plugin covers, update `plugins/redis-development/README.md`, which the Marketplace shows before install.
 5. Validate: `npm run validate` (covers plugin manifests, the vendored copies, eval baselines, and the agentskills.io spec).
 
 ## Running Validators
@@ -75,7 +78,8 @@ Use [skills/redis-core/](skills/redis-core/) as the reference layout. Editorial 
 npm run validate                   # plugin manifests + vendored copies + eval baselines + agentskills.io spec
 npm run validate:eval-baselines    # every eval suite has a baseline matching its evals and matrix
 npm run validate:skill-structure   # spec validation only (across all skills)
-npm run validate:plugins           # codex + claude + cursor plugin manifests + vendored copies
+npm run validate:plugins           # antigravity + codex + claude + cursor plugin manifests + vendored copies
+npm run validate:antigravity-plugins # Antigravity manifest, square logo, README, and cross-manifest consistency
 npm run validate:codex-plugins     # Codex manifest, assets, metadata, and cross-manifest consistency
 npm run validate:plugin-skills     # vendored copies match skills/, with no symlinks
 npm run sync:plugins               # regenerate the vendored copies (the fix when the above fails)

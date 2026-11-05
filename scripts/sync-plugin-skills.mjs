@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
 // Vendors real copies of every skill from the top-level `skills/` source of
-// truth into the ChatGPT, Codex, and Claude Code plugin package. The Claude
-// Code plugin directory fetches only the
+// truth into the shared ChatGPT, Codex, Claude Code, Cursor, and Antigravity
+// plugin package. The Claude Code plugin directory fetches only the
 // `plugins/redis-development` subdirectory and advances our pinned commit only
 // when that subdirectory's own contents change, so a skill has to exist there
 // as real files to be published at all. See AGENTS.md, "Where Skills Live".
