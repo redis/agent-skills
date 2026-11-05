@@ -107,6 +107,96 @@ async function validateReferencedPath(
   }
 }
 
+// Transports Claude Code accepts for a remote MCP server. "streamable-http" is
+// an alias for "http" so configs copied from server docs work unchanged.
+const remoteMcpTransports = new Set(["http", "streamable-http", "sse", "ws"]);
+
+// Resolve every inline mcpServers map a manifest contributes, following string
+// values (and arrays of them) to the config files they point at.
+async function collectMcpServerMaps(pluginDir, value, pluginName) {
+  if (typeof value === "string") {
+    const resolved = path.resolve(pluginDir, value);
+    const config = await readJsonFile(
+      resolved,
+      `${pluginName} mcp config "${value}"`,
+    );
+    // readJsonFile has already reported a missing or unparseable file.
+    if (config === null) {
+      return [];
+    }
+    // A file that parses but carries no server map would otherwise skip every
+    // check below. A likely way to get there: copying the snake_case
+    // "mcp_servers" key from Codex's config.toml, where plugin .mcp.json files
+    // (Codex's included) use camelCase "mcpServers".
+    const servers = config?.mcpServers;
+    if (!servers || typeof servers !== "object" || Array.isArray(servers)) {
+      addError(
+        `${pluginName}: mcp config "${value}" must contain an "mcpServers" object.`,
+      );
+      return [];
+    }
+    return [servers];
+  }
+  if (Array.isArray(value)) {
+    const maps = [];
+    for (const entry of value) {
+      maps.push(...(await collectMcpServerMaps(pluginDir, entry, pluginName)));
+    }
+    return maps;
+  }
+  if (value && typeof value === "object") {
+    return [value];
+  }
+  if (value !== undefined) {
+    addError(
+      `${pluginName}: "mcpServers" must be a path, an array of paths, or an object.`,
+    );
+  }
+  return [];
+}
+
+async function validateMcpServers(pluginDir, pluginManifest, pluginName) {
+  const maps = await collectMcpServerMaps(
+    pluginDir,
+    pluginManifest.mcpServers,
+    pluginName,
+  );
+
+  for (const map of maps) {
+    for (const [serverName, server] of Object.entries(map)) {
+      const label = `${pluginName}: mcpServers."${serverName}"`;
+      if (!server || typeof server !== "object" || Array.isArray(server)) {
+        addError(`${label} must be an object.`);
+        continue;
+      }
+
+      const hasUrl = typeof server.url === "string" && server.url.length > 0;
+      const hasCommand =
+        typeof server.command === "string" && server.command.length > 0;
+
+      if (!hasUrl && !hasCommand) {
+        addError(`${label} must define either "url" or "command".`);
+        continue;
+      }
+
+      // Claude Code reads an entry with no "type" as a stdio server, so a
+      // remote server missing it is skipped at runtime rather than connected.
+      if (hasUrl && typeof server.type !== "string") {
+        addError(
+          `${label} has a "url" but no "type"; add "type": "http" (or "sse" / "ws").`,
+        );
+        continue;
+      }
+
+      if (hasUrl && !remoteMcpTransports.has(server.type)) {
+        addError(
+          `${label} has unsupported transport "${server.type}"; expected one of ${[...remoteMcpTransports].join(", ")}.`,
+        );
+      }
+    }
+  }
+}
+
 async function main() {
   const marketplacePath = path.join(
     repoRoot,
@@ -201,6 +291,8 @@ async function main() {
         await validateReferencedPath(pluginDir, field, value, entry.name);
       }
     }
+
+    await validateMcpServers(pluginDir, pluginManifest, entry.name);
   }
 
   summarizeAndExit();

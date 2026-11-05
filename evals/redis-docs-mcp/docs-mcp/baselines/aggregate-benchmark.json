@@ -1,0 +1,683 @@
+{
+  "generated_at": "2026-11-04T15:38:24.292Z",
+  "input_root": "eval-workspaces/redis-docs-mcp/docs-mcp/iteration-1",
+  "context": {
+    "skill_name": "redis-docs-mcp",
+    "suite_name": "docs-mcp"
+  },
+  "models": [
+    {
+      "model_dir": "anthropic__claude-haiku-4-5-20251001",
+      "model": "claude-haiku-4-5-20251001",
+      "provider": "anthropic",
+      "analyzer_model": "<model-name>",
+      "runs_per_configuration": 3,
+      "evals_run": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "without_skill": {
+        "count": 10,
+        "pass_rate": 0.5166666666666666,
+        "time_seconds": 16.909299999999995,
+        "tokens": 1419.9
+      },
+      "with_skill": {
+        "count": 10,
+        "pass_rate": 0.7333333333333333,
+        "time_seconds": 20.1735,
+        "tokens": 1285
+      },
+      "delta": {
+        "pass_rate": 0.21666666666666667,
+        "time_seconds": 3.264200000000006,
+        "tokens": -134.9000000000001
+      },
+      "cost": {
+        "generation_usd": 0.933218,
+        "grading_usd": 1.45756,
+        "total_usd": 2.390778,
+        "with_skill_usd": 1.306451,
+        "without_skill_usd": 1.084327,
+        "delta_usd": 0.022212,
+        "runs_with_cost": 20
+      },
+      "verdict": "improves"
+    },
+    {
+      "model_dir": "anthropic__claude-opus-5-5",
+      "model": "claude-opus-5-5",
+      "provider": "anthropic",
+      "analyzer_model": "<model-name>",
+      "runs_per_configuration": 3,
+      "evals_run": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "without_skill": {
+        "count": 10,
+        "pass_rate": 0.7333333333333332,
+        "time_seconds": 18.2749,
+        "tokens": 2311.8
+      },
+      "with_skill": {
+        "count": 10,
+        "pass_rate": 0.95,
+        "time_seconds": 19.124700000000004,
+        "tokens": 2275.5
+      },
+      "delta": {
+        "pass_rate": 0.21666666666666679,
+        "time_seconds": 0.8498000000000054,
+        "tokens": -36.30000000000018
+      },
+      "cost": {
+        "generation_usd": 4.349502,
+        "grading_usd": 1.76922,
+        "total_usd": 6.118721,
+        "with_skill_usd": 3.52995,
+        "without_skill_usd": 2.588771,
+        "delta_usd": 0.094118,
+        "runs_with_cost": 20
+      },
+      "verdict": "improves"
+    },
+    {
+      "model_dir": "anthropic__claude-sonnet-5-5",
+      "model": "claude-sonnet-5-5",
+      "provider": "anthropic",
+      "analyzer_model": "<model-name>",
+      "runs_per_configuration": 3,
+      "evals_run": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "without_skill": {
+        "count": 10,
+        "pass_rate": 0.6000000000000001,
+        "time_seconds": 13.068200000000001,
+        "tokens": 2000.8
+      },
+      "with_skill": {
+        "count": 10,
+        "pass_rate": 0.9833333333333334,
+        "time_seconds": 13.073500000000001,
+        "tokens": 1865.3
+      },
+      "delta": {
+        "pass_rate": 0.3833333333333333,
+        "time_seconds": 0.005300000000000082,
+        "tokens": -135.5
+      },
+      "cost": {
+        "generation_usd": 1.671728,
+        "grading_usd": 1.39866,
+        "total_usd": 3.070388,
+        "with_skill_usd": 1.732323,
+        "without_skill_usd": 1.338064,
+        "delta_usd": 0.039426,
+        "runs_with_cost": 20
+      },
+      "verdict": "improves"
+    }
+  ],
+  "evals": [
+    {
+      "eval_id": 1,
+      "eval_name": "sections-not-pages",
+      "without_skill": {
+        "count": 6,
+        "pass_rate": 0.5,
+        "time_seconds": 16.32283333333333,
+        "tokens": 1812.6666666666667
+      },
+      "with_skill": {
+        "count": 6,
+        "pass_rate": 0.8333333333333334,
+        "time_seconds": 19.92316666666667,
+        "tokens": 1709.6666666666667
+      },
+      "delta": {
+        "pass_rate": 0.33333333333333337,
+        "time_seconds": 3.6003333333333387,
+        "tokens": -103
+      },
+      "mean_delta_pass_rate": 0.33333333333333337,
+      "models": [
+        {
+          "model": "claude-haiku-4-5-20251001",
+          "eval_name": "sections-not-pages",
+          "with_skill": {
+            "count": 2,
+            "pass_rate": 0.75,
+            "time_seconds": 30.122500000000002,
+            "tokens": 1461
+          },
+          "without_skill": {
+            "count": 2,
+            "pass_rate": 0.25,
+            "time_seconds": 22.982,
+            "tokens": 1646.5
+          },
+          "delta": {
+            "pass_rate": 0.5,
+            "time_seconds": 7.140500000000003,
+            "tokens": -185.5
+          }
+        },
+        {
+          "model": "claude-opus-5-5",
+          "eval_name": "sections-not-pages",
+          "with_skill": {
+            "count": 2,
+            "pass_rate": 0.8333333333333334,
+            "time_seconds": 17.5315,
+            "tokens": 1977.5
+          },
+          "without_skill": {
+            "count": 2,
+            "pass_rate": 0.75,
+            "time_seconds": 15.582,
+            "tokens": 1893.5
+          },
+          "delta": {
+            "pass_rate": 0.08333333333333337,
+            "time_seconds": 1.9495000000000005,
+            "tokens": 84
+          }
+        },
+        {
+          "model": "claude-sonnet-5-5",
+          "eval_name": "sections-not-pages",
+          "with_skill": {
+            "count": 2,
+            "pass_rate": 0.9166666666666667,
+            "time_seconds": 12.1155,
+            "tokens": 1690.5
+          },
+          "without_skill": {
+            "count": 2,
+            "pass_rate": 0.5,
+            "time_seconds": 10.404499999999999,
+            "tokens": 1898
+          },
+          "delta": {
+            "pass_rate": 0.41666666666666674,
+            "time_seconds": 1.711000000000002,
+            "tokens": -207.5
+          }
+        }
+      ]
+    },
+    {
+      "eval_id": 2,
+      "eval_name": "never-construct-ids",
+      "without_skill": {
+        "count": 6,
+        "pass_rate": 0.49999999999999994,
+        "time_seconds": 15.241,
+        "tokens": 1498.8333333333333
+      },
+      "with_skill": {
+        "count": 6,
+        "pass_rate": 0.9722222222222223,
+        "time_seconds": 15.889833333333334,
+        "tokens": 1455.8333333333333
+      },
+      "delta": {
+        "pass_rate": 0.4722222222222224,
+        "time_seconds": 0.648833333333334,
+        "tokens": -43
+      },
+      "mean_delta_pass_rate": 0.4722222222222224,
+      "models": [
+        {
+          "model": "claude-haiku-4-5-20251001",
+          "eval_name": "never-construct-ids",
+          "with_skill": {
+            "count": 2,
+            "pass_rate": 1,
+            "time_seconds": 17.519,
+            "tokens": 773.5
+          },
+          "without_skill": {
+            "count": 2,
+            "pass_rate": 0.5833333333333333,
+            "time_seconds": 15.4145,
+            "tokens": 1280
+          },
+          "delta": {
+            "pass_rate": 0.41666666666666674,
+            "time_seconds": 2.104499999999998,
+            "tokens": -506.5
+          }
+        },
+        {
+          "model": "claude-opus-5-5",
+          "eval_name": "never-construct-ids",
+          "with_skill": {
+            "count": 2,
+            "pass_rate": 0.9166666666666667,
+            "time_seconds": 18.058500000000002,
+            "tokens": 1891.5
+          },
+          "without_skill": {
+            "count": 2,
+            "pass_rate": 0.5833333333333333,
+            "time_seconds": 16.114,
+            "tokens": 1726.5
+          },
+          "delta": {
+            "pass_rate": 0.3333333333333335,
+            "time_seconds": 1.9445000000000014,
+            "tokens": 165
+          }
+        },
+        {
+          "model": "claude-sonnet-5-5",
+          "eval_name": "never-construct-ids",
+          "with_skill": {
+            "count": 2,
+            "pass_rate": 1,
+            "time_seconds": 12.091999999999999,
+            "tokens": 1702.5
+          },
+          "without_skill": {
+            "count": 2,
+            "pass_rate": 0.3333333333333333,
+            "time_seconds": 14.194500000000001,
+            "tokens": 1490
+          },
+          "delta": {
+            "pass_rate": 0.6666666666666667,
+            "time_seconds": -2.1025000000000027,
+            "tokens": 212.5
+          }
+        }
+      ]
+    },
+    {
+      "eval_id": 3,
+      "eval_name": "version-metadata-trap",
+      "without_skill": {
+        "count": 6,
+        "pass_rate": 0.7222222222222222,
+        "time_seconds": 14.994500000000002,
+        "tokens": 1732.6666666666667
+      },
+      "with_skill": {
+        "count": 6,
+        "pass_rate": 0.9444444444444443,
+        "time_seconds": 16.677333333333333,
+        "tokens": 1482.1666666666667
+      },
+      "delta": {
+        "pass_rate": 0.2222222222222221,
+        "time_seconds": 1.6828333333333312,
+        "tokens": -250.5
+      },
+      "mean_delta_pass_rate": 0.2222222222222221,
+      "models": [
+        {
+          "model": "claude-haiku-4-5-20251001",
+          "eval_name": "version-metadata-trap",
+          "with_skill": {
+            "count": 2,
+            "pass_rate": 0.8333333333333333,
+            "time_seconds": 19.271,
+            "tokens": 1266.5
+          },
+          "without_skill": {
+            "count": 2,
+            "pass_rate": 0.6666666666666666,
+            "time_seconds": 15.5275,
+            "tokens": 1286.5
+          },
+          "delta": {
+            "pass_rate": 0.16666666666666663,
+            "time_seconds": 3.743500000000001,
+            "tokens": -20
+          }
+        },
+        {
+          "model": "claude-opus-5-5",
+          "eval_name": "version-metadata-trap",
+          "with_skill": {
+            "count": 2,
+            "pass_rate": 1,
+            "time_seconds": 19.368499999999997,
+            "tokens": 2033.5
+          },
+          "without_skill": {
+            "count": 2,
+            "pass_rate": 0.8333333333333334,
+            "time_seconds": 18.0805,
+            "tokens": 2105
+          },
+          "delta": {
+            "pass_rate": 0.16666666666666663,
+            "time_seconds": 1.2879999999999967,
+            "tokens": -71.5
+          }
+        },
+        {
+          "model": "claude-sonnet-5-5",
+          "eval_name": "version-metadata-trap",
+          "with_skill": {
+            "count": 2,
+            "pass_rate": 1,
+            "time_seconds": 11.3925,
+            "tokens": 1146.5
+          },
+          "without_skill": {
+            "count": 2,
+            "pass_rate": 0.6666666666666666,
+            "time_seconds": 11.3755,
+            "tokens": 1806.5
+          },
+          "delta": {
+            "pass_rate": 0.33333333333333337,
+            "time_seconds": 0.01699999999999946,
+            "tokens": -660
+          }
+        }
+      ]
+    },
+    {
+      "eval_id": 4,
+      "eval_name": "corpus-boundary-miss",
+      "without_skill": {
+        "count": 6,
+        "pass_rate": 0.75,
+        "time_seconds": 14.2145,
+        "tokens": 1680
+      },
+      "with_skill": {
+        "count": 6,
+        "pass_rate": 0.8333333333333334,
+        "time_seconds": 15.735166666666665,
+        "tokens": 1657
+      },
+      "delta": {
+        "pass_rate": 0.08333333333333337,
+        "time_seconds": 1.5206666666666653,
+        "tokens": -23
+      },
+      "mean_delta_pass_rate": 0.08333333333333337,
+      "models": [
+        {
+          "model": "claude-haiku-4-5-20251001",
+          "eval_name": "corpus-boundary-miss",
+          "with_skill": {
+            "count": 2,
+            "pass_rate": 0.5,
+            "time_seconds": 16.5355,
+            "tokens": 1271.5
+          },
+          "without_skill": {
+            "count": 2,
+            "pass_rate": 0.5833333333333333,
+            "time_seconds": 14.175,
+            "tokens": 1112
+          },
+          "delta": {
+            "pass_rate": -0.08333333333333326,
+            "time_seconds": 2.3604999999999983,
+            "tokens": 159.5
+          }
+        },
+        {
+          "model": "claude-opus-5-5",
+          "eval_name": "corpus-boundary-miss",
+          "with_skill": {
+            "count": 2,
+            "pass_rate": 1,
+            "time_seconds": 17.636,
+            "tokens": 2077.5
+          },
+          "without_skill": {
+            "count": 2,
+            "pass_rate": 0.8333333333333334,
+            "time_seconds": 17.9135,
+            "tokens": 2215.5
+          },
+          "delta": {
+            "pass_rate": 0.16666666666666663,
+            "time_seconds": -0.27749999999999986,
+            "tokens": -138
+          }
+        },
+        {
+          "model": "claude-sonnet-5-5",
+          "eval_name": "corpus-boundary-miss",
+          "with_skill": {
+            "count": 2,
+            "pass_rate": 1,
+            "time_seconds": 13.034,
+            "tokens": 1622
+          },
+          "without_skill": {
+            "count": 2,
+            "pass_rate": 0.8333333333333333,
+            "time_seconds": 10.555,
+            "tokens": 1712.5
+          },
+          "delta": {
+            "pass_rate": 0.16666666666666674,
+            "time_seconds": 2.479000000000001,
+            "tokens": -90.5
+          }
+        }
+      ]
+    },
+    {
+      "eval_id": 5,
+      "eval_name": "ask-economics",
+      "without_skill": {
+        "count": 6,
+        "pass_rate": 0.6111111111111112,
+        "time_seconds": 19.647833333333335,
+        "tokens": 2830
+      },
+      "with_skill": {
+        "count": 6,
+        "pass_rate": 0.8611111111111112,
+        "time_seconds": 19.060666666666666,
+        "tokens": 2738.3333333333335
+      },
+      "delta": {
+        "pass_rate": 0.25,
+        "time_seconds": -0.5871666666666684,
+        "tokens": -91.66666666666652
+      },
+      "mean_delta_pass_rate": 0.25,
+      "models": [
+        {
+          "model": "claude-haiku-4-5-20251001",
+          "eval_name": "ask-economics",
+          "with_skill": {
+            "count": 2,
+            "pass_rate": 0.5833333333333334,
+            "time_seconds": 17.4195,
+            "tokens": 1652.5
+          },
+          "without_skill": {
+            "count": 2,
+            "pass_rate": 0.5,
+            "time_seconds": 16.447499999999998,
+            "tokens": 1774.5
+          },
+          "delta": {
+            "pass_rate": 0.08333333333333337,
+            "time_seconds": 0.9720000000000013,
+            "tokens": -122
+          }
+        },
+        {
+          "model": "claude-opus-5-5",
+          "eval_name": "ask-economics",
+          "with_skill": {
+            "count": 2,
+            "pass_rate": 1,
+            "time_seconds": 23.029,
+            "tokens": 3397.5
+          },
+          "without_skill": {
+            "count": 2,
+            "pass_rate": 0.6666666666666667,
+            "time_seconds": 23.6845,
+            "tokens": 3618.5
+          },
+          "delta": {
+            "pass_rate": 0.33333333333333326,
+            "time_seconds": -0.6555,
+            "tokens": -221
+          }
+        },
+        {
+          "model": "claude-sonnet-5-5",
+          "eval_name": "ask-economics",
+          "with_skill": {
+            "count": 2,
+            "pass_rate": 1,
+            "time_seconds": 16.7335,
+            "tokens": 3165
+          },
+          "without_skill": {
+            "count": 2,
+            "pass_rate": 0.6666666666666666,
+            "time_seconds": 18.811500000000002,
+            "tokens": 3097
+          },
+          "delta": {
+            "pass_rate": 0.33333333333333337,
+            "time_seconds": -2.078000000000003,
+            "tokens": 68
+          }
+        }
+      ]
+    }
+  ],
+  "overall": {
+    "models": 3,
+    "total_cost_usd": 11.579887,
+    "generation_cost_usd": 6.954448,
+    "grading_cost_usd": 4.62544,
+    "mean_delta_pass_rate": 0.27222222222222225,
+    "mean_delta_tokens": -102.23333333333342,
+    "mean_delta_time_seconds": 1.3731000000000038,
+    "mean_delta_cost_usd": 0.05191866666666667,
+    "models_improved": 3,
+    "models_neutral": 0,
+    "models_degraded": 0
+  },
+  "baseline_comparison": {
+    "path": "evals/redis-docs-mcp/docs-mcp/baselines/aggregate-benchmark.json",
+    "generated_at": "2026-11-04T14:23:36.791Z",
+    "input_root": "eval-workspaces/redis-docs-mcp/docs-mcp/iteration-1",
+    "overall": {
+      "baseline": {
+        "mean_pass_delta": 0.29444444444444456,
+        "mean_token_delta": -75.40000000000002,
+        "mean_time_delta_seconds": 14.693266666666666,
+        "mean_cost_delta_usd": 0.049334333333333334
+      },
+      "current": {
+        "mean_pass_delta": 0.27222222222222225,
+        "mean_token_delta": -102.23333333333342,
+        "mean_time_delta_seconds": 1.3731000000000038,
+        "mean_cost_delta_usd": 0.05191866666666667
+      },
+      "change": {
+        "mean_pass_delta": -0.02222222222222231,
+        "mean_token_delta": -26.8333333333334,
+        "mean_time_delta_seconds": -13.320166666666662,
+        "mean_cost_delta_usd": 0.0025843333333333343
+      }
+    },
+    "models": [
+      {
+        "model": "claude-haiku-4-5-20251001",
+        "status": "compared",
+        "baseline": {
+          "pass_delta": 0.3500000000000001,
+          "token_delta": -64.79999999999995,
+          "time_delta_seconds": 44.8772,
+          "cost_delta_usd": 0.041215
+        },
+        "current": {
+          "pass_delta": 0.21666666666666667,
+          "token_delta": -134.9000000000001,
+          "time_delta_seconds": 3.264200000000006,
+          "cost_delta_usd": 0.022212
+        },
+        "change": {
+          "pass_delta": -0.13333333333333341,
+          "token_delta": -70.10000000000014,
+          "time_delta_seconds": -41.613,
+          "cost_delta_usd": -0.019003000000000003
+        },
+        "baseline_verdict": "improves",
+        "current_verdict": "improves"
+      },
+      {
+        "model": "claude-opus-5-5",
+        "status": "compared",
+        "baseline": {
+          "pass_delta": 0.2333333333333334,
+          "token_delta": -78,
+          "time_delta_seconds": 0.7859000000000016,
+          "cost_delta_usd": 0.071462
+        },
+        "current": {
+          "pass_delta": 0.21666666666666679,
+          "token_delta": -36.30000000000018,
+          "time_delta_seconds": 0.8498000000000054,
+          "cost_delta_usd": 0.094118
+        },
+        "change": {
+          "pass_delta": -0.016666666666666607,
+          "token_delta": 41.69999999999982,
+          "time_delta_seconds": 0.06390000000000384,
+          "cost_delta_usd": 0.022655999999999996
+        },
+        "baseline_verdict": "improves",
+        "current_verdict": "improves"
+      },
+      {
+        "model": "claude-sonnet-5-5",
+        "status": "compared",
+        "baseline": {
+          "pass_delta": 0.30000000000000016,
+          "token_delta": -83.40000000000009,
+          "time_delta_seconds": -1.5832999999999995,
+          "cost_delta_usd": 0.035326
+        },
+        "current": {
+          "pass_delta": 0.3833333333333333,
+          "token_delta": -135.5,
+          "time_delta_seconds": 0.005300000000000082,
+          "cost_delta_usd": 0.039426
+        },
+        "change": {
+          "pass_delta": 0.08333333333333315,
+          "token_delta": -52.09999999999991,
+          "time_delta_seconds": 1.5885999999999996,
+          "cost_delta_usd": 0.0040999999999999995
+        },
+        "baseline_verdict": "improves",
+        "current_verdict": "improves"
+      }
+    ],
+    "missing_models": []
+  }
+}

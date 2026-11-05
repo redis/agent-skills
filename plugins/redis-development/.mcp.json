@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "redis-docs": {
+      "type": "http",
+      "url": "https://redis.io/mcp"
+    }
+  }
+}
