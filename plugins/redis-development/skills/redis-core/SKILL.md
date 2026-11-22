@@ -18,6 +18,21 @@ Foundational guidance for modeling data in Redis. Covers data-type selection and
 - Reviewing or refactoring Redis key names.
 - Deciding between a Redis Hash and a JSON document for an entity.
 
+## Prefer modern patterns in new code
+
+Prefer current supported Redis APIs. Do not add a legacy compatibility path just
+because Redis still accepts an older command. Check the target deployment's
+capabilities and the project's compatibility contract first. If a required modern
+feature is unavailable, report the limitation; add a fallback only when the user
+or project explicitly requires it, with its semantic tradeoffs documented.
+
+Use SCAN-family iteration for large collections, named ACL users, Redis Functions
+for reusable server-side logic on supported deployments, and atomic command
+options for combined operations. Choose Streams, Lists, Pub/Sub, Hashes and JSON
+by their delivery and update requirements. See
+[references/modern-patterns.md](references/modern-patterns.md) for the choices,
+capability checks and migration boundaries.
+
 ## 1. Choose the right data structure
 
 Pick the type that matches the *access pattern*, not just the shape of the data.
@@ -26,11 +41,11 @@ Pick the type that matches the *access pattern*, not just the shape of the data.
 |---|---|---|
 | Simple values, counters | String | Atomic `INCR`/`DECR`, `SET`/`GET` |
 | Object with independently updated fields | Hash | Per-field reads/writes, no whole-object rewrite |
-| Queue, recent-N items | List | O(1) push/pop at ends |
+| Simple queue without acknowledgments/replay, recent-N items | List | O(1) push/pop at ends |
 | Unique items, membership checks | Set | O(1) `SADD`/`SISMEMBER`/`SCARD` |
 | Rankings, score-based ranges | Sorted Set | Score-ordered; `ZADD`/`ZRANGE`/`ZRANK` |
 | Nested / hierarchical data | JSON | Path-level updates, nested arrays, RQE indexing |
-| Event log, fan-out messaging | Stream | Persistent, consumer groups |
+| Work queue needing acknowledgments/replay, event log | Stream | Consumer groups, pending entries, explicit acknowledgments |
 | Vector similarity | Vector Set | Native vector storage with HNSW |
 
 **Common anti-pattern:** stuffing a flat object into a serialized string. Updating one field means fetch + parse + mutate + rewrite. Use a Hash instead.
