@@ -1,0 +1,245 @@
+{
+  "generated_at": "2026-11-22T18:44:02.177Z",
+  "input_root": "eval-workspaces/redis-core/modern-patterns/iteration-1",
+  "context": {
+    "skill_name": "redis-core",
+    "suite_name": "modern-patterns"
+  },
+  "models": [
+    {
+      "model_dir": "anthropic__claude-sonnet-5",
+      "model": "claude-sonnet-5",
+      "provider": "anthropic",
+      "analyzer_model": "<model-name>",
+      "runs_per_configuration": 3,
+      "evals_run": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "without_skill": {
+        "count": 4,
+        "pass_rate": 0.95,
+        "time_seconds": 30.00125,
+        "tokens": 4832
+      },
+      "with_skill": {
+        "count": 4,
+        "pass_rate": 1,
+        "time_seconds": 30.841,
+        "tokens": 4857
+      },
+      "delta": {
+        "pass_rate": 0.050000000000000044,
+        "time_seconds": 0.8397500000000022,
+        "tokens": 25
+      },
+      "cost": {
+        "generation_usd": 2.061233,
+        "grading_usd": 1.53846,
+        "total_usd": 3.599693,
+        "with_skill_usd": 1.984978,
+        "without_skill_usd": 1.614715,
+        "delta_usd": 0.092566,
+        "runs_with_cost": 8
+      },
+      "verdict": "neutral"
+    }
+  ],
+  "evals": [
+    {
+      "eval_id": 1,
+      "eval_name": "new-service-modern-defaults",
+      "without_skill": {
+        "count": 1,
+        "pass_rate": 0.8,
+        "time_seconds": 40.781,
+        "tokens": 5982
+      },
+      "with_skill": {
+        "count": 1,
+        "pass_rate": 1,
+        "time_seconds": 34.076,
+        "tokens": 5037
+      },
+      "delta": {
+        "pass_rate": 0.19999999999999996,
+        "time_seconds": -6.704999999999998,
+        "tokens": -945
+      },
+      "mean_delta_pass_rate": 0.19999999999999996,
+      "models": [
+        {
+          "model": "claude-sonnet-5",
+          "eval_name": "new-service-modern-defaults",
+          "with_skill": {
+            "count": 1,
+            "pass_rate": 1,
+            "time_seconds": 34.076,
+            "tokens": 5037
+          },
+          "without_skill": {
+            "count": 1,
+            "pass_rate": 0.8,
+            "time_seconds": 40.781,
+            "tokens": 5982
+          },
+          "delta": {
+            "pass_rate": 0.19999999999999996,
+            "time_seconds": -6.704999999999998,
+            "tokens": -945
+          }
+        }
+      ]
+    },
+    {
+      "eval_id": 2,
+      "eval_name": "preserve-legitimate-primitives",
+      "without_skill": {
+        "count": 1,
+        "pass_rate": 1,
+        "time_seconds": 29.209,
+        "tokens": 5349
+      },
+      "with_skill": {
+        "count": 1,
+        "pass_rate": 1,
+        "time_seconds": 34.67,
+        "tokens": 6005
+      },
+      "delta": {
+        "pass_rate": 0,
+        "time_seconds": 5.461000000000002,
+        "tokens": 656
+      },
+      "mean_delta_pass_rate": 0,
+      "models": [
+        {
+          "model": "claude-sonnet-5",
+          "eval_name": "preserve-legitimate-primitives",
+          "with_skill": {
+            "count": 1,
+            "pass_rate": 1,
+            "time_seconds": 34.67,
+            "tokens": 6005
+          },
+          "without_skill": {
+            "count": 1,
+            "pass_rate": 1,
+            "time_seconds": 29.209,
+            "tokens": 5349
+          },
+          "delta": {
+            "pass_rate": 0,
+            "time_seconds": 5.461000000000002,
+            "tokens": 656
+          }
+        }
+      ]
+    },
+    {
+      "eval_id": 3,
+      "eval_name": "explicit-legacy-deployment",
+      "without_skill": {
+        "count": 1,
+        "pass_rate": 1,
+        "time_seconds": 24.373,
+        "tokens": 4019
+      },
+      "with_skill": {
+        "count": 1,
+        "pass_rate": 1,
+        "time_seconds": 30.457,
+        "tokens": 4722
+      },
+      "delta": {
+        "pass_rate": 0,
+        "time_seconds": 6.084,
+        "tokens": 703
+      },
+      "mean_delta_pass_rate": 0,
+      "models": [
+        {
+          "model": "claude-sonnet-5",
+          "eval_name": "explicit-legacy-deployment",
+          "with_skill": {
+            "count": 1,
+            "pass_rate": 1,
+            "time_seconds": 30.457,
+            "tokens": 4722
+          },
+          "without_skill": {
+            "count": 1,
+            "pass_rate": 1,
+            "time_seconds": 24.373,
+            "tokens": 4019
+          },
+          "delta": {
+            "pass_rate": 0,
+            "time_seconds": 6.084,
+            "tokens": 703
+          }
+        }
+      ]
+    },
+    {
+      "eval_id": 4,
+      "eval_name": "strict-functions-unknown-write",
+      "without_skill": {
+        "count": 1,
+        "pass_rate": 1,
+        "time_seconds": 25.642,
+        "tokens": 3978
+      },
+      "with_skill": {
+        "count": 1,
+        "pass_rate": 1,
+        "time_seconds": 24.161,
+        "tokens": 3664
+      },
+      "delta": {
+        "pass_rate": 0,
+        "time_seconds": -1.480999999999998,
+        "tokens": -314
+      },
+      "mean_delta_pass_rate": 0,
+      "models": [
+        {
+          "model": "claude-sonnet-5",
+          "eval_name": "strict-functions-unknown-write",
+          "with_skill": {
+            "count": 1,
+            "pass_rate": 1,
+            "time_seconds": 24.161,
+            "tokens": 3664
+          },
+          "without_skill": {
+            "count": 1,
+            "pass_rate": 1,
+            "time_seconds": 25.642,
+            "tokens": 3978
+          },
+          "delta": {
+            "pass_rate": 0,
+            "time_seconds": -1.480999999999998,
+            "tokens": -314
+          }
+        }
+      ]
+    }
+  ],
+  "overall": {
+    "models": 1,
+    "total_cost_usd": 3.599693,
+    "generation_cost_usd": 2.061233,
+    "grading_cost_usd": 1.53846,
+    "mean_delta_pass_rate": 0.050000000000000044,
+    "mean_delta_tokens": 25,
+    "mean_delta_time_seconds": 0.8397500000000022,
+    "mean_delta_cost_usd": 0.092566,
+    "models_improved": 0,
+    "models_neutral": 1,
+    "models_degraded": 0
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "eval_suite": "modern-patterns",
+  "description": "Focused initial single-model baseline for modern API selection and compatibility boundaries; not a cross-model result.",
+  "models": [
+    "claude-sonnet-5"
+  ],
+  "configurations": [
+    "with_skill",
+    "without_skill"
+  ],
+  "repetitions": 1,
+  "judge_model": "claude-sonnet-5",
+  "default_iteration": "iteration-1"
+}

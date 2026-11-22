@@ -6,11 +6,11 @@ Selecting the appropriate Redis data type for your use case is fundamental to pe
 |----------|------------------|-----|
 | Simple values, counters | String | Fast, atomic operations |
 | Object with fields | Hash | Memory efficient, partial updates, field-level expiration |
-| Queue, recent items | List | O(1) push/pop at ends |
+| Simple queue without acknowledgments/replay, recent items | List | O(1) push/pop at ends |
 | Unique items, membership | Set | O(1) add/remove/check |
 | Rankings, ranges | Sorted Set | Score-based ordering |
 | Nested/hierarchical data | JSON | Path queries, nested structures, geospatial indexing with RQE |
-| Event logs, messaging | Stream | Persistent, consumer groups |
+| Work queue needing acknowledgments/replay, event logs | Stream | Consumer groups, pending entries, acknowledgments |
 | Similarity search | Vector Set | Native vector storage with built-in HNSW indexing |
 
 **Incorrect:** Using strings for everything.
