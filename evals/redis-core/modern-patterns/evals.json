@@ -1,0 +1,75 @@
+{
+  "skill_name": "redis-core",
+  "eval_suite": "modern-patterns",
+  "description": "Modern Redis defaults with explicit compatibility and semantic boundaries.",
+  "evals": [
+    {
+      "id": 1,
+      "name": "new-service-modern-defaults",
+      "prompt": "We are starting a Redis 7.4 service. We control deployment and have no older-client compatibility requirement. A starter uses KEYS to enumerate tenants, requirepass/password-only connections, an EVALSHA script for shared reusable atomic logic, and SET followed by EXPIRE for session creation. Recommend the defaults to implement and what must be checked before deployment.",
+      "expected_output": "Recommends SCAN-family enumeration, named ACL credentials with verified TLS, managed Redis Functions with a deployment/permission plan, and atomic SET expiration options. Checks capabilities and avoids adding an unrequested legacy fallback.",
+      "covered_rules": [
+        "modern-defaults",
+        "capability-checks"
+      ],
+      "expectations": [
+        "Recommends SCAN-family cursor iteration rather than KEYS for tenant enumeration.",
+        "Recommends a dedicated named ACL user with both username/password and verified TLS.",
+        "Prefers Redis Functions for the reusable server-side logic and discusses library installation/permissions or Cluster primary installation.",
+        "Recommends SET with EX/PX rather than separate SET then EXPIRE for session creation.",
+        "Does not silently add EVAL/EVALSHA or password-only fallback when no compatibility requirement exists."
+      ]
+    },
+    {
+      "id": 2,
+      "name": "preserve-legitimate-primitives",
+      "prompt": "Our Redis modernization proposal bans all Strings, Lists, Pub/Sub, SMEMBERS and EVAL as deprecated. We store immutable compressed payloads as Strings, use Pub/Sub for disposable UI refresh notifications, keep a small atomically checked authorization set, and now need a work queue with acknowledgments and recovery after worker crashes. Review the proposal and recommend the work-queue design.",
+      "expected_output": "Rejects false blanket deprecation claims and preserves valid primitives and bounded atomic reads. Recommends Streams groups/acknowledgments/pending recovery for the reliable queue without promising exactly-once delivery or treating persistence as automatic.",
+      "covered_rules": [
+        "semantic-boundaries",
+        "durable-queues"
+      ],
+      "expectations": [
+        "Explains that Strings, Lists, Pub/Sub and EVAL remain supported rather than declaring all deprecated.",
+        "Preserves Strings for the immutable payloads and Pub/Sub for disposable notifications.",
+        "Preserves or explicitly analyzes atomicity of the bounded authorization-set read rather than blindly replacing it with a non-snapshot SCAN.",
+        "Recommends Streams consumer groups with acknowledgments and pending-entry recovery for the work queue.",
+        "Acknowledges duplicate processing/idempotent consumers or persistence configuration rather than promising exactly-once delivery."
+      ]
+    },
+    {
+      "id": 3,
+      "name": "explicit-legacy-deployment",
+      "prompt": "An existing service is contractually required to keep working with Redis 6.0 for now. It uses EVALSHA with checked NOSCRIPT handling and has no JSON module. We want partial updates of a flat user profile and an atomic expiring insert-if-absent. Can modernization mandate Functions, GETEX, GETDEL and native JSON here? Explain the supported implementation and migration boundary.",
+      "expected_output": "Honors the explicit compatibility requirement: Functions and 6.2-only commands cannot be required on 6.0. Uses Hash for flat fields and SET NX EX/PX. Documents the existing EVAL compatibility path and a future upgrade without inventing JSON availability or silently breaking the deployment.",
+      "covered_rules": [
+        "capability-checks",
+        "explicit-compatibility"
+      ],
+      "expectations": [
+        "Identifies Redis Functions as unavailable on Redis 6.0 and does not require FUNCTION LOAD/FCALL on that deployment.",
+        "Identifies GETEX/GETDEL as requiring a newer version than Redis 6.0.",
+        "Recommends Hash for the flat independently updated profile and does not assume native JSON availability.",
+        "Uses SET with NX and EX/PX for the atomic expiring insert.",
+        "Treats retention of the existing EVAL-based logic as an explicit compatibility decision rather than claiming it is removed or universally forbidden."
+      ]
+    },
+    {
+      "id": 4,
+      "name": "strict-functions-unknown-write",
+      "prompt": "Our project requires Redis Functions and forbids EVAL fallback. A reusable write function sometimes returns NOPERM and sometimes loses its socket reply. Should the client transparently send the same Lua body with EVAL, or retry FCALL? We also need atomic read-and-delete and read-and-renew operations on Redis 7.4.",
+      "expected_output": "Preserves the strict contract: diagnose permission errors and missing capabilities without EVAL fallback; never replay unknown writes absent idempotency/outcome resolution. Suggests GETDEL and GETEX for the matching value operations.",
+      "covered_rules": [
+        "explicit-compatibility",
+        "unknown-write-outcomes",
+        "atomic-command-options"
+      ],
+      "expectations": [
+        "Respects the explicit prohibition on EVAL fallback.",
+        "Treats NOPERM as an authorization problem to diagnose rather than a reason to bypass the required design.",
+        "Does not automatically replay an unknown write outcome; discusses proven non-execution, idempotency or durable outcome resolution.",
+        "Recommends GETDEL for atomic read-and-delete and GETEX for atomic read-and-renew."
+      ]
+    }
+  ]
+}
