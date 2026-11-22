@@ -1,6 +1,6 @@
 ---
 name: redis-security
-description: Redis security guidance covering authentication (requirepass and ACL users), TLS, ACL-based least-privilege access control, restricting network exposure via bind and protected-mode, firewall rules, and disabling dangerous commands. Use when deploying Redis to production, defining ACL users for an application, configuring TLS connections, locking down a Redis instance behind a firewall, or auditing a Redis deployment for security hardening.
+description: Redis security guidance covering named ACL authentication and legacy requirepass compatibility, TLS, ACL-based least-privilege access control, restricting network exposure via bind and protected-mode, firewall rules, and disabling dangerous commands. Use when deploying Redis to production, defining ACL users for an application, configuring TLS connections, locking down a Redis instance behind a firewall, or auditing a Redis deployment for security hardening.
 license: MIT
 metadata:
   author: Redis, Inc.
@@ -20,33 +20,42 @@ Production hardening for Redis: authentication, ACL-based access control, and ne
 
 ## 1. Always authenticate (and use TLS)
 
-Never run a production Redis without a password. Pair authentication with TLS so credentials and data aren't sent in clear text.
+Use a dedicated named ACL user for new applications and pair authentication with verified TLS. Keep `requirepass`/password-only examples for an explicit existing compatibility requirement.
 
 ```
 # redis.conf
-requirepass your-strong-password
+aclfile /path/to/users.acl
 tls-port 6380
 tls-cert-file /path/to/redis.crt
 tls-key-file  /path/to/redis.key
+```
+
+A minimal application ACL file (provision operator access separately before
+disabling the default user):
+
+```text
+user default off
+user app_cache on >replace-with-a-strong-password ~cache:* +get +set +del
 ```
 
 ```python
 r = redis.Redis(
     host="localhost",
     port=6380,
-    password="your-strong-password",
+    username="app_cache",
+    password="replace-with-a-strong-password",
     ssl=True,
     ssl_cert_reqs="required",
 )
 ```
 
-If you can use ACL users (next section) instead of the single `requirepass`, do — `requirepass` is effectively the legacy "default user" shortcut.
+Adjust the command/key grants to the workload. `requirepass` sets the default ACL user's password; Redis retaining it does not make it the default choice for new code.
 
 See [references/auth.md](references/auth.md).
 
 ## 2. ACLs for least-privilege access
 
-The `default` user with a shared password is fine for development. For production, give each application a dedicated ACL user with only the commands and key patterns it actually needs.
+Use application-specific ACL users in development and production so examples exercise the intended identity and permissions. Preserve a default-user setup only when the existing application explicitly requires it.
 
 ```
 # Cache-only reader
